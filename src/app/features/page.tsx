@@ -1,17 +1,13 @@
 import Header2 from "@/components/mvpblocks/header-2"
 import FeatureSteps from "@/components/mvpblocks/feature-2"
-import SimplePricing from "@/components/mvpblocks/simple-pricing"
-import Faq2 from "@/components/mvpblocks/faq-2"
 import Footer4Col from "@/components/mvpblocks/footer-4col"
 
-export default function Home() {
+export default function FeaturesPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header2 />
       <main className="flex-1">
         <FeatureSteps />
-        <SimplePricing />
-        <Faq2 />
       </main>
       <Footer4Col />
     </div>

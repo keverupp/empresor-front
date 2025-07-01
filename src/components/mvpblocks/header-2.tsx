@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ArrowRight, Zap, Search } from 'lucide-react';
-import Link from 'next/link';
+import React, { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Menu, X, ArrowRight, Zap, Search } from 'lucide-react'
+import Link from 'next/link'
+import { appConfig } from '@/config/app'
 
 interface NavItem {
   name: string;
@@ -11,13 +12,11 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { name: 'Home', href: '/' },
-  { name: 'Features', href: '/features' },
-  { name: 'Solutions', href: '/solutions' },
-  { name: 'Pricing', href: '/pricing' },
-  { name: 'Resources', href: '/resources' },
-  { name: 'Contact', href: '/contact' },
-];
+  { name: 'Início', href: '/' },
+  { name: 'Funcionalidades', href: '/features' },
+  { name: 'Planos', href: '/pricing' },
+  { name: 'Contato', href: '/contact' },
+]
 
 export default function Header2() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -103,10 +102,10 @@ export default function Header2() {
                 </div>
                 <div className="flex flex-col">
                   <span className="text-lg font-bold text-foreground">
-                    Acme Inc.
+                    {appConfig.name}
                   </span>
                   <span className="-mt-1 text-xs text-muted-foreground">
-                    Build faster
+                    {appConfig.description}
                   </span>
                 </div>
               </Link>

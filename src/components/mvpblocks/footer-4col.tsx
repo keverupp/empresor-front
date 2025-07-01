@@ -7,8 +7,9 @@ import {
   MapPin,
   Phone,
   Twitter,
-} from 'lucide-react';
-import Link from 'next/link';
+} from 'lucide-react'
+import Link from 'next/link'
+import { appConfig } from '@/config/app'
 
 const socialLinks = [
   { icon: Facebook, label: 'Facebook' },
@@ -52,18 +53,17 @@ export default function Footer4Col() {
           <div>
             <div className="flex justify-center gap-2 text-primary sm:justify-start">
               <img
-                src="/logo.webp"
+                src={appConfig.logos.light}
                 alt="logo"
                 className="h-8 w-8 rounded-full"
               />
               <span className="bg-primary from-foreground via-rose-200 to-primary bg-clip-text text-2xl font-semibold text-transparent dark:bg-gradient-to-b">
-                Mvpblocks
+                {appConfig.name}
               </span>
             </div>
 
             <p className="mt-6 max-w-md text-center leading-relaxed text-foreground/50 sm:max-w-xs sm:text-left">
-              Lorem ipsum dolor, sit amet consectetur adipisicing elit. Incidunt
-              consequuntur amet culpa cum itaque neque.
+              {appConfig.description}
             </p>
 
             <ul className="mt-8 flex justify-center gap-6 sm:justify-start md:gap-8">
@@ -180,7 +180,7 @@ export default function Footer4Col() {
             </p>
 
             <p className="text-secondary-foreground/70-foreground mt-4 text-sm transition sm:order-first sm:mt-0">
-              &copy; 2025 Mvpblocks
+              &copy; {new Date().getFullYear()} {appConfig.name}
             </p>
           </div>
         </div>
