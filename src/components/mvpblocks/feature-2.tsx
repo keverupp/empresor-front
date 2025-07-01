@@ -1,46 +1,46 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
-import { Rocket, Code, Paintbrush } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { FileText, Users, Calculator, BarChart3 } from "lucide-react";
 
 const features = [
   {
-    step: 'Step 1',
-    title: 'Build Faster',
+    step: "Passo 1",
+    title: "Gestão Completa de Clientes",
     content:
-      'Create your MVP in record time with our pre-built blocks and components.',
-    icon: <Rocket className="h-6 w-6 text-primary" />,
+      "Cadastre e gerencie seus clientes com dados completos de contato, endereço e histórico. Tenha todas as informações organizadas em um só lugar.",
+    icon: <Users className="h-6 w-6 text-primary" />,
     image:
-      'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?q=80&w=2070&auto=format&fit=crop',
+      "https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=2070&auto=format&fit=crop",
   },
   {
-    step: 'Step 2',
-    title: 'Customize Easily',
+    step: "Passo 2",
+    title: "Orçamentos Inteligentes",
     content:
-      'Tailor every component to your needs with our intuitive design system and flexible architecture.',
-    icon: <Paintbrush className="h-6 w-6 text-primary" />,
+      "Crie orçamentos profissionais com cálculos automáticos, controle de produtos/serviços e numeração automática. Personalize com sua marca.",
+    icon: <FileText className="h-6 w-6 text-primary" />,
     image:
-      'https://images.unsplash.com/photo-1618761714954-0b8cd0026356?q=80&w=2070&auto=format&fit=crop',
+      "https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=2070&auto=format&fit=crop",
   },
   {
-    step: 'Step 3',
-    title: 'Deploy Confidently',
+    step: "Passo 3",
+    title: "Cálculos Automáticos",
     content:
-      'Launch your product with confidence using our optimized, responsive, and accessible components.',
-    icon: <Code className="h-6 w-6 text-primary" />,
+      "Adicione produtos, defina quantidades e descontos. O sistema calcula automaticamente subtotais, impostos e valor final para você.",
+    icon: <Calculator className="h-6 w-6 text-primary" />,
     image:
-      'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
+      "https://images.unsplash.com/photo-1554224154-26032fced8bd?q=80&w=2070&auto=format&fit=crop",
   },
   {
-    step: 'Step 4',
-    title: 'Add Yours!',
+    step: "Passo 4",
+    title: "Relatórios e Analytics",
     content:
-      'Contribute your own blocks and become part of the MVPBlocks community.',
-    icon: <Code className="h-6 w-6 text-primary" />,
+      "Acompanhe performance com estatísticas de conversão, valores por período, orçamentos próximos ao vencimento e controle financeiro completo.",
+    icon: <BarChart3 className="h-6 w-6 text-primary" />,
     image:
-      'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop',
+      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop",
   },
 ];
 
@@ -62,23 +62,24 @@ export default function FeatureSteps() {
   }, [progress]);
 
   return (
-    <div className={'p-8 md:p-12'}>
+    <div className={"p-8 md:p-12"}>
       <div className="mx-auto w-full max-w-7xl">
         <div className="relative mx-auto mb-12 max-w-2xl sm:text-center">
           <div className="relative z-10">
             <h2 className="font-geist text-3xl font-bold tracking-tighter md:text-4xl lg:text-5xl">
-              Build Your MVP in Three Steps
+              Complete Seu Processo Comercial em 4 Passos
             </h2>
             <p className="font-geist mt-3 text-foreground/60">
-              MVPBlocks helps you create, customize, and deploy your product
-              faster than ever before.
+              Do cadastro de clientes ao controle financeiro, tenha uma visão
+              completa do seu negócio com ferramentas integradas para maximizar
+              suas vendas.
             </p>
           </div>
           <div
             className="absolute inset-0 mx-auto h-44 max-w-xs blur-[118px]"
             style={{
               background:
-                'linear-gradient(152.92deg, rgba(192, 15, 102, 0.2) 4.54%, rgba(192, 11, 109, 0.26) 34.2%, rgba(192, 15, 102, 0.1) 77.55%)',
+                "linear-gradient(152.92deg, rgba(59, 130, 246, 0.2) 4.54%, rgba(59, 130, 246, 0.26) 34.2%, rgba(59, 130, 246, 0.1) 77.55%)",
             }}
           ></div>
         </div>
@@ -100,10 +101,10 @@ export default function FeatureSteps() {
               >
                 <motion.div
                   className={cn(
-                    'flex h-12 w-12 items-center justify-center rounded-full border-2 md:h-14 md:w-14',
+                    "flex h-12 w-12 items-center justify-center rounded-full border-2 md:h-14 md:w-14",
                     index === currentFeature
-                      ? 'scale-110 border-primary bg-primary/10 text-primary [box-shadow:0_0_15px_rgba(192,15,102,0.3)]'
-                      : 'border-muted-foreground bg-muted',
+                      ? "scale-110 border-primary bg-primary/10 text-primary [box-shadow:0_0_15px_rgba(59,130,246,0.3)]"
+                      : "border-muted-foreground bg-muted"
                   )}
                 >
                   {feature.icon}
@@ -123,7 +124,7 @@ export default function FeatureSteps() {
 
           <div
             className={cn(
-              'relative order-1 h-[200px] overflow-hidden rounded-xl border border-primary/20 [box-shadow:0_5px_30px_-15px_rgba(192,15,102,0.3)] md:order-2 md:h-[300px] lg:h-[400px]',
+              "relative order-1 h-[200px] overflow-hidden rounded-lg border border-primary/20 [box-shadow:0_5px_30px_-15px_rgba(59,130,246,0.3)] md:order-2 md:h-[300px] lg:h-[400px]"
             )}
           >
             <AnimatePresence mode="wait">
@@ -136,7 +137,7 @@ export default function FeatureSteps() {
                       initial={{ y: 100, opacity: 0, rotateX: -20 }}
                       animate={{ y: 0, opacity: 1, rotateX: 0 }}
                       exit={{ y: -100, opacity: 0, rotateX: 20 }}
-                      transition={{ duration: 0.5, ease: 'easeInOut' }}
+                      transition={{ duration: 0.5, ease: "easeInOut" }}
                     >
                       <img
                         src={feature.image}
@@ -153,7 +154,7 @@ export default function FeatureSteps() {
                         </span>
                       </div>
                     </motion.div>
-                  ),
+                  )
               )}
             </AnimatePresence>
           </div>

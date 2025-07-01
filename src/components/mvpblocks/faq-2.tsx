@@ -1,91 +1,120 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
-import { MinusIcon, PlusIcon } from 'lucide-react';
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { MinusIcon, PlusIcon } from "lucide-react";
+import { appConfig } from "@/config/app";
 
 interface FaqItem {
   id: string;
   question: string;
   answer: string;
-  category: 'general' | 'pricing' | 'technical' | 'support';
+  category: "geral" | "preco" | "tecnico" | "suporte";
 }
 
 const faqItems: FaqItem[] = [
   {
-    id: '1',
-    question: 'What is MVPBlocks?',
+    id: "1",
+    question: "O que é o Empresor?",
     answer:
-      'MVPBlocks is a collection of ready-to-use UI components built with Next.js and Tailwind CSS. It helps developers quickly build beautiful, responsive websites without starting from scratch.',
-    category: 'general',
+      "O Empresor é uma plataforma SaaS completa para gestão empresarial que oferece ferramentas integradas para administração de documentos, projetos, finanças, recursos humanos e análise de dados em um só lugar.",
+    category: "geral",
   },
   {
-    id: '2',
-    question: 'Is MVPBlocks free to use?',
+    id: "2",
+    question: "Como funciona a cobrança?",
     answer:
-      'Yes, MVPBlocks is completely free and open-source. You can use it for personal and commercial projects without any restrictions or attribution requirements.',
-    category: 'general',
+      "Oferecemos planos mensais e anuais flexíveis baseados no número de usuários e funcionalidades. Você pode começar com nosso plano gratuito e fazer upgrade conforme sua empresa cresce.",
+    category: "preco",
   },
   {
-    id: '3',
-    question: 'Do I need to know Tailwind CSS to use MVPBlocks?',
+    id: "3",
+    question: "É possível integrar com outros sistemas?",
     answer:
-      "While having Tailwind CSS knowledge is helpful, it's not required. You can simply copy and paste our components into your project and make basic modifications without deep Tailwind expertise.",
-    category: 'technical',
+      "Sim! O Empresor oferece APIs robustas e integrações nativas com os principais sistemas de contabilidade, bancos, e-commerce e outras ferramentas empresariais que sua empresa já utiliza.",
+    category: "tecnico",
   },
   {
-    id: '4',
-    question: 'How do I install MVPBlocks?',
+    id: "4",
+    question: "Meus dados estão seguros?",
     answer:
-      "You don't need to install MVPBlocks as a package. Simply browse our component library, find the components you need, and copy the code into your project. Make sure you have the required dependencies installed.",
-    category: 'technical',
+      "Absolutamente. Utilizamos criptografia de ponta, backups automáticos, servidores seguros no Brasil e seguimos todas as normas da LGPD para garantir a máxima segurança dos seus dados empresariais.",
+    category: "tecnico",
   },
   {
-    id: '5',
-    question: 'Can I customize the components?',
+    id: "5",
+    question: "Preciso de conhecimento técnico para usar?",
     answer:
-      'Absolutely! All components are built with customization in mind. You can modify colors, spacing, typography, and more using Tailwind classes or by editing the component code directly.',
-    category: 'technical',
+      "Não! O Empresor foi desenvolvido para ser intuitivo e fácil de usar. Oferecemos treinamento gratuito, documentação completa e suporte técnico para garantir que sua equipe aproveite ao máximo a plataforma.",
+    category: "geral",
   },
   {
-    id: '6',
-    question: 'Do MVPBlocks components work with dark mode?',
+    id: "6",
+    question: "Funciona no celular e tablet?",
     answer:
-      "Yes, all MVPBlocks components are designed to work seamlessly with both light and dark modes. They automatically adapt to your site's theme settings.",
-    category: 'technical',
+      "Sim! O Empresor é totalmente responsivo e funciona perfeitamente em computadores, tablets e smartphones. Você pode gerenciar sua empresa de qualquer lugar, a qualquer hora.",
+    category: "tecnico",
   },
   {
-    id: '7',
-    question: 'How often are new components added?',
+    id: "7",
+    question: "Quantos usuários posso adicionar?",
     answer:
-      'We regularly add new components to the library. Our goal is to provide a comprehensive set of components for all common UI patterns and website sections.',
-    category: 'general',
+      "Depende do seu plano. O plano básico permite até 5 usuários, o profissional até 25 usuários, e o empresarial é ilimitado. Você pode adicionar ou remover usuários a qualquer momento.",
+    category: "preco",
   },
   {
-    id: '8',
-    question: 'How can I contribute to MVPBlocks?',
+    id: "8",
+    question: "Como funciona o suporte técnico?",
     answer:
-      'We welcome contributions! You can contribute by creating new components, improving existing ones, fixing bugs, or enhancing documentation. Check our GitHub repository for contribution guidelines.',
-    category: 'support',
+      "Oferecemos suporte via chat, email e telefone durante horário comercial. Clientes dos planos superiores têm acesso a suporte prioritário e atendimento personalizado com consultores especializados.",
+    category: "suporte",
+  },
+  {
+    id: "9",
+    question: "Posso experimentar antes de assinar?",
+    answer:
+      "Claro! Oferecemos um período de teste gratuito de 14 dias com acesso completo a todas as funcionalidades. Não é necessário cartão de crédito para começar o teste.",
+    category: "geral",
+  },
+  {
+    id: "10",
+    question: "E se eu quiser cancelar?",
+    answer:
+      "Você pode cancelar a qualquer momento sem multas ou taxas. Seus dados ficam disponíveis por 90 dias após o cancelamento, e oferecemos export completo das informações.",
+    category: "preco",
+  },
+  {
+    id: "11",
+    question: "Como migrar meus dados atuais?",
+    answer:
+      "Nossa equipe especializada ajuda na migração gratuita dos seus dados. Suportamos importação de planilhas Excel, outros sistemas de gestão e bancos de dados. O processo é rápido e seguro.",
+    category: "suporte",
+  },
+  {
+    id: "12",
+    question: "O sistema fica offline às vezes?",
+    answer:
+      "Garantimos 99.9% de disponibilidade com infraestrutura redundante. Em caso de manutenções programadas, avisamos com antecedência e elas são feitas em horários de menor movimento.",
+    category: "tecnico",
   },
 ];
 
 const categories = [
-  { id: 'all', label: 'All' },
-  { id: 'general', label: 'General' },
-  { id: 'technical', label: 'Technical' },
-  { id: 'pricing', label: 'Pricing' },
-  { id: 'support', label: 'Support' },
+  { id: "all", label: "Todas" },
+  { id: "geral", label: "Geral" },
+  { id: "preco", label: "Preços" },
+  { id: "tecnico", label: "Técnico" },
+  { id: "suporte", label: "Suporte" },
 ];
 
 export default function Faq2() {
-  const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [activeCategory, setActiveCategory] = useState<string>("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const filteredFaqs =
-    activeCategory === 'all'
+    activeCategory === "all"
       ? faqItems
       : faqItems.filter((item) => item.category === activeCategory);
 
@@ -101,16 +130,17 @@ export default function Faq2() {
             variant="outline"
             className="mb-4 border-primary px-3 py-1 text-xs font-medium uppercase tracking-wider"
           >
-            FAQs
+            FAQ
           </Badge>
 
           <h2 className="mb-6 text-center text-4xl font-bold tracking-tight text-foreground md:text-5xl">
-            Frequently Asked Questions
+            Perguntas Frequentes
           </h2>
 
           <p className="max-w-2xl text-center text-muted-foreground">
-            Find answers to common questions about MVPBlocks and how to use our
-            components to build your next project.
+            Encontre respostas para as principais dúvidas sobre o{" "}
+            {appConfig.name} e como nossa plataforma pode transformar a gestão
+            da sua empresa.
           </p>
         </div>
 
@@ -121,10 +151,10 @@ export default function Faq2() {
               key={category.id}
               onClick={() => setActiveCategory(category.id)}
               className={cn(
-                'rounded-full px-4 py-2 text-sm font-medium transition-all',
+                "rounded-full px-4 py-2 text-sm font-medium transition-all",
                 activeCategory === category.id
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
               )}
             >
               {category.label}
@@ -143,12 +173,10 @@ export default function Faq2() {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
                 className={cn(
-                  'h-fit overflow-hidden rounded-xl border border-border',
-                  expandedId === faq.id
-                    ? 'shadow-3xl bg-card/50'
-                    : 'bg-card/50',
+                  "h-fit overflow-hidden rounded-lg border border-border",
+                  expandedId === faq.id ? "shadow-3xl bg-card/50" : "bg-card/50"
                 )}
-                style={{ minHeight: '88px' }}
+                style={{ minHeight: "88px" }}
               >
                 <button
                   onClick={() => toggleExpand(faq.id)}
@@ -170,7 +198,7 @@ export default function Faq2() {
                   {expandedId === faq.id && (
                     <motion.div
                       initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
+                      animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.3 }}
                       className="overflow-hidden"
@@ -194,13 +222,13 @@ export default function Faq2() {
           className="mt-16 text-center"
         >
           <p className="mb-4 text-muted-foreground">
-            Can&apos;t find what you&apos;re looking for?
+            Não encontrou o que procurava?
           </p>
           <a
-            href="#"
+            href={`mailto:${appConfig.contact.support}`}
             className="inline-flex items-center justify-center rounded-lg border-2 border-primary px-6 py-3 font-medium text-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
           >
-            Contact Support
+            Falar com Suporte
           </a>
         </motion.div>
       </div>

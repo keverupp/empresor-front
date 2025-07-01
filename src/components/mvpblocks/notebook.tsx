@@ -1,12 +1,13 @@
-'use client';
+"use client";
 
-import { buttonVariants } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { ArrowRight } from 'lucide-react';
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { ArrowRight, Play } from "lucide-react";
+import { appConfig } from "@/config/app";
 
 export default function NotebookHero() {
   return (
-    <div className="min-h-screen py-6 sm:py-14">
+    <div className="mx-auto max-w-7xl p-8 md:p-12">
       {/* Add keyframes for the animation */}
       <style jsx global>{`
         @keyframes moveGradientLeft {
@@ -23,45 +24,56 @@ export default function NotebookHero() {
       `}</style>
 
       <div className="pointer-events-none absolute inset-0 top-0 z-0 overflow-hidden">
-        <div className="absolute -left-20 -top-20 h-[600px] w-[600px] rounded-full bg-gradient-to-br from-rose-500/30 via-rose-500/20 to-transparent opacity-50 blur-[100px]" />
-        <div className="absolute -right-20 -top-40 h-[500px] w-[500px] rounded-full bg-gradient-to-bl from-red-500/30 via-red-500/20 to-transparent opacity-50 blur-[100px]" />
-        <div className="absolute bottom-0 left-0 h-[400px] w-[400px] rounded-full bg-gradient-to-tr from-amber-500/20 via-amber-500/10 to-transparent opacity-30 blur-[80px]" />
+        <div className="absolute -left-20 -top-20 h-[600px] w-[600px] rounded-full bg-gradient-to-br from-blue-500/30 via-blue-500/20 to-transparent opacity-50 blur-[100px]" />
+        <div className="absolute -right-20 -top-40 h-[500px] w-[500px] rounded-full bg-gradient-to-bl from-blue-600/30 via-blue-600/20 to-transparent opacity-50 blur-[100px]" />
+        <div className="absolute bottom-0 left-0 h-[400px] w-[400px] rounded-full bg-gradient-to-tr from-cyan-500/20 via-cyan-500/10 to-transparent opacity-30 blur-[80px]" />
       </div>
 
       <main className="container relative mt-4 max-w-[1100px] px-2 py-4 lg:py-8">
         <div className="relative sm:overflow-hidden">
-          <div className="relative flex flex-col items-start justify-start rounded-xl border border-primary/20 bg-fd-background/70 px-4 pt-12 shadow-xl shadow-primary/10 backdrop-blur-md max-md:text-center md:px-12 md:pt-16">
+          <div className="relative flex flex-col items-center justify-center text-center rounded bg-fd-background/70 px-4 pt-12 shadow-xl shadow-primary/10 backdrop-blur-md md:px-12 md:pt-16">
             <div
               className="animate-gradient-x absolute inset-0 top-32 z-0 hidden blur-2xl dark:block"
               style={{
                 maskImage:
-                  'linear-gradient(to bottom, transparent, white, transparent)',
+                  "linear-gradient(to bottom, transparent, white, transparent)",
                 background:
-                  'repeating-linear-gradient(65deg, hsl(var(--primary)), hsl(var(--primary)/0.8) 12px, color-mix(in oklab, hsl(var(--primary)) 30%, transparent) 20px, transparent 200px)',
-                backgroundSize: '200% 100%',
+                  "repeating-linear-gradient(65deg, hsl(var(--primary)), hsl(var(--primary)/0.8) 12px, color-mix(in oklab, hsl(var(--primary)) 30%, transparent) 20px, transparent 200px)",
+                backgroundSize: "200% 100%",
               }}
             />
             <div
-              className="animate-gradient-x absolute inset-0 top-32 z-0 text-left blur-2xl dark:hidden"
+              className="animate-gradient-x absolute inset-0 top-32 z-0 blur-2xl dark:hidden"
               style={{
                 maskImage:
-                  'linear-gradient(to bottom, transparent, white, transparent)',
+                  "linear-gradient(to bottom, transparent, white, transparent)",
                 background:
-                  'repeating-linear-gradient(65deg, hsl(var(--primary)/0.9), hsl(var(--primary)/0.7) 12px, color-mix(in oklab, hsl(var(--primary)) 30%, transparent) 20px, transparent 200px)',
-                backgroundSize: '200% 100%',
+                  "repeating-linear-gradient(65deg, hsl(var(--primary)/0.9), hsl(var(--primary)/0.7) 12px, color-mix(in oklab, hsl(var(--primary)) 30%, transparent) 20px, transparent 200px)",
+                backgroundSize: "200% 100%",
               }}
             />
-            <h1 className="mb-4 flex flex-wrap gap-2 text-3xl font-medium leading-tight md:text-5xl">
-              Build <span className="text-primary">Beautiful UI</span> with
-              MVPBlocks
+
+            {/* Badge */}
+            <div className="mb-6 inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
+              🚀 Sistema de Gestão de Orçamentos Completo
+            </div>
+
+            <h1 className="mb-6 text-4xl font-bold leading-tight md:text-6xl lg:text-7xl">
+              Transforme a{" "}
+              <span className="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+                Gestão de Orçamentos
+              </span>{" "}
+              da Sua Empresa
             </h1>
-            <p className="mb-8 text-left text-muted-foreground md:max-w-[80%] md:text-xl">
-              Your comprehensive library of ready-to-use UI components built
-              with Next.js and Tailwind CSS. From simple buttons to complex
-              layouts, MVPBlocks helps you create stunning interfaces with
-              minimal effort.
+
+            <p className="mb-8 max-w-3xl text-lg text-muted-foreground md:text-xl">
+              Sistema completo para criar, gerenciar e acompanhar orçamentos
+              empresariais. Automatize cálculos, personalize PDFs com sua marca
+              e tenha controle total sobre seu processo comercial.
             </p>
-            <div className="mb-6 flex flex-wrap gap-4 md:flex-row">
+
+            {/* Features Grid */}
+            <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
               <div className="flex items-center gap-2">
                 <svg
                   className="h-5 w-5 text-primary"
@@ -77,7 +89,9 @@ export default function NotebookHero() {
                     d="M5 13l4 4L19 7"
                   ></path>
                 </svg>
-                <span>100+ Components</span>
+                <span className="text-sm font-medium">
+                  Orçamentos Inteligentes
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <svg
@@ -94,7 +108,7 @@ export default function NotebookHero() {
                     d="M5 13l4 4L19 7"
                   ></path>
                 </svg>
-                <span>Dark & Light Mode</span>
+                <span className="text-sm font-medium">PDF Personalizado</span>
               </div>
               <div className="flex items-center gap-2">
                 <svg
@@ -111,7 +125,7 @@ export default function NotebookHero() {
                     d="M5 13l4 4L19 7"
                   ></path>
                 </svg>
-                <span>Responsive Design</span>
+                <span className="text-sm font-medium">Controle Financeiro</span>
               </div>
               <div className="flex items-center gap-2">
                 <svg
@@ -128,67 +142,74 @@ export default function NotebookHero() {
                     d="M5 13l4 4L19 7"
                   ></path>
                 </svg>
-                <span>Accessible Components</span>
+                <span className="text-sm font-medium">
+                  Relatórios Completos
+                </span>
               </div>
             </div>
 
-            <div className="z-10 mt-2 inline-flex items-center justify-start gap-3">
+            {/* CTA Buttons */}
+            <div className="z-10 mb-12 inline-flex flex-col items-center justify-center gap-4 sm:flex-row">
               <a
-                href="#"
+                href="/signup"
                 className={cn(
                   buttonVariants({
-                    size: 'lg',
+                    size: "lg",
                     className:
-                      'rounded-full bg-gradient-to-b from-primary to-primary/80 text-primary-foreground',
-                  }),
+                      "rounded-full bg-gradient-to-b from-primary to-primary/80 text-primary-foreground px-8 py-3 text-lg",
+                  })
                 )}
               >
-                Getting Started <ArrowRight className="size-4" />
+                Começar Gratuitamente <ArrowRight className="ml-2 size-5" />
               </a>
-              <a
-                href="https://github.com/subhadeeproy3902/mvpblocks"
-                target="_blank"
-                rel="noreferrer noopener"
+              <button
                 className={cn(
                   buttonVariants({
-                    size: 'lg',
-                    variant: 'outline',
-                    className: 'rounded-full bg-fd-background',
-                  }),
+                    size: "lg",
+                    variant: "outline",
+                    className:
+                      "rounded-full bg-background/50 backdrop-blur-sm px-8 py-3 text-lg",
+                  })
                 )}
               >
-                GitHub{' '}
-                <svg
-                  className="ml-1 inline size-4"
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
-                  <path d="M9 18c-4.51 2-5-2-7-2" />
-                </svg>
-              </a>
+                <Play className="mr-2 size-5" />
+                Ver Demonstração
+              </button>
             </div>
 
-            <div className="relative z-10 mt-16 w-full">
+            {/* Social Proof */}
+            <div className="mb-16 text-center">
+              <p className="mb-4 text-sm text-muted-foreground">
+                Mais de{" "}
+                <span className="font-semibold text-foreground">
+                  500+ empresas
+                </span>{" "}
+                já automatizaram seus orçamentos com o {appConfig.name}
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-8 opacity-60 grayscale hover:opacity-80 hover:grayscale-0 transition-all duration-300">
+                {/* Placeholder para logos de clientes */}
+                <div className="h-8 w-24 rounded bg-muted"></div>
+                <div className="h-8 w-20 rounded bg-muted"></div>
+                <div className="h-8 w-28 rounded bg-muted"></div>
+                <div className="h-8 w-22 rounded bg-muted"></div>
+              </div>
+            </div>
+
+            {/* Dashboard Preview */}
+            <div className="relative z-10 w-full">
               <img
-                src="https://blocks.mvp-subha.me/assets/bg.png"
-                alt="MVPBlocks component library preview"
+                src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop"
+                alt={`${appConfig.name} - Dashboard de gestão empresarial`}
                 width={1000}
                 height={600}
-                className="border-6 z-10 mx-auto -mb-60 w-full select-none rounded-lg border-neutral-100 object-cover shadow-2xl duration-1000 animate-in fade-in slide-in-from-bottom-12 dark:border-neutral-600 lg:-mb-40"
+                className="z-10 mx-auto -mb-60 w-full max-w-4xl select-none rounded border border-neutral-200 object-cover shadow-2xl duration-1000 animate-in fade-in slide-in-from-bottom-12 dark:border-neutral-700 lg:-mb-40"
               />
 
-              <div className="absolute -right-6 -top-6 rotate-6 transform rounded-lg bg-white p-3 shadow-lg animate-in fade-in slide-in-from-left-4 dark:bg-neutral-900">
-                <div className="flex items-center gap-2">
+              {/* Floating Cards */}
+              <div className="absolute -right-6 -top-6 rotate-3 transform rounded bg-white p-4 shadow-lg animate-in fade-in slide-in-from-right-4 dark:bg-neutral-900">
+                <div className="flex items-center gap-3">
                   <svg
-                    className="h-5 w-5 text-green-500"
+                    className="h-6 w-6 text-green-500"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                     xmlns="http://www.w3.org/2000/svg"
@@ -199,7 +220,24 @@ export default function NotebookHero() {
                       clipRule="evenodd"
                     ></path>
                   </svg>
-                  <span className="font-medium">Ready-to-Use Components</span>
+                  <div>
+                    <p className="font-semibold">99.9% Uptime</p>
+                    <p className="text-sm text-muted-foreground">
+                      Sempre disponível
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="absolute -left-6 top-1/3 -rotate-3 transform rounded bg-white p-4 shadow-lg animate-in fade-in slide-in-from-left-4 dark:bg-neutral-900">
+                <div className="flex items-center gap-3">
+                  <div className="h-3 w-3 rounded-full bg-blue-500"></div>
+                  <div>
+                    <p className="font-semibold">LGPD Compliant</p>
+                    <p className="text-sm text-muted-foreground">
+                      Dados seguros
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
