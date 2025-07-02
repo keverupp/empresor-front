@@ -2,19 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
-import { Menu, X, ArrowRight, Command } from "lucide-react";
+import { Menu, X, ArrowRight, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
 import { appConfig } from "@/config/app";
 import { ModeToggle } from "@/components/theme-toggle";
 import { useNavigation } from "@/hooks/use-navigation";
-import {
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface NavItem {
   name: string;
@@ -28,29 +21,12 @@ const navItems: NavItem[] = [
   { name: "Contato", href: "#contact" },
 ];
 
-const commandItems = [
-  { title: "Início", href: "#hero", description: "Página principal" },
-  {
-    title: "Funcionalidades",
-    href: "#features",
-    description: "Veja nossas funcionalidades",
-  },
-  { title: "FAQ", href: "#faq", description: "Perguntas frequentes" },
-  {
-    title: "Contato",
-    href: "#contact",
-    description: "Entre em contato conosco",
-  },
-  { title: "Login", href: "/login", description: "Acesse sua conta" },
-  { title: "Cadastro", href: "/register", description: "Crie uma nova conta" },
-];
-
 export default function Header2() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-  const [open, setOpen] = useState(false);
   const { navigateTo } = useNavigation();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -58,18 +34,6 @@ export default function Header2() {
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setOpen((open) => !open);
-      }
-    };
-
-    document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
   }, []);
 
   const containerVariants: Variants = {
@@ -93,19 +57,12 @@ export default function Header2() {
     closed: {
       opacity: 0,
       x: "100%",
-      transition: {
-        duration: 0.3,
-        ease: "easeInOut" as const,
-      },
+      transition: { duration: 0.3, ease: "easeInOut" },
     },
     open: {
       opacity: 1,
       x: 0,
-      transition: {
-        duration: 0.3,
-        ease: "easeInOut" as const,
-        staggerChildren: 0.1,
-      },
+      transition: { duration: 0.3, ease: "easeInOut", staggerChildren: 0.1 },
     },
   };
 
@@ -147,7 +104,6 @@ export default function Header2() {
                       alt={appConfig.name}
                       className="h-5 w-5 text-white"
                       onError={(e) => {
-                        // Fallback para texto se a imagem não carregar
                         e.currentTarget.style.display = "none";
                         e.currentTarget.nextElementSibling?.classList.remove(
                           "hidden"
@@ -208,39 +164,43 @@ export default function Header2() {
               className="hidden items-center space-x-3 lg:flex"
               variants={itemVariants}
             >
-              {/* Command Button */}
-              <motion.button
-                onClick={() => setOpen(true)}
-                className="flex items-center rounded-lg p-2 text-muted-foreground transition-colors duration-200 hover:bg-muted hover:text-foreground"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Command className="h-5 w-5" />
-                <span className="sr-only">Abrir comando (Ctrl+K)</span>
-              </motion.button>
-
-              {/* Theme Toggle */}
               <ModeToggle />
 
-              <Link
-                href="/login"
-                className="px-4 py-2 text-sm font-medium text-foreground/80 transition-colors duration-200 hover:text-foreground"
-              >
-                Entrar
-              </Link>
-
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Link
-                  href="/register"
-                  className="inline-flex items-center space-x-2 rounded-lg bg-foreground px-5 py-2.5 text-sm font-medium text-background shadow-sm transition-all duration-200 hover:bg-foreground/90"
+              {isAuthenticated ? (
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  <span>Começar</span>
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </motion.div>
+                  <Link
+                    href="/dashboard"
+                    className="inline-flex items-center space-x-2 rounded-lg bg-foreground px-5 py-2.5 text-sm font-medium text-background shadow-sm transition-all duration-200 hover:bg-foreground/90"
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    <span>Dashboard</span>
+                  </Link>
+                </motion.div>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="px-4 py-2 text-sm font-medium text-foreground/80 transition-colors duration-200 hover:text-foreground"
+                  >
+                    Entrar
+                  </Link>
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Link
+                      href="/register"
+                      className="inline-flex items-center space-x-2 rounded-lg bg-foreground px-5 py-2.5 text-sm font-medium text-background shadow-sm transition-all duration-200 hover:bg-foreground/90"
+                    >
+                      <span>Começar</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </motion.div>
+                </>
+              )}
             </motion.div>
 
             <motion.button
@@ -259,33 +219,6 @@ export default function Header2() {
         </div>
       </motion.header>
 
-      {/* Command Dialog */}
-      <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput placeholder="Digite um comando ou busque..." />
-        <CommandList>
-          <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
-          <CommandGroup heading="Navegação">
-            {commandItems.map((item) => (
-              <CommandItem
-                key={item.href}
-                onSelect={() => {
-                  handleNavClick(item.href);
-                  setOpen(false);
-                }}
-              >
-                <div className="flex flex-col">
-                  <span>{item.title}</span>
-                  <span className="text-sm text-muted-foreground">
-                    {item.description}
-                  </span>
-                </div>
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        </CommandList>
-      </CommandDialog>
-
-      {/* Mobile Menu */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <>
@@ -329,20 +262,34 @@ export default function Header2() {
                   className="space-y-3 border-t border-border pt-6"
                   variants={mobileItemVariants}
                 >
-                  <Link
-                    href="/login"
-                    className="block w-full rounded-lg py-3 text-center font-medium text-foreground transition-colors duration-200 hover:bg-muted"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Entrar
-                  </Link>
-                  <Link
-                    href="/register"
-                    className="block w-full rounded-lg bg-foreground py-3 text-center font-medium text-background transition-all duration-200 hover:bg-foreground/90"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Começar
-                  </Link>
+                  {isAuthenticated ? (
+                    <button
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        navigateTo("/dashboard");
+                      }}
+                      className="block w-full rounded-lg bg-foreground py-3 text-center font-medium text-background transition-all duration-200 hover:bg-foreground/90"
+                    >
+                      Dashboard
+                    </button>
+                  ) : (
+                    <>
+                      <Link
+                        href="/login"
+                        className="block w-full rounded-lg py-3 text-center font-medium text-foreground transition-colors duration-200 hover:bg-muted"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        Entrar
+                      </Link>
+                      <Link
+                        href="/register"
+                        className="block w-full rounded-lg bg-foreground py-3 text-center font-medium text-background transition-all duration-200 hover:bg-foreground/90"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        Começar
+                      </Link>
+                    </>
+                  )}
                 </motion.div>
               </div>
             </motion.div>

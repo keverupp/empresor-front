@@ -1,13 +1,10 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
-  IconCamera,
   IconChartBar,
   IconDashboard,
   IconDatabase,
-  IconFileAi,
-  IconFileDescription,
   IconFileWord,
   IconFolder,
   IconHelp,
@@ -17,12 +14,12 @@ import {
   IconSearch,
   IconSettings,
   IconUsers,
-} from "@tabler/icons-react"
+} from "@tabler/icons-react";
 
-import { NavDocuments } from "@/components/nav-documents"
-import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
-import { NavUser } from "@/components/nav-user"
+import { NavDocuments } from "@/components/nav-documents";
+import { NavMain } from "@/components/nav-main";
+import { NavSecondary } from "@/components/nav-secondary";
+import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -31,126 +28,88 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
+import { useUserData } from "@/hooks/useUserData";
+import { Skeleton } from "@/components/ui/skeleton";
+import Link from "next/link";
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
+// Dados da navegação com URLs corretas do dashboard
+const navigationData = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/dashboard",
       icon: IconDashboard,
     },
     {
-      title: "Lifecycle",
-      url: "#",
+      title: "Orçamentos",
+      url: "/dashboard/quotes",
       icon: IconListDetails,
     },
     {
-      title: "Analytics",
-      url: "#",
-      icon: IconChartBar,
+      title: "Clientes",
+      url: "/dashboard/clients",
+      icon: IconUsers,
     },
     {
-      title: "Projects",
-      url: "#",
+      title: "Produtos",
+      url: "/dashboard/products",
       icon: IconFolder,
     },
     {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: IconCamera,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: IconFileAi,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
+      title: "Analytics",
+      url: "/dashboard/analytics",
+      icon: IconChartBar,
     },
   ],
   navSecondary: [
     {
-      title: "Settings",
-      url: "#",
+      title: "Configurações",
+      url: "/dashboard/settings",
       icon: IconSettings,
     },
     {
-      title: "Get Help",
-      url: "#",
+      title: "Ajuda",
+      url: "/dashboard/help",
       icon: IconHelp,
     },
     {
-      title: "Search",
-      url: "#",
+      title: "Buscar",
+      url: "/dashboard/search",
       icon: IconSearch,
     },
   ],
   documents: [
     {
-      name: "Data Library",
-      url: "#",
+      name: "Biblioteca de Dados",
+      url: "/dashboard/data-library",
       icon: IconDatabase,
     },
     {
-      name: "Reports",
-      url: "#",
+      name: "Relatórios",
+      url: "/dashboard/reports",
       icon: IconReport,
     },
     {
-      name: "Word Assistant",
-      url: "#",
+      name: "Assistente de Documentos",
+      url: "/dashboard/document-assistant",
       icon: IconFileWord,
     },
   ],
-}
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { userData, isLoading, error } = useUserData();
+
+  // Dados de fallback caso não consiga carregar
+  const fallbackUserData = {
+    name: "Usuário",
+    email: "usuario@example.com",
+    avatar: "/avatars/default.jpg",
+  };
+
+  const displayUserData = userData || fallbackUserData;
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -160,22 +119,37 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="#">
+              <Link href="/dashboard">
                 <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
-              </a>
+                <span className="text-base font-semibold">Empresor</span>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={navigationData.navMain} />
+        <NavDocuments items={navigationData.documents} />
+        <NavSecondary items={navigationData.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        {isLoading ? (
+          <div className="flex items-center gap-2 p-2">
+            <Skeleton className="h-8 w-8 rounded-lg" />
+            <div className="flex-1">
+              <Skeleton className="h-4 w-full mb-1" />
+              <Skeleton className="h-3 w-3/4" />
+            </div>
+          </div>
+        ) : (
+          <NavUser user={displayUserData} />
+        )}
+        {error && (
+          <div className="text-xs text-red-500 p-2">
+            Erro ao carregar dados do usuário
+          </div>
+        )}
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }
