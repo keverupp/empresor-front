@@ -42,7 +42,7 @@ const commandItems = [
     description: "Entre em contato conosco",
   },
   { title: "Login", href: "/login", description: "Acesse sua conta" },
-  { title: "Cadastro", href: "/signup", description: "Crie uma nova conta" },
+  { title: "Cadastro", href: "/register", description: "Crie uma nova conta" },
 ];
 
 export default function Header2() {
@@ -234,7 +234,7 @@ export default function Header2() {
                 whileTap={{ scale: 0.98 }}
               >
                 <Link
-                  href="/signup"
+                  href="/register"
                   className="inline-flex items-center space-x-2 rounded-lg bg-foreground px-5 py-2.5 text-sm font-medium text-background shadow-sm transition-all duration-200 hover:bg-foreground/90"
                 >
                   <span>Começar</span>
@@ -337,7 +337,7 @@ export default function Header2() {
                     Entrar
                   </Link>
                   <Link
-                    href="/signup"
+                    href="/register"
                     className="block w-full rounded-lg bg-foreground py-3 text-center font-medium text-background transition-all duration-200 hover:bg-foreground/90"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
