@@ -13,6 +13,7 @@ import {
 } from "@tabler/icons-react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import {
   CommandDialog,
@@ -40,28 +41,28 @@ const quickCommands = [
         title: "Novo Orçamento",
         description: "Criar um novo orçamento",
         icon: IconFileText,
-        action: "/quotes/new",
+        action: "/dashboard/quotes/new",
         keywords: ["orcamento", "quote", "novo", "criar"],
       },
       {
         title: "Novo Cliente",
         description: "Adicionar novo cliente",
         icon: IconUsers,
-        action: "/clients/new",
+        action: "/dashboard/clients/new",
         keywords: ["cliente", "client", "novo", "adicionar"],
       },
       {
         title: "Novo Produto",
         description: "Cadastrar novo produto",
         icon: IconPlus,
-        action: "/products/new",
+        action: "/dashboard/products/new",
         keywords: ["produto", "product", "novo", "cadastrar"],
       },
       {
         title: "Agendar Reunião",
         description: "Criar novo evento no calendário",
         icon: IconCalendar,
-        action: "/calendar/new",
+        action: "/dashboard/calendar/new",
         keywords: ["reuniao", "meeting", "calendario", "agendar"],
       },
     ],
@@ -80,14 +81,14 @@ const quickCommands = [
         title: "Relatórios",
         description: "Ver relatórios e analytics",
         icon: IconCalculator,
-        action: "/reports",
+        action: "/dashboard/reports",
         keywords: ["relatorios", "reports", "analytics"],
       },
       {
         title: "Configurações",
         description: "Configurações da conta",
         icon: IconSettings,
-        action: "/settings",
+        action: "/dashboard/settings",
         keywords: ["configuracoes", "settings", "config"],
       },
     ],
@@ -106,44 +107,20 @@ export function NavMain({
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
-  // Atalhos de teclado globais
+  // Atalho de teclado para abrir o Command Dialog
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      // Abre o command input com Cmd+K ou Ctrl+K
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setOpen((open) => !open);
-        return;
-      }
-
-      // Se o dialog não estiver aberto, verifica atalhos específicos
-      if (!open) {
-        const isModifierPressed = e.metaKey || e.ctrlKey;
-
-        if (isModifierPressed) {
-          const shortcutMap: Record<string, string> = {
-            n: "/quotes/new",
-            u: "/clients/new",
-            p: "/products/new",
-            r: "/calendar/new",
-            d: "/dashboard",
-            a: "/reports",
-            ",": "/settings",
-          };
-
-          const action = shortcutMap[e.key.toLowerCase()];
-          if (action) {
-            e.preventDefault();
-            router.push(action);
-          }
-        }
       }
     };
 
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
-  }, [open, router]);
+  }, []);
 
+  // Função para executar comandos
   const handleCommandSelect = (action: string) => {
     setOpen(false);
     router.push(action);
@@ -151,34 +128,38 @@ export function NavMain({
 
   return (
     <SidebarGroup>
-      <SidebarGroupContent className="flex flex-col gap-2">
+      <SidebarGroupContent>
+        {/* Botão de comando */}
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={() => setOpen(true)}
-              tooltip="Command Input (⌘K)"
-              className="bg-input text-input-foreground hover:bg-input/90 hover:text-input-foreground active:bg-input/90 active:text-input-foreground min-w-8 duration-200 ease-linear"
+              className="mb-2 flex items-center gap-2 text-sm text-muted-foreground"
             >
-              <IconCommand />
-              <span>Pesquisar</span>
-              <kbd className="pointer-events-none ml-auto hidden h-5 select-none items-center gap-1 rounded border bg-primary-foreground/20 px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
-                <span className="text-xs">⌘</span>K
-              </kbd>
+              <IconCommand className="h-4 w-4" />
+              <span>Buscar...</span>
+              <div className="ml-auto flex items-center gap-1">
+                <kbd className="pointer-events-none select-none items-center gap-1 rounded border bg-muted px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground">
+                  <span className="text-xs">⌘</span>K
+                </kbd>
+              </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
 
+        {/* Command Dialog */}
         <CommandDialog open={open} onOpenChange={setOpen}>
           <CommandInput placeholder="Digite um comando ou busque..." />
           <CommandList>
-            <CommandEmpty>Nenhum comando encontrado.</CommandEmpty>
+            <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
 
+            {/* Comandos rápidos */}
             {quickCommands.map((group) => (
               <CommandGroup key={group.group} heading={group.group}>
                 {group.items.map((item) => (
                   <CommandItem
                     key={item.title}
-                    value={item.keywords.join(" ")}
+                    value={`${item.title} ${item.keywords.join(" ")}`}
                     onSelect={() => handleCommandSelect(item.action)}
                   >
                     <item.icon className="mr-2 h-4 w-4" />
@@ -211,12 +192,15 @@ export function NavMain({
           </CommandList>
         </CommandDialog>
 
+        {/* Menu principal da sidebar com navegação funcional */}
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton tooltip={item.title}>
-                {item.icon && <item.icon />}
-                <span>{item.title}</span>
+              <SidebarMenuButton asChild tooltip={item.title}>
+                <Link href={item.url}>
+                  {item.icon && <item.icon />}
+                  <span>{item.title}</span>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
