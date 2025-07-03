@@ -48,6 +48,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CompanyActivationModal } from "@/components/company-activation-modal";
+import { CompanyRegisterDialog } from "@/components/company-register-dialog";
 
 import { useCompanyContext } from "@/contexts/CompanyContext";
 import type { Company, CompanyMenuItem } from "@/types/company";
@@ -322,6 +323,9 @@ export function NavCompanies() {
     company: null,
   });
 
+  // Dialog de registro
+  const [registerDialog, setRegisterDialog] = React.useState(false);
+
   // Expande automaticamente a empresa ativa
   React.useEffect(() => {
     if (activeCompanyId) {
@@ -370,6 +374,19 @@ export function NavCompanies() {
   const handleActivationSuccess = React.useCallback(() => {
     refreshCompanies(); // Recarrega a lista de empresas
   }, [refreshCompanies]);
+
+  // Callback de sucesso do registro
+  const handleRegisterSuccess = React.useCallback(
+    (newCompany: any) => {
+      refreshCompanies(); // Recarrega a lista de empresas
+      // Abre modal de ativação para a nova empresa
+      setActivationModal({
+        isOpen: true,
+        company: newCompany,
+      });
+    },
+    [refreshCompanies]
+  );
 
   // Permissões simplificadas
   const companyPermissions = React.useMemo(
@@ -432,11 +449,9 @@ export function NavCompanies() {
         <SidebarGroupLabel>Empresas</SidebarGroupLabel>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link href="/dashboard/companies/new">
-                <IconPlus className="w-4 h-4" />
-                <span>Criar Empresa</span>
-              </Link>
+            <SidebarMenuButton onClick={() => setRegisterDialog(true)}>
+              <IconPlus className="w-4 h-4" />
+              <span>Criar Empresa</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -456,11 +471,9 @@ export function NavCompanies() {
         <SidebarGroupLabel>Empresas</SidebarGroupLabel>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link href="/dashboard/companies/new">
-                <IconPlus className="w-4 h-4" />
-                <span>Criar Empresa</span>
-              </Link>
+            <SidebarMenuButton onClick={() => setRegisterDialog(true)}>
+              <IconPlus className="w-4 h-4" />
+              <span>Criar Empresa</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -497,11 +510,12 @@ export function NavCompanies() {
 
           {/* Botão para adicionar nova empresa */}
           <SidebarMenuItem>
-            <SidebarMenuButton asChild className="text-muted-foreground">
-              <Link href="/dashboard/companies/new">
-                <IconPlus className="w-4 h-4" />
-                <span>Nova Empresa</span>
-              </Link>
+            <SidebarMenuButton
+              onClick={() => setRegisterDialog(true)}
+              className="text-muted-foreground"
+            >
+              <IconPlus className="w-4 h-4" />
+              <span>Nova Empresa</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -513,6 +527,13 @@ export function NavCompanies() {
         isOpen={activationModal.isOpen}
         onClose={closeActivationModal}
         onSuccess={handleActivationSuccess}
+      />
+
+      {/* Dialog de registro */}
+      <CompanyRegisterDialog
+        isOpen={registerDialog}
+        onClose={() => setRegisterDialog(false)}
+        onSuccess={handleRegisterSuccess}
       />
     </>
   );
