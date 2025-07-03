@@ -1,15 +1,18 @@
 // src/hooks/useApi.ts
 import { useAuth } from "../contexts/AuthContext";
-import { useCallback } from "react";
-import { ApiOptions, ApiResponse } from "../types/auth";
+import { useCallback, useRef } from "react";
+import type { ApiOptions, ApiResponse } from "../types/auth";
 import { appConfig } from "../config/app";
 import { toast } from "sonner";
 
 export const useApi = () => {
   const { tokens, refreshToken, logout } = useAuth();
 
+  const tokensRef = useRef(tokens);
+  tokensRef.current = tokens;
+
   const apiCall = useCallback(
-    async <T = any>(
+    async <T = unknown>(
       endpoint: string,
       options: ApiOptions = {}
     ): Promise<ApiResponse<T>> => {
@@ -20,50 +23,66 @@ export const useApi = () => {
         ...fetchOptions
       } = options;
 
-      // Construir URL completa
       const fullUrl = endpoint.startsWith("http")
         ? endpoint
         : `${appConfig.development.api.baseURL}${endpoint}`;
-
-      // Configurar headers padrão
-      const headers = new Headers(fetchOptions.headers);
-      headers.set("Content-Type", "application/json");
-
-      // Adicionar token de autorização se não for skipAuth
-      if (!skipAuth && tokens?.accessToken) {
-        headers.set("Authorization", `Bearer ${tokens.accessToken}`);
-      }
-
-      const config: RequestInit = {
-        ...fetchOptions,
-        headers,
-        signal: AbortSignal.timeout(appConfig.development.api.timeout),
-      };
 
       let retries = 0;
       const maxRetries = appConfig.development.api.retries;
 
       while (retries <= maxRetries) {
         try {
+          const currentTokens = tokensRef.current;
+
+          const headers = new Headers(fetchOptions.headers);
+          headers.set("Content-Type", "application/json");
+
+          if (!skipAuth && currentTokens?.accessToken) {
+            headers.set("Authorization", `Bearer ${currentTokens.accessToken}`);
+          }
+
+          const config: RequestInit = {
+            ...fetchOptions,
+            headers,
+            // fallback para evitar erro em alguns browsers / node
+            signal:
+              AbortSignal.timeout?.(appConfig.development.api.timeout) ??
+              undefined,
+          };
+
           let response = await fetch(fullUrl, config);
 
-          // Se receber 401 e tiver refresh token, tentar renovar
           if (
             response.status === 401 &&
             !skipAuth &&
-            tokens?.refreshToken &&
+            currentTokens?.refreshToken &&
             retries === 0
           ) {
             try {
               await refreshToken();
+              await new Promise((resolve) => setTimeout(resolve, 100));
+              const refreshedTokens = tokensRef.current;
 
-              // Tentar novamente com o novo token
-              if (tokens?.accessToken) {
-                headers.set("Authorization", `Bearer ${tokens.accessToken}`);
-                response = await fetch(fullUrl, { ...config, headers });
+              if (
+                refreshedTokens?.accessToken &&
+                refreshedTokens.accessToken !== currentTokens.accessToken
+              ) {
+                headers.set(
+                  "Authorization",
+                  `Bearer ${refreshedTokens.accessToken}`
+                );
+
+                const retryConfig: RequestInit = {
+                  ...fetchOptions,
+                  headers,
+                  signal:
+                    AbortSignal.timeout?.(appConfig.development.api.timeout) ??
+                    undefined,
+                };
+
+                response = await fetch(fullUrl, retryConfig);
               }
-            } catch (refreshError) {
-              // Se o refresh falhar, deslogar
+            } catch {
               await logout();
               return {
                 error: "Session expired. Please login again.",
@@ -72,10 +91,13 @@ export const useApi = () => {
             }
           }
 
-          const data = await response.json();
+          const data = (await response.json()) as T;
 
           if (!response.ok) {
-            const errorMessage = data.message || "Request failed";
+            const errorMessage =
+              typeof data === "object" && data !== null && "message" in data
+                ? (data as { message: string }).message
+                : "Request failed";
 
             if (showErrorToast) {
               toast.error("Erro na requisição", {
@@ -89,7 +111,6 @@ export const useApi = () => {
             };
           }
 
-          // Mostrar toast de sucesso se solicitado
           if (showSuccessToast) {
             toast.success("Operação realizada com sucesso!");
           }
@@ -98,13 +119,13 @@ export const useApi = () => {
             data,
             status: response.status,
           };
-        } catch (error) {
+        } catch (err: unknown) {
           retries++;
 
-          if (retries > maxRetries) {
-            const errorMessage =
-              error instanceof Error ? error.message : "Network error";
+          const errorMessage =
+            err instanceof Error ? err.message : "Network error";
 
+          if (retries > maxRetries) {
             if (showErrorToast) {
               toast.error("Erro de conexão", {
                 description: errorMessage,
@@ -117,12 +138,9 @@ export const useApi = () => {
             };
           }
 
-          // Aguardar antes de tentar novamente
           await new Promise((resolve) => setTimeout(resolve, 1000 * retries));
         }
       }
-
-      const errorMessage = "Max retries exceeded";
 
       if (showErrorToast) {
         toast.error("Erro de conexão", {
@@ -131,47 +149,58 @@ export const useApi = () => {
       }
 
       return {
-        error: errorMessage,
+        error: "Max retries exceeded",
         status: 0,
       };
     },
-    [tokens, refreshToken, logout]
+    [refreshToken, logout] // tokens removidos corretamente
   );
 
   return {
     apiCall,
-    // Métodos de conveniência
-    get: <T = any>(endpoint: string, options?: ApiOptions) =>
+    get: <T = unknown>(endpoint: string, options?: ApiOptions) =>
       apiCall<T>(endpoint, { method: "GET", ...options }),
 
-    post: <T = any>(endpoint: string, data?: any, options?: ApiOptions) =>
+    post: <T = unknown>(
+      endpoint: string,
+      data?: unknown,
+      options?: ApiOptions
+    ) =>
       apiCall<T>(endpoint, {
         method: "POST",
         body: data ? JSON.stringify(data) : undefined,
-        showSuccessToast: true, // Por padrão, mostrar sucesso em posts
+        showSuccessToast: true,
         ...options,
       }),
 
-    put: <T = any>(endpoint: string, data?: any, options?: ApiOptions) =>
+    put: <T = unknown>(
+      endpoint: string,
+      data?: unknown,
+      options?: ApiOptions
+    ) =>
       apiCall<T>(endpoint, {
         method: "PUT",
         body: data ? JSON.stringify(data) : undefined,
-        showSuccessToast: true, // Por padrão, mostrar sucesso em puts
+        showSuccessToast: true,
         ...options,
       }),
 
-    patch: <T = any>(endpoint: string, data?: any, options?: ApiOptions) =>
+    patch: <T = unknown>(
+      endpoint: string,
+      data?: unknown,
+      options?: ApiOptions
+    ) =>
       apiCall<T>(endpoint, {
         method: "PATCH",
         body: data ? JSON.stringify(data) : undefined,
-        showSuccessToast: true, // Por padrão, mostrar sucesso em patches
+        showSuccessToast: true,
         ...options,
       }),
 
-    delete: <T = any>(endpoint: string, options?: ApiOptions) =>
+    delete: <T = unknown>(endpoint: string, options?: ApiOptions) =>
       apiCall<T>(endpoint, {
         method: "DELETE",
-        showSuccessToast: true, // Por padrão, mostrar sucesso em deletes
+        showSuccessToast: true,
         ...options,
       }),
   };
