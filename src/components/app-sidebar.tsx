@@ -1,23 +1,20 @@
+// src/components/app-sidebar.tsx
 "use client";
 
 import * as React from "react";
 import {
-  IconChartBar,
   IconDashboard,
   IconDatabase,
   IconFileWord,
-  IconFolder,
   IconHelp,
   IconInnerShadowTop,
-  IconListDetails,
   IconReport,
   IconSearch,
   IconSettings,
-  IconUsers,
 } from "@tabler/icons-react";
 
+import { NavCompanies } from "@/components/nav-companies";
 import { NavDocuments } from "@/components/nav-documents";
-import { NavMain } from "@/components/nav-main";
 import { NavSecondary } from "@/components/nav-secondary";
 import { NavUser } from "@/components/nav-user";
 import {
@@ -28,75 +25,82 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarGroup,
+  SidebarGroupContent,
 } from "@/components/ui/sidebar";
 import { useUserData } from "@/hooks/useUserData";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 
-// Dados da navegação com URLs corretas do dashboard
-const navigationData = {
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: IconDashboard,
-    },
-    {
-      title: "Orçamentos",
-      url: "/dashboard/quotes",
-      icon: IconListDetails,
-    },
-    {
-      title: "Clientes",
-      url: "/dashboard/clients",
-      icon: IconUsers,
-    },
-    {
-      title: "Produtos",
-      url: "/dashboard/products",
-      icon: IconFolder,
-    },
-    {
-      title: "Analytics",
-      url: "/dashboard/analytics",
-      icon: IconChartBar,
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Configurações",
-      url: "/dashboard/settings",
-      icon: IconSettings,
-    },
-    {
-      title: "Ajuda",
-      url: "/dashboard/help",
-      icon: IconHelp,
-    },
-    {
-      title: "Buscar",
-      url: "/dashboard/search",
-      icon: IconSearch,
-    },
-  ],
-  documents: [
-    {
-      name: "Biblioteca de Dados",
-      url: "/dashboard/data-library",
-      icon: IconDatabase,
-    },
-    {
-      name: "Relatórios",
-      url: "/dashboard/reports",
-      icon: IconReport,
-    },
-    {
-      name: "Assistente de Documentos",
-      url: "/dashboard/document-assistant",
-      icon: IconFileWord,
-    },
-  ],
-};
+// Navegação principal (itens que ficam no topo, independente de empresa)
+const mainNavigation = [
+  {
+    title: "Dashboard Geral",
+    url: "/dashboard",
+    icon: IconDashboard,
+    description: "Visão geral de todas as empresas",
+  },
+];
+
+// Navegação secundária (ferramentas e configurações)
+const secondaryNavigation = [
+  {
+    title: "Configurações",
+    url: "/dashboard/settings",
+    icon: IconSettings,
+  },
+  {
+    title: "Ajuda",
+    url: "/dashboard/help",
+    icon: IconHelp,
+  },
+  {
+    title: "Buscar",
+    url: "/dashboard/search",
+    icon: IconSearch,
+  },
+];
+
+// Documentos e ferramentas
+const documentsNavigation = [
+  {
+    name: "Biblioteca de Dados",
+    url: "/dashboard/data-library",
+    icon: IconDatabase,
+  },
+  {
+    name: "Relatórios",
+    url: "/dashboard/reports",
+    icon: IconReport,
+  },
+  {
+    name: "Assistente de Documentos",
+    url: "/dashboard/document-assistant",
+    icon: IconFileWord,
+  },
+];
+
+// Componente para navegação principal
+function NavMain() {
+  return (
+    <SidebarGroup>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {mainNavigation.map((item) => (
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton asChild tooltip={item.description}>
+                <Link href={item.url}>
+                  <item.icon />
+                  <span>{item.title}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
+}
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { userData, isLoading, error } = useUserData();
@@ -112,6 +116,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
+      {/* Header com logo */}
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -127,11 +132,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
+
+      {/* Conteúdo principal */}
       <SidebarContent>
-        <NavMain items={navigationData.navMain} />
-        <NavDocuments items={navigationData.documents} />
-        <NavSecondary items={navigationData.navSecondary} className="mt-auto" />
+        {/* Dashboard Geral - sempre visível */}
+        <NavMain />
+
+        {/* Empresas com accordion - seção principal */}
+        <NavCompanies />
+
+        {/* Ferramentas e documentos */}
+        <NavDocuments items={documentsNavigation} />
+
+        {/* Navegação secundária - sempre no final */}
+        <NavSecondary items={secondaryNavigation} className="mt-auto" />
       </SidebarContent>
+
+      {/* Footer com dados do usuário */}
       <SidebarFooter>
         {isLoading ? (
           <div className="flex items-center gap-2 p-2">

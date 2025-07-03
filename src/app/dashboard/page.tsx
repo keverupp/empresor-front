@@ -1,31 +1,27 @@
+// src/app/dashboard/page.tsx
 "use client";
 
-import {
-  DashboardLayout,
-  useDashboardLayout,
-} from "@/components/layouts/DashboardLayout";
+import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
 import { DataTable } from "@/components/data-table";
 import { SectionCards } from "@/components/section-cards";
+
 import data from "./data.json";
 
 export default function DashboardPage() {
-  const { createBreadcrumbs } = useDashboardLayout();
-
-  const breadcrumbs = createBreadcrumbs([
-    { label: "Dashboard", href: "/dashboard" },
-  ]);
-
   return (
     <DashboardLayout
-      title="Dashboard"
-      description="Visão geral dos seus negócios e métricas importantes"
-      breadcrumbs={breadcrumbs}
+      title="Dashboard Geral"
+      description="Visão geral de todas as suas empresas e atividades"
     >
-      <div className="@container/main flex flex-1 flex-col gap-6 px-4 py-6 md:px-6">
-        <SectionCards />
-        <ChartAreaInteractive />
-        <DataTable data={data} />
+      <div className="@container/main flex flex-1 flex-col gap-2">
+        <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+          <SectionCards />
+          <div className="px-4 lg:px-6">
+            <ChartAreaInteractive />
+          </div>
+          <DataTable data={data} />
+        </div>
       </div>
     </DashboardLayout>
   );
