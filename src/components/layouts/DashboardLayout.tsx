@@ -29,6 +29,7 @@ function DashboardContent({
   children,
   title,
   description,
+  actions,
   className = "",
 }: DashboardLayoutProps) {
   return (
@@ -42,7 +43,7 @@ function DashboardContent({
     >
       <AppSidebar variant="inset" />
       <SidebarInset>
-        <SiteHeader />
+        <SiteHeader actions={actions} />
 
         {/* Título e descrição da página */}
         {(title || description) && (
@@ -130,11 +131,10 @@ export function DashboardLayout({
 // Hook para facilitar a configuração das páginas
 export function useDashboardLayout() {
   return {
-    createBreadcrumbs: (items: Array<{ label: string; href?: string }>) => {
-      return items.map((item, index) => ({
+    createBreadcrumbs: (items: Array<{ label: string; href?: string }>) =>
+      items.map((item, index) => ({
         ...item,
         current: index === items.length - 1,
-      }));
-    },
+      })),
   };
 }
