@@ -2,7 +2,37 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { appConfig } from "@/config/app";
-import { toast } from "sonner";
+import { detectDocumentType } from "@/lib/format-utils";
+import type { Company } from "@/types/company";
+
+// Função para converter CompanyApiResponse para Company
+export function apiResponseToCompany(apiResponse: CompanyApiResponse): Company {
+  const documentType = detectDocumentType(apiResponse.document_number);
+
+  return {
+    id: apiResponse.id,
+    name: apiResponse.name,
+    document_number: apiResponse.document_number,
+    document_type: documentType !== "UNKNOWN" ? documentType : "CNPJ",
+    status: apiResponse.status as any,
+    email: apiResponse.email,
+    phone: apiResponse.phone_number || undefined,
+    website: undefined, // API não tem este campo
+    logo_url: apiResponse.logo_url || undefined,
+    address: {
+      street: apiResponse.address_street || undefined,
+      number: apiResponse.address_number || undefined,
+      complement: apiResponse.address_complement || undefined,
+      neighborhood: apiResponse.address_neighborhood || undefined,
+      city: apiResponse.address_city || undefined,
+      state: apiResponse.address_state || undefined,
+      zip_code: apiResponse.address_zip_code || undefined,
+    },
+    owner_id: parseInt(apiResponse.owner_id), // Conversão string para number
+    created_at: apiResponse.created_at,
+    updated_at: apiResponse.updated_at,
+  };
+}
 
 // Interface para a resposta real da API
 export interface CompanyApiResponse {
@@ -11,6 +41,7 @@ export interface CompanyApiResponse {
   name: string;
   legal_name?: string | null;
   document_number: string;
+  document_type?: "CNPJ" | "CPF"; // Campo derivado para compatibilidade
   email: string;
   phone_number?: string | null;
   address_street?: string | null;
@@ -76,14 +107,16 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
       }
 
       const data: CompanyApiResponse = await response.json();
+      // Derivar document_type baseado no document_number para compatibilidade
+      const documentType = detectDocumentType(data.document_number);
+      data.document_type =
+        documentType !== "UNKNOWN" ? documentType : undefined;
       setCompany(data);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Erro desconhecido";
       setError(errorMessage);
-      toast.error("Erro ao carregar empresa", {
-        description: errorMessage,
-      });
+      // Toast será gerenciado pelo sistema centralizado de erro
     } finally {
       setIsLoading(false);
     }
@@ -112,16 +145,18 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
         }
 
         const updatedCompany: CompanyApiResponse = await response.json();
+        // Derivar document_type baseado no document_number para compatibilidade
+        const documentType = detectDocumentType(updatedCompany.document_number);
+        updatedCompany.document_type =
+          documentType !== "UNKNOWN" ? documentType : undefined;
         setCompany(updatedCompany);
 
-        toast.success("Empresa atualizada com sucesso!");
+        // Toast de sucesso pode ser gerenciado no componente que chama a função
         return true;
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Erro desconhecido";
-        toast.error("Erro ao atualizar empresa", {
-          description: errorMessage,
-        });
+        // Toast de erro será gerenciado pelo sistema centralizado
         return false;
       } finally {
         setIsUpdating(false);
@@ -150,14 +185,12 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
         throw new Error(errorData.message || "Erro ao excluir empresa");
       }
 
-      toast.success("Empresa excluída com sucesso!");
+      // Toast de sucesso pode ser gerenciado no componente que chama a função
       return true;
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Erro desconhecido";
-      toast.error("Erro ao excluir empresa", {
-        description: errorMessage,
-      });
+      // Toast de erro será gerenciado pelo sistema centralizado
       return false;
     } finally {
       setIsDeleting(false);
