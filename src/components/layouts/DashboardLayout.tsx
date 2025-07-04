@@ -1,14 +1,13 @@
 // src/components/layouts/DashboardLayout.tsx
 "use client";
 
-import React from "react";
-import { AppSidebar } from "@/components/app-sidebar";
-import { SiteHeader } from "@/components/site-header";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { CompanyProvider } from "@/contexts/CompanyContext";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { AppSidebar } from "@/components/app-sidebar";
+import { SiteHeader } from "@/components/site-header";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 
 interface BreadcrumbItem {
   label: string;
@@ -72,29 +71,42 @@ export function DashboardLayout({
   actions,
   className = "",
 }: DashboardLayoutProps) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, validateSession } = useAuth();
   const router = useRouter();
+  const [hasValidated, setHasValidated] = useState(false);
 
-  // Redireciona para login se não estiver autenticado
+  // Validar sessão uma única vez no mount
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push("/login");
-    }
-  }, [isAuthenticated, isLoading, router]);
+    const validateAuth = async () => {
+      if (!hasValidated) {
+        await validateSession();
+        setHasValidated(true);
+      }
+    };
 
-  // Mostra loading enquanto verifica autenticação
-  if (isLoading) {
+    validateAuth();
+  }, [validateSession, hasValidated]);
+
+  // Redirecionar para login quando sessão for inválida
+  useEffect(() => {
+    if (hasValidated && !isLoading && !isAuthenticated) {
+      router.replace("/login");
+    }
+  }, [isAuthenticated, isLoading, hasValidated, router]);
+
+  // Loading enquanto valida
+  if (isLoading || !hasValidated) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Carregando...</p>
+          <p className="text-muted-foreground">Validando sessão...</p>
         </div>
       </div>
     );
   }
 
-  // Se não estiver autenticado, não renderiza o dashboard
+  // Se não estiver autenticado após validação, não renderiza
   if (!isAuthenticated) {
     return null;
   }

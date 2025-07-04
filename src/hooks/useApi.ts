@@ -3,11 +3,12 @@ import { useAuth } from "../contexts/AuthContext";
 import { useCallback, useRef } from "react";
 import type { ApiOptions, ApiResponse } from "../types/auth";
 import { appConfig } from "../config/app";
+import { storage } from "../utils/storage";
 import { toast } from "sonner";
 
 export const useApi = () => {
   const { tokens, refreshToken, logout } = useAuth();
-
+  const isRefreshingRef = useRef(false);
   const tokensRef = useRef(tokens);
   tokensRef.current = tokens;
 
@@ -28,180 +29,222 @@ export const useApi = () => {
         : `${appConfig.development.api.baseURL}${endpoint}`;
 
       let retries = 0;
-      const maxRetries = appConfig.development.api.retries;
+      const maxRetries = appConfig.development.api.retries ?? 1;
 
       while (retries <= maxRetries) {
         try {
-          const currentTokens = tokensRef.current;
-
           const headers = new Headers(fetchOptions.headers);
           headers.set("Content-Type", "application/json");
 
-          if (!skipAuth && currentTokens?.accessToken) {
-            headers.set("Authorization", `Bearer ${currentTokens.accessToken}`);
+          if (
+            !skipAuth &&
+            storage.needsTokenRefresh() &&
+            !isRefreshingRef.current
+          ) {
+            try {
+              isRefreshingRef.current = true;
+              await refreshToken();
+              await new Promise((resolve) => setTimeout(resolve, 100));
+            } catch (error) {
+              console.error("Pre-request token refresh failed:", error);
+            } finally {
+              isRefreshingRef.current = false;
+            }
+          }
+
+          const latestTokens = tokensRef.current;
+          if (!skipAuth && latestTokens?.accessToken) {
+            headers.set("Authorization", `Bearer ${latestTokens.accessToken}`);
           }
 
           const config: RequestInit = {
             ...fetchOptions,
             headers,
-            // fallback para evitar erro em alguns browsers / node
-            signal:
-              AbortSignal.timeout?.(appConfig.development.api.timeout) ??
-              undefined,
+            signal: AbortSignal.timeout?.(
+              appConfig.development.api.timeout ?? 30000
+            ),
           };
 
           let response = await fetch(fullUrl, config);
-
           if (
             response.status === 401 &&
             !skipAuth &&
-            currentTokens?.refreshToken &&
+            latestTokens?.refreshToken &&
+            !isRefreshingRef.current &&
             retries === 0
           ) {
             try {
+              isRefreshingRef.current = true;
               await refreshToken();
               await new Promise((resolve) => setTimeout(resolve, 100));
-              const refreshedTokens = tokensRef.current;
 
+              const refreshedTokens = tokensRef.current;
               if (
                 refreshedTokens?.accessToken &&
-                refreshedTokens.accessToken !== currentTokens.accessToken
+                refreshedTokens.accessToken !== latestTokens.accessToken
               ) {
                 headers.set(
                   "Authorization",
                   `Bearer ${refreshedTokens.accessToken}`
                 );
-
-                const retryConfig: RequestInit = {
+                response = await fetch(fullUrl, {
                   ...fetchOptions,
                   headers,
-                  signal:
-                    AbortSignal.timeout?.(appConfig.development.api.timeout) ??
-                    undefined,
-                };
-
-                response = await fetch(fullUrl, retryConfig);
+                  signal: AbortSignal.timeout?.(
+                    appConfig.development.api.timeout ?? 30000
+                  ),
+                });
               }
-            } catch {
+            } catch (refreshError) {
+              console.error(
+                "Token refresh failed during API call:",
+                refreshError
+              );
+              storage.clear();
               await logout();
               return {
-                error: "Session expired. Please login again.",
+                error: "Sessão expirada. Faça login novamente.",
+                data: null,
                 status: 401,
               };
+            } finally {
+              isRefreshingRef.current = false;
             }
           }
 
-          const data = (await response.json()) as T;
+          let responseData: T | null = null;
+          const contentType = response.headers.get("content-type");
 
-          if (!response.ok) {
+          if (contentType?.includes("application/json")) {
+            responseData = (await response.json()) as T;
+          } else if (response.ok) {
+            responseData = (await response.text()) as unknown as T;
+          }
+
+          if (response.ok) {
+            if (showSuccessToast && responseData) {
+              const message =
+                ((responseData as Record<string, unknown>)
+                  ?.message as string) ?? "Operação realizada com sucesso";
+              toast.success("Sucesso", { description: message });
+            }
+
+            return {
+              data: responseData,
+              error: null,
+              status: response.status,
+            };
+          } else {
+            const errorData = responseData as Record<string, unknown> | null;
             const errorMessage =
-              typeof data === "object" && data !== null && "message" in data
-                ? (data as { message: string }).message
-                : "Request failed";
+              (errorData?.message as string) ||
+              (errorData?.error as string) ||
+              `Erro ${response.status}: ${response.statusText}`;
 
             if (showErrorToast) {
-              toast.error("Erro na requisição", {
-                description: errorMessage,
-              });
+              toast.error("Erro na operação", { description: errorMessage });
             }
 
             return {
               error: errorMessage,
+              data: null,
               status: response.status,
             };
           }
-
-          if (showSuccessToast) {
-            toast.success("Operação realizada com sucesso!");
-          }
-
-          return {
-            data,
-            status: response.status,
-          };
         } catch (err: unknown) {
-          retries++;
+          console.error(`API call error (retry ${retries}):`, err);
 
-          const errorMessage =
-            err instanceof Error ? err.message : "Network error";
+          if (retries >= maxRetries) {
+            const errorMessage =
+              err instanceof Error
+                ? err.message
+                : "Erro de rede. Verifique sua conexão.";
 
-          if (retries > maxRetries) {
             if (showErrorToast) {
-              toast.error("Erro de conexão", {
-                description: errorMessage,
-              });
+              toast.error("Erro de conexão", { description: errorMessage });
             }
 
             return {
               error: errorMessage,
+              data: null,
               status: 0,
             };
           }
 
+          retries++;
           await new Promise((resolve) => setTimeout(resolve, 1000 * retries));
         }
       }
 
-      if (showErrorToast) {
-        toast.error("Erro de conexão", {
-          description: "Máximo de tentativas excedido. Verifique sua conexão.",
-        });
-      }
-
       return {
-        error: "Max retries exceeded",
+        error: "Falha após múltiplas tentativas",
+        data: null,
         status: 0,
       };
     },
-    [refreshToken, logout] // tokens removidos corretamente
+    [refreshToken, logout]
+  );
+
+  const get = useCallback(
+    <T = unknown>(endpoint: string, options?: Omit<ApiOptions, "method">) =>
+      apiCall<T>(endpoint, { ...options, method: "GET" }),
+    [apiCall]
+  );
+
+  const post = useCallback(
+    <T = unknown>(
+      endpoint: string,
+      data?: unknown,
+      options?: Omit<ApiOptions, "method" | "body">
+    ) =>
+      apiCall<T>(endpoint, {
+        ...options,
+        method: "POST",
+        body: data ? JSON.stringify(data) : undefined,
+      }),
+    [apiCall]
+  );
+
+  const put = useCallback(
+    <T = unknown>(
+      endpoint: string,
+      data?: unknown,
+      options?: Omit<ApiOptions, "method" | "body">
+    ) =>
+      apiCall<T>(endpoint, {
+        ...options,
+        method: "PUT",
+        body: data ? JSON.stringify(data) : undefined,
+      }),
+    [apiCall]
+  );
+
+  const patch = useCallback(
+    <T = unknown>(
+      endpoint: string,
+      data?: unknown,
+      options?: Omit<ApiOptions, "method" | "body">
+    ) =>
+      apiCall<T>(endpoint, {
+        ...options,
+        method: "PATCH",
+        body: data ? JSON.stringify(data) : undefined,
+      }),
+    [apiCall]
+  );
+
+  const del = useCallback(
+    <T = unknown>(endpoint: string, options?: Omit<ApiOptions, "method">) =>
+      apiCall<T>(endpoint, { ...options, method: "DELETE" }),
+    [apiCall]
   );
 
   return {
     apiCall,
-    get: <T = unknown>(endpoint: string, options?: ApiOptions) =>
-      apiCall<T>(endpoint, { method: "GET", ...options }),
-
-    post: <T = unknown>(
-      endpoint: string,
-      data?: unknown,
-      options?: ApiOptions
-    ) =>
-      apiCall<T>(endpoint, {
-        method: "POST",
-        body: data ? JSON.stringify(data) : undefined,
-        showSuccessToast: true,
-        ...options,
-      }),
-
-    put: <T = unknown>(
-      endpoint: string,
-      data?: unknown,
-      options?: ApiOptions
-    ) =>
-      apiCall<T>(endpoint, {
-        method: "PUT",
-        body: data ? JSON.stringify(data) : undefined,
-        showSuccessToast: true,
-        ...options,
-      }),
-
-    patch: <T = unknown>(
-      endpoint: string,
-      data?: unknown,
-      options?: ApiOptions
-    ) =>
-      apiCall<T>(endpoint, {
-        method: "PATCH",
-        body: data ? JSON.stringify(data) : undefined,
-        showSuccessToast: true,
-        ...options,
-      }),
-
-    delete: <T = unknown>(endpoint: string, options?: ApiOptions) =>
-      apiCall<T>(endpoint, {
-        method: "DELETE",
-        showSuccessToast: true,
-        ...options,
-      }),
+    get,
+    post,
+    put,
+    patch,
+    delete: del,
   };
 };

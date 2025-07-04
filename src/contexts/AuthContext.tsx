@@ -20,6 +20,7 @@ interface AuthContextType extends AuthState {
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (token: string, newPassword: string) => Promise<void>;
   refreshToken: () => Promise<void>;
+  validateSession: () => Promise<void>;
 }
 
 // Actions
@@ -29,7 +30,8 @@ type AuthAction =
   | { type: "AUTH_FAILURE" }
   | { type: "LOGOUT" }
   | { type: "UPDATE_TOKENS"; payload: AuthTokens }
-  | { type: "SET_USER"; payload: User };
+  | { type: "SET_USER"; payload: User }
+  | { type: "SET_LOADING"; payload: boolean };
 
 // Reducer
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
@@ -70,8 +72,24 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         ...state,
         user: action.payload,
       };
+    case "SET_LOADING":
+      return {
+        ...state,
+        isLoading: action.payload,
+      };
     default:
       return state;
+  }
+};
+
+// Função para verificar se o JWT está expirado
+const isTokenExpired = (token: string): boolean => {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const currentTime = Math.floor(Date.now() / 1000);
+    return payload.exp < currentTime;
+  } catch {
+    return true; // Se não conseguir decodificar, considera expirado
   }
 };
 
@@ -79,7 +97,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
 const initialState: AuthState = {
   user: null,
   tokens: null,
-  isLoading: false,
+  isLoading: true, // Inicia como true para validar sessão
   isAuthenticated: false,
 };
 
@@ -92,17 +110,71 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Inicializar estado do localStorage
-  useEffect(() => {
+  // Função para validar sessão atual
+  const validateSession = async (): Promise<void> => {
     const tokens = storage.getTokens();
     const user = storage.getUser();
 
-    if (tokens && user) {
+    if (!tokens || !user) {
+      dispatch({ type: "AUTH_FAILURE" });
+      return;
+    }
+
+    // Verificar se o access token não está expirado
+    if (!isTokenExpired(tokens.accessToken)) {
       dispatch({
         type: "AUTH_SUCCESS",
         payload: { user, tokens },
       });
+      return;
     }
+
+    // Se access token expirou, tentar renovar com refresh token
+    if (tokens.refreshToken && !isTokenExpired(tokens.refreshToken)) {
+      try {
+        await refreshTokenInternal(tokens.refreshToken);
+      } catch (error) {
+        console.error("Token refresh failed during validation:", error);
+        storage.clear();
+        dispatch({ type: "AUTH_FAILURE" });
+      }
+    } else {
+      // Refresh token também expirado, limpar sessão
+      storage.clear();
+      dispatch({ type: "AUTH_FAILURE" });
+    }
+  };
+
+  // Função interna para refresh token (sem loops)
+  const refreshTokenInternal = async (refreshToken: string): Promise<void> => {
+    const apiUrl = `${appConfig.development.api.baseURL}${appConfig.urls.api.endpoints.auth.refresh}`;
+
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Token refresh failed");
+    }
+
+    const data = await response.json();
+    const user = storage.getUser();
+
+    if (user) {
+      dispatch({
+        type: "AUTH_SUCCESS",
+        payload: { user, tokens: data },
+      });
+    }
+  };
+
+  // Inicializar estado ao carregar a aplicação
+  useEffect(() => {
+    validateSession();
   }, []);
 
   // Salvar no localStorage quando state mudar
@@ -303,26 +375,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     try {
-      const apiUrl = `${appConfig.development.api.baseURL}${appConfig.urls.api.endpoints.auth.refresh}`;
-
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ refreshToken: state.tokens.refreshToken }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Token refresh failed");
-      }
-
-      const data = await response.json();
-
-      dispatch({
-        type: "UPDATE_TOKENS",
-        payload: data,
-      });
+      await refreshTokenInternal(state.tokens.refreshToken);
     } catch (error) {
       // Se falhar o refresh, deslogar o usuário
       storage.clear();
@@ -342,6 +395,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     forgotPassword,
     resetPassword,
     refreshToken,
+    validateSession,
   };
 
   return (

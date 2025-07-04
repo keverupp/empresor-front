@@ -318,7 +318,7 @@ export function CompanyRegisterDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <IconBuilding className="w-5 h-5 text-blue-500" />
+            <IconBuilding className="w-5 h-5 text-foreground" />
             {dialogConfig.title}
           </DialogTitle>
           <DialogDescription>{dialogConfig.description}</DialogDescription>

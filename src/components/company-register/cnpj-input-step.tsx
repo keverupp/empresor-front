@@ -1,4 +1,3 @@
-// src/components/company-register/cnpj-input-step.tsx
 "use client";
 
 import React, { useEffect } from "react";
@@ -31,7 +30,6 @@ export function CNPJInputStep({
     }
   };
 
-  // Auto-avançar quando consulta for bem-sucedida
   useEffect(() => {
     if (!isLoading && !error && onNext) {
       const timer = setTimeout(() => {
@@ -41,12 +39,8 @@ export function CNPJInputStep({
     }
   }, [isLoading, error, onNext]);
 
-  // Formatar CNPJ enquanto digita
   const handleCnpjChange = (value: string) => {
-    // Remove tudo que não é número
     const numbers = value.replace(/\D/g, "");
-
-    // Aplica máscara: 00.000.000/0000-00
     let formatted = numbers;
     if (numbers.length > 2) {
       formatted = numbers.replace(/(\d{2})(\d)/, "$1.$2");
@@ -71,9 +65,11 @@ export function CNPJInputStep({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="cnpj">CNPJ da Empresa</Label>
+    <div className="space-y-6">
+      <div className="space-y-2 text-center">
+        <Label htmlFor="cnpj" className="text-sm text-muted-foreground">
+          CNPJ da Empresa
+        </Label>
         <Input
           id="cnpj"
           value={cnpjInput}
@@ -87,7 +83,7 @@ export function CNPJInputStep({
       </div>
 
       {error && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" className="text-sm">
           <IconAlertCircle className="h-4 w-4" />
           <AlertDescription>{error}</AlertDescription>
         </Alert>

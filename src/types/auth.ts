@@ -36,14 +36,16 @@ export interface UpdateProfileData {
   newPassword?: string;
 }
 
-export interface ApiResponse<T = any> {
-  data?: T;
-  error?: string;
+// Aqui removemos o any e deixamos genérico com fallback para `unknown`
+export interface ApiResponse<T = unknown> {
+  data: T | null;
+  error: string | null;
   status: number;
 }
 
-export interface ApiOptions extends RequestInit {
+export interface ApiOptions extends Omit<RequestInit, "body"> {
   skipAuth?: boolean;
   showErrorToast?: boolean;
   showSuccessToast?: boolean;
+  body?: BodyInit | null; // explicitando body para não conflitar
 }
