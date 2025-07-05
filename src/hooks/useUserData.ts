@@ -6,7 +6,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 interface ExtendedUserData {
   name: string;
   email: string;
-  avatar: string;
+  avatar?: string | null; // Avatar opcional
   role?: string;
   status?: string;
   active_plan?: {
@@ -36,7 +36,11 @@ export const useUserData = () => {
       setUserData({
         name: profile.name,
         email: profile.email,
-        avatar: `/avatars/${profile.name.toLowerCase().replace(" ", "")}.jpg`,
+        // Só define avatar se existir e não for vazio
+        avatar:
+          profile.avatar_url && profile.avatar_url.trim() !== ""
+            ? profile.avatar_url
+            : null,
         role: profile.role,
         status: profile.status,
         active_plan: profile.active_plan,
@@ -48,12 +52,12 @@ export const useUserData = () => {
           : "Erro ao carregar dados do usuário";
       setError(errorMessage);
 
-      // Em caso de erro, usa dados básicos do contexto de auth
+      // Em caso de erro, usa dados básicos do contexto de auth SEM avatar
       if (user) {
         setUserData({
           name: user.name,
           email: user.email,
-          avatar: `/avatars/default.jpg`,
+          avatar: null, // Não define avatar padrão
         });
       }
     } finally {

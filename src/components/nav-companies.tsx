@@ -13,12 +13,10 @@ import {
   IconFolder,
   IconChevronDown,
   IconChevronRight,
-  IconPlus,
   IconDots,
   IconReport,
   IconMail,
   IconAlertTriangle,
-  type Icon,
 } from "@tabler/icons-react";
 
 import {
@@ -48,7 +46,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CompanyActivationModal } from "@/components/company-activation-modal";
-import { CompanyRegisterDialog } from "@/components/company-register-dialog";
+import { NewCompanyButton } from "@/components/new-company-button";
 
 import { useCompanyContext } from "@/contexts/CompanyContext";
 import type { Company, CompanyMenuItem } from "@/types/company";
@@ -209,49 +207,31 @@ function CompanyItem({
             side={isMobile ? "bottom" : "right"}
             align={isMobile ? "end" : "start"}
           >
-            {isPending ? (
-              // Menu para empresa pendente
+            {isPending && (
               <>
                 <DropdownMenuItem onClick={onActivationClick}>
-                  <IconMail className="w-4 h-4" />
-                  <span>Ativar Empresa</span>
+                  <IconMail className="w-4 h-4 mr-2" />
+                  Ativar Empresa
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href={`/dashboard/companies/${company.id}/settings`}>
-                    <IconSettings className="w-4 h-4" />
-                    <span>Configurações</span>
-                  </Link>
-                </DropdownMenuItem>
-              </>
-            ) : (
-              // Menu para empresa ativa
-              <>
-                <DropdownMenuItem asChild>
-                  <Link href={`/dashboard/companies/${company.id}/settings`}>
-                    <IconSettings className="w-4 h-4" />
-                    <span>Configurações</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href={`/dashboard/companies/${company.id}/clients/new`}>
-                    <IconPlus className="w-4 h-4" />
-                    <span>Novo Cliente</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href={`/dashboard/companies/${company.id}`}>
-                    <IconBuilding className="w-4 h-4" />
-                    <span>Ver Empresa</span>
-                  </Link>
-                </DropdownMenuItem>
               </>
             )}
+            <DropdownMenuItem asChild>
+              <Link href={`/dashboard/companies/${company.id}/settings`}>
+                <IconSettings className="w-4 h-4 mr-2" />
+                Configurações
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={`/dashboard/companies/${company.id}`}>
+                <IconBuilding className="w-4 h-4" />
+                <span>Ver Empresa</span>
+              </Link>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Submenus */}
+        {/* Submenu com as seções da empresa */}
         <CollapsibleContent>
           <SidebarMenuSub>
             {isPending ? (
@@ -304,8 +284,6 @@ export function NavCompanies() {
     switchCompany,
     isLoading,
     isError,
-    error,
-    permissions,
     hasPermission,
     refreshCompanies,
   } = useCompanyContext();
@@ -322,9 +300,6 @@ export function NavCompanies() {
     isOpen: false,
     company: null,
   });
-
-  // Dialog de registro
-  const [registerDialog, setRegisterDialog] = React.useState(false);
 
   // Expande automaticamente a empresa ativa
   React.useEffect(() => {
@@ -375,19 +350,6 @@ export function NavCompanies() {
     refreshCompanies(); // Recarrega a lista de empresas
   }, [refreshCompanies]);
 
-  // Callback de sucesso do registro
-  const handleRegisterSuccess = React.useCallback(
-    (newCompany: any) => {
-      refreshCompanies(); // Recarrega a lista de empresas
-      // Abre modal de ativação para a nova empresa
-      setActivationModal({
-        isOpen: true,
-        company: newCompany,
-      });
-    },
-    [refreshCompanies]
-  );
-
   // Permissões simplificadas
   const companyPermissions = React.useMemo(
     () => ({
@@ -401,125 +363,89 @@ export function NavCompanies() {
     [hasPermission]
   );
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <SidebarGroup>
-        <SidebarGroupLabel>Empresas</SidebarGroupLabel>
-        <SidebarMenu>
-          {[1, 2].map((i) => (
-            <SidebarMenuItem key={i}>
-              <div className="flex items-center gap-2 p-2">
-                <Skeleton className="h-4 w-4 rounded" />
-                <Skeleton className="h-4 flex-1" />
-                <Skeleton className="h-4 w-4" />
-              </div>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarGroup>
-    );
-  }
-
-  // Error state
-  if (isError) {
-    return (
-      <SidebarGroup>
-        <SidebarGroupLabel>Empresas</SidebarGroupLabel>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <div className="p-2 text-sm text-red-500">
-              Erro ao carregar empresas
-              {error && (
-                <div className="text-xs text-muted-foreground mt-1">
-                  {error.message}
-                </div>
-              )}
-            </div>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarGroup>
-    );
-  }
-
-  // Empty state
-  if (!companies.length) {
-    return (
-      <SidebarGroup>
-        <SidebarGroupLabel>Empresas</SidebarGroupLabel>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => setRegisterDialog(true)}>
-              <IconPlus className="w-4 h-4" />
-              <span>Criar Empresa</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarGroup>
-    );
-  }
-
-  // Filtra empresas inativas
-  const visibleCompanies = companies.filter(
-    (company) => company.status !== "inactive"
-  );
-
-  // Se não há empresas visíveis após filtrar
-  if (!visibleCompanies.length) {
-    return (
-      <SidebarGroup>
-        <SidebarGroupLabel>Empresas</SidebarGroupLabel>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton onClick={() => setRegisterDialog(true)}>
-              <IconPlus className="w-4 h-4" />
-              <span>Criar Empresa</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarGroup>
-    );
-  }
-
   return (
     <>
-      <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+      {/* Seção principal de empresas */}
+      <SidebarGroup>
         <SidebarGroupLabel>Empresas</SidebarGroupLabel>
         <SidebarMenu>
-          {visibleCompanies.map((company) => {
-            const isActive = activeCompanyId === company.id;
-            const isExpanded = expandedCompanies.has(company.id);
-            const menuItems = getCompanyMenuItems(
-              company.id,
-              companyPermissions
-            );
+          {/* Loading state - só para as empresas */}
+          {isLoading && (
+            <>
+              {[1, 2].map((i) => (
+                <SidebarMenuItem key={i}>
+                  <div className="flex items-center gap-2 p-2">
+                    <Skeleton className="h-4 w-4 rounded" />
+                    <Skeleton className="h-4 flex-1" />
+                    <Skeleton className="h-4 w-4" />
+                  </div>
+                </SidebarMenuItem>
+              ))}
+            </>
+          )}
 
-            return (
-              <CompanyItem
-                key={company.id}
-                company={company}
-                isActive={isActive}
-                isExpanded={isExpanded}
-                onToggle={() => toggleCompany(company.id)}
-                onSelect={() => selectCompany(company.id)}
-                onActivationClick={() => openActivationModal(company)}
-                menuItems={menuItems}
-              />
-            );
-          })}
+          {/* Error state */}
+          {isError && (
+            <SidebarMenuItem>
+              <div className="p-2 text-sm text-red-500">
+                Erro ao carregar empresas
+                <button
+                  onClick={refreshCompanies}
+                  className="ml-2 text-blue-500 underline hover:no-underline"
+                >
+                  Tentar novamente
+                </button>
+              </div>
+            </SidebarMenuItem>
+          )}
 
-          {/* Botão para adicionar nova empresa */}
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={() => setRegisterDialog(true)}
-              className="text-muted-foreground"
-            >
-              <IconPlus className="w-4 h-4" />
-              <span>Nova Empresa</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          {/* Lista de empresas */}
+          {!isLoading &&
+            !isError &&
+            companies.map((company) => {
+              const isActive = activeCompanyId === company.id;
+              const isExpanded = expandedCompanies.has(company.id);
+              const menuItems = getCompanyMenuItems(
+                company.id,
+                companyPermissions
+              );
+
+              return (
+                <CompanyItem
+                  key={company.id}
+                  company={company}
+                  isActive={isActive}
+                  isExpanded={isExpanded}
+                  onToggle={() => toggleCompany(company.id)}
+                  onSelect={() => selectCompany(company.id)}
+                  onActivationClick={() => openActivationModal(company)}
+                  menuItems={menuItems}
+                />
+              );
+            })}
+
+          {/* Mensagem quando não há empresas */}
+          {!isLoading && !isError && companies.length === 0 && (
+            <SidebarMenuItem>
+              <div className="p-2 text-sm text-muted-foreground text-center">
+                Cadastre uma empresa para iniciar!
+              </div>
+            </SidebarMenuItem>
+          )}
         </SidebarMenu>
       </SidebarGroup>
+
+      {/* Botão Nova Empresa - sempre disponível */}
+      <NewCompanyButton
+        showSeparator={companies.length > 0}
+        onCompanyCreated={(newCompany) => {
+          // Opcional: abrir modal de ativação para a nova empresa
+          setActivationModal({
+            isOpen: true,
+            company: newCompany,
+          });
+        }}
+      />
 
       {/* Modal de ativação */}
       <CompanyActivationModal
@@ -527,13 +453,6 @@ export function NavCompanies() {
         isOpen={activationModal.isOpen}
         onClose={closeActivationModal}
         onSuccess={handleActivationSuccess}
-      />
-
-      {/* Dialog de registro */}
-      <CompanyRegisterDialog
-        isOpen={registerDialog}
-        onClose={() => setRegisterDialog(false)}
-        onSuccess={handleRegisterSuccess}
       />
     </>
   );

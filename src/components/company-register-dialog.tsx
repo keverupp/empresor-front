@@ -342,7 +342,7 @@ export function CompanyRegisterDialog({
           </div>
 
           {/* Renderizar step atual */}
-          <div className="min-h-[200px] sm:min-h-[250px]">
+          <div>
             {state.currentStep === RegistrationStep.CNPJ_INPUT && (
               <CNPJInputStep
                 cnpjInput={state.cnpjInput}

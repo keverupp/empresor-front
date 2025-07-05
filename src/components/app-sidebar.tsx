@@ -109,7 +109,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const fallbackUserData = {
     name: "Usuário",
     email: "usuario@example.com",
-    avatar: "/avatars/default.jpg",
   };
 
   const displayUserData = userData || fallbackUserData;

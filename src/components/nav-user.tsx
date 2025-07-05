@@ -34,7 +34,7 @@ export function NavUser({
   user: {
     name: string;
     email: string;
-    avatar: string;
+    avatar?: string | null; // Avatar é opcional
   };
 }) {
   const { isMobile } = useSidebar();
@@ -52,13 +52,44 @@ export function NavUser({
 
   // Gera iniciais do usuário para o fallback do avatar
   const getInitials = (name: string) => {
+    if (!name || name.trim() === "") {
+      return "U"; // Fallback se não houver nome
+    }
+
     return name
+      .trim()
       .split(" ")
+      .filter((word) => word.length > 0) // Remove palavras vazias
       .map((word) => word.charAt(0))
       .join("")
       .toUpperCase()
-      .slice(0, 2);
+      .slice(0, 2); // Máximo 2 caracteres
   };
+
+  // Gera cor de fundo baseada no nome para consistência visual
+  const getBackgroundColor = (name: string) => {
+    const colors = [
+      "bg-blue-500",
+      "bg-green-500",
+      "bg-purple-500",
+      "bg-pink-500",
+      "bg-indigo-500",
+      "bg-teal-500",
+      "bg-orange-500",
+      "bg-red-500",
+    ];
+
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    return colors[Math.abs(hash) % colors.length];
+  };
+
+  const initials = getInitials(user.name);
+  const backgroundColor = getBackgroundColor(user.name);
+  const hasAvatar = user.avatar && user.avatar.trim() !== "";
 
   return (
     <SidebarMenu>
@@ -70,9 +101,20 @@ export function NavUser({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">
-                  {getInitials(user.name)}
+                {hasAvatar && (
+                  <AvatarImage
+                    src={user.avatar!}
+                    alt={user.name}
+                    onError={(e) => {
+                      // Se a imagem falhar ao carregar, esconde o elemento
+                      e.currentTarget.style.display = "none";
+                    }}
+                  />
+                )}
+                <AvatarFallback
+                  className={`rounded-lg text-white font-semibold ${backgroundColor}`}
+                >
+                  {initials}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
@@ -85,7 +127,7 @@ export function NavUser({
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
             side={isMobile ? "bottom" : "right"}
             align="end"
             sideOffset={4}
@@ -93,9 +135,19 @@ export function NavUser({
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">
-                    {getInitials(user.name)}
+                  {hasAvatar && (
+                    <AvatarImage
+                      src={user.avatar!}
+                      alt={user.name}
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                  )}
+                  <AvatarFallback
+                    className={`rounded-lg text-white font-semibold ${backgroundColor}`}
+                  >
+                    {initials}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">

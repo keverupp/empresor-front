@@ -68,7 +68,9 @@ export function CompanyDeleteDialog({
             <DialogDescription className="sm:text-center">
               Esta ação não pode ser desfeita. Para confirmar, digite o nome da
               empresa{" "}
-              <span className="text-primary font-semibold">{company.name}</span>
+              <span className="text-destructive font-semibold">
+                {company.name}
+              </span>
               .
             </DialogDescription>
           </DialogHeader>
@@ -76,17 +78,16 @@ export function CompanyDeleteDialog({
 
         <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
           <div className="*:not-first:mt-2">
-            <Label htmlFor={id}>Nome da empresa</Label>
+            <Label htmlFor={id}>Para confirmar digite no campo abaixo. </Label>
             <Input
               id={id}
               type="text"
-              placeholder={`Digite ${company.name} para confirmar`}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               disabled={isLoading}
             />
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <DialogClose asChild>
               <Button
                 type="button"
