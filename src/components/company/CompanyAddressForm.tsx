@@ -161,7 +161,12 @@ export function CompanyAddressForm({
             <Label htmlFor="address_zip_code">CEP</Label>
             <Input
               id="address_zip_code"
-              {...form.register("address_zip_code")}
+              value={formatCEP(form.watch("address_zip_code") || "")}
+              onChange={(e) => {
+                // para salvar sem formatação
+                const raw = e.target.value.replace(/\D/g, "");
+                form.setValue("address_zip_code", raw);
+              }}
               placeholder="00000-000"
             />
             <p className="text-xs text-muted-foreground">

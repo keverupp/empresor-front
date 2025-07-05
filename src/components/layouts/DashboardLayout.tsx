@@ -49,7 +49,9 @@ function DashboardContent({
         {(title || description) && (
           <div className="flex flex-col gap-1 px-4 py-6 md:px-6">
             {title && (
-              <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">
+                {title}
+              </h1>
             )}
             {description && (
               <p className="text-muted-foreground text-sm">{description}</p>

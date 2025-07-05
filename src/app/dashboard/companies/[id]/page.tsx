@@ -30,7 +30,6 @@ const companyUpdateSchema = z.object({
   legal_name: z.string().optional(),
   email: z.string().email("Email inválido"),
   phone_number: z.string().optional(),
-  website: z.string().url("URL inválida").optional().or(z.literal("")),
   address_street: z.string().optional(),
   address_number: z.string().optional(),
   address_complement: z.string().optional(),
@@ -69,7 +68,6 @@ export default function CompanyDetailPage() {
       legal_name: "",
       email: "",
       phone_number: "",
-      website: "",
       address_street: "",
       address_number: "",
       address_complement: "",
@@ -115,7 +113,6 @@ export default function CompanyDetailPage() {
         legal_name: company.legal_name || "",
         email: company.email || "",
         phone_number: company.phone_number || "",
-        website: "",
         address_street: company.address_street || "",
         address_number: company.address_number || "",
         address_complement: company.address_complement || "",
@@ -141,7 +138,6 @@ export default function CompanyDetailPage() {
         legal_name: company.legal_name || "",
         email: company.email || "",
         phone_number: company.phone_number || "",
-        website: "",
         address_street: company.address_street || "",
         address_number: company.address_number || "",
         address_complement: company.address_complement || "",
@@ -165,8 +161,8 @@ export default function CompanyDetailPage() {
         onClick={fetchCompany}
         disabled={isLoading}
       >
-        <RefreshCw className="h-4 w-4 mr-2" />
-        Atualizar
+        <RefreshCw className="h-4 w-4 mr-0 sm:mr-2" />
+        <span className="hidden sm:inline">Atualizar</span>
       </Button>
       {company && (
         <CompanyDeleteDialog
@@ -175,8 +171,8 @@ export default function CompanyDetailPage() {
           isLoading={isDeleting}
         >
           <Button variant="destructive" size="sm" disabled={isLoading}>
-            <Trash2 className="h-4 w-4 mr-2" />
-            Excluir
+            <Trash2 className="h-4 w-4 mr-0 sm:mr-2" />
+            <span className="hidden sm:inline">Excluir</span>
           </Button>
         </CompanyDeleteDialog>
       )}
@@ -209,7 +205,6 @@ export default function CompanyDetailPage() {
         legal_name: company.legal_name || "",
         email: company.email || "",
         phone_number: company.phone_number || "",
-        website: "",
         address_street: company.address_street || "",
         address_number: company.address_number || "",
         address_complement: company.address_complement || "",

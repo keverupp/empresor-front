@@ -22,7 +22,7 @@ export function SiteHeader({ actions }: SiteHeaderProps) {
             orientation="vertical"
             className="mx-2 data-[orientation=vertical]:h-4"
           />
-          <h1 className="text-base font-medium">
+          <h1 className="text-sm sm:text-base font-medium">
             {user?.name && `Bem-vindo(a), ${user.name.split(" ")[0]}`}
           </h1>
         </div>

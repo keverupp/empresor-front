@@ -122,7 +122,12 @@ export function CompanyBasicInfoForm({
             <Label htmlFor="phone_number">Telefone</Label>
             <Input
               id="phone_number"
-              {...form.register("phone_number")}
+              value={formatPhone(form.watch("phone_number") || "")}
+              onChange={(e) => {
+                // salva só os números
+                const raw = e.target.value.replace(/\D/g, "");
+                form.setValue("phone_number", raw);
+              }}
               placeholder="(11) 99999-9999"
             />
             <p className="text-xs text-muted-foreground">

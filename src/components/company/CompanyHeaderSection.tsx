@@ -84,13 +84,15 @@ export function CompanyHeaderSection({
 
           <div className="flex-1 space-y-3">
             <div>
-              <h1 className="text-3xl font-bold">{company.name}</h1>
+              <h1 className="text-lg sm:text-xl md:text-2xl font-bold">
+                {company.name}
+              </h1>
               {company.legal_name && (
-                <p className="text-lg text-muted-foreground">
+                <p className="text-sm sm:text-base md:text-lg text-muted-foreground">
                   {company.legal_name}
                 </p>
               )}
-              <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+              <p className="text-xs sm:text-sm md:text-base text-muted-foreground flex items-center gap-2 mt-1">
                 <FileText className="h-4 w-4" />
                 {detectDocumentType(company.document_number)}:{" "}
                 {formatCNPJ(company.document_number)}
