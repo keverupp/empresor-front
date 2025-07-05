@@ -80,15 +80,6 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Headers para requisições
-  const getHeaders = useCallback(
-    () => ({
-      Authorization: `Bearer ${tokens?.accessToken}`,
-      "Content-Type": "application/json",
-    }),
-    [tokens?.accessToken]
-  );
-
   // Fetch company data
   const fetchCompany = useCallback(async () => {
     if (!tokens?.accessToken) return;
@@ -99,7 +90,13 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
     try {
       const response = await fetch(
         `${appConfig.development.api.baseURL}/companies/${companyId}`,
-        { headers: getHeaders() }
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${tokens.accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
 
       if (!response.ok) {
@@ -107,7 +104,6 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
       }
 
       const data: CompanyApiResponse = await response.json();
-      // Derivar document_type baseado no document_number para compatibilidade
       const documentType = detectDocumentType(data.document_number);
       data.document_type =
         documentType !== "UNKNOWN" ? documentType : undefined;
@@ -116,11 +112,10 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
       const errorMessage =
         err instanceof Error ? err.message : "Erro desconhecido";
       setError(errorMessage);
-      // Toast será gerenciado pelo sistema centralizado de erro
     } finally {
       setIsLoading(false);
     }
-  }, [companyId, tokens?.accessToken, getHeaders]);
+  }, [companyId, tokens?.accessToken]);
 
   // Update company
   const updateCompany = useCallback(
@@ -134,7 +129,10 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
           `${appConfig.development.api.baseURL}/companies/${companyId}`,
           {
             method: "PUT",
-            headers: getHeaders(),
+            headers: {
+              Authorization: `Bearer ${tokens.accessToken}`,
+              "Content-Type": "application/json",
+            },
             body: JSON.stringify(updateData),
           }
         );
@@ -145,24 +143,19 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
         }
 
         const updatedCompany: CompanyApiResponse = await response.json();
-        // Derivar document_type baseado no document_number para compatibilidade
         const documentType = detectDocumentType(updatedCompany.document_number);
         updatedCompany.document_type =
           documentType !== "UNKNOWN" ? documentType : undefined;
         setCompany(updatedCompany);
 
-        // Toast de sucesso pode ser gerenciado no componente que chama a função
         return true;
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Erro desconhecido";
-        // Toast de erro será gerenciado pelo sistema centralizado
         return false;
       } finally {
         setIsUpdating(false);
       }
     },
-    [companyId, tokens?.accessToken, getHeaders]
+    [companyId, tokens?.accessToken]
   );
 
   // Delete company
@@ -176,7 +169,9 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
         `${appConfig.development.api.baseURL}/companies/${companyId}`,
         {
           method: "DELETE",
-          headers: getHeaders(),
+          headers: {
+            Authorization: `Bearer ${tokens.accessToken}`,
+          },
         }
       );
 
@@ -185,17 +180,13 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
         throw new Error(errorData.message || "Erro ao excluir empresa");
       }
 
-      // Toast de sucesso pode ser gerenciado no componente que chama a função
       return true;
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Erro desconhecido";
-      // Toast de erro será gerenciado pelo sistema centralizado
       return false;
     } finally {
       setIsDeleting(false);
     }
-  }, [companyId, tokens?.accessToken, getHeaders]);
+  }, [companyId, tokens?.accessToken]);
 
   // Effect para carregar dados iniciais
   useEffect(() => {

@@ -86,11 +86,25 @@ export default function CompanyDetailPage() {
 
   // Handlers
   const handleDelete = async (): Promise<boolean> => {
-    const success = await deleteCompany();
-    if (success) {
-      router.push("/dashboard/companies");
+    try {
+      console.log("Iniciando processo de exclusão da empresa");
+      const success = await deleteCompany();
+
+      if (success) {
+        console.log("Empresa excluída com sucesso, redirecionando...");
+        // Usar setTimeout para garantir que o toast seja exibido antes da navegação
+        setTimeout(() => {
+          router.push("/dashboard/");
+        }, 1000);
+        return true;
+      } else {
+        console.log("Falha ao excluir empresa");
+        return false;
+      }
+    } catch (error) {
+      console.error("Erro durante o processo de exclusão:", error);
+      return false;
     }
-    return success;
   };
 
   // Atualizar form quando company data carrega
