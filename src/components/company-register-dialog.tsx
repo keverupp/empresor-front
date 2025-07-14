@@ -18,7 +18,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { IconBuilding, IconArrowLeft } from "@tabler/icons-react";
+import { IconBuilding } from "@tabler/icons-react";
 
 // Componentes dos steps
 import { CNPJInputStep } from "@/components/company-register/cnpj-input-step";
@@ -396,20 +396,7 @@ export function CompanyRegisterDialog({
         </div>
 
         {/* Footer com botões condicionais */}
-        <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-4">
-          {/* Botão Voltar */}
-          {(state.currentStep === RegistrationStep.COMPANY_CONFIRMATION ||
-            state.currentStep === RegistrationStep.EMAIL_VERIFICATION) && (
-            <Button
-              variant="outline"
-              onClick={handleBackStep}
-              className="w-full sm:w-auto order-2 sm:order-1"
-            >
-              <IconArrowLeft className="w-4 h-4 mr-2" />
-              Voltar
-            </Button>
-          )}
-
+        <DialogFooter className="flex flex-col-reverse sm:flex-row">
           {/* Botão Cancelar */}
           {state.currentStep !== RegistrationStep.SUCCESS &&
             state.currentStep !== RegistrationStep.EMAIL_VERIFICATION &&
