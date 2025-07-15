@@ -1,13 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
-import { Phone, Mail, MapPin, FileText, MoreHorizontal } from "lucide-react";
+import { Phone, Mail, FileText, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import { DataTable } from "@/components/data-table/data-table";
+import { Client } from "@/types/apiInterfaces";
+import { useApi } from "@/hooks/useApi";
+import { CreateClientAction } from "@/components/clients/CreateClientAction";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -18,70 +21,40 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { formatters } from "@/config/app";
 
-// Interface baseada no schema def-4 da API
-interface Client {
-  id: string;
-  company_id: string;
-  name: string;
-  email: string | null;
-  phone_number: string | null;
-  document_number: string | null;
-  address_street: string | null;
-  address_city: string | null;
-  address_state: string | null;
-  address_zip_code: string | null;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
 export default function CompanyClientsPage() {
   const params = useParams();
   const router = useRouter();
   const companyId = params.id as string;
 
+  const { get } = useApi(); // ← desestrutura o método GET
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Função para buscar orçamentos da API
-  const fetchClients = async () => {
+  const fetchClients = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
-    try {
-      const response = await fetch(`/api/companies/${companyId}/clients`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          "Content-Type": "application/json",
-        },
-      });
+    // useApi.get já cuida de headers, retry, token, toasts etc.
+    const { data, error: apiError } = await get<Client[]>(
+      `/companies/${companyId}/clients`
+    );
 
-      if (!response.ok) {
-        throw new Error(`Erro ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      setClients(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("Erro ao buscar orçamentos:", err);
-      setError(err instanceof Error ? err.message : "Erro desconhecido");
-      toast.error("Erro ao carregar orçamentos", {
-        description: err instanceof Error ? err.message : "Erro desconhecido",
-      });
-    } finally {
-      setIsLoading(false);
+    if (apiError) {
+      setError(apiError);
+      toast.error("Erro ao carregar clientes", { description: apiError });
+      setClients([]);
+    } else if (data) {
+      setClients(data);
     }
-  };
 
-  // Carregar orçamentos na montagem do componente
+    setIsLoading(false);
+  }, [companyId, get]);
+
   useEffect(() => {
-    if (companyId) {
-      fetchClients();
-    }
-  }, [companyId]);
+    if (companyId) fetchClients();
+  }, [companyId, fetchClients]);
 
-  // Definição das colunas da tabela
   const columns: ColumnDef<Client>[] = [
     {
       accessorKey: "name",
@@ -128,35 +101,6 @@ export default function CompanyClientsPage() {
       },
     },
     {
-      id: "address",
-      header: "Endereço",
-      cell: ({ row }) => {
-        const { address_street, address_city, address_state } = row.original;
-        const hasAddress = address_street || address_city || address_state;
-
-        if (!hasAddress) {
-          return <span className="text-muted-foreground text-sm">-</span>;
-        }
-
-        const addressParts = [
-          address_street,
-          address_city,
-          address_state,
-        ].filter(Boolean);
-        return (
-          <div className="flex items-center gap-2">
-            <MapPin className="h-3 w-3 text-muted-foreground" />
-            <span
-              className="text-sm truncate max-w-[200px]"
-              title={addressParts.join(", ")}
-            >
-              {addressParts.join(", ")}
-            </span>
-          </div>
-        );
-      },
-    },
-    {
       accessorKey: "created_at",
       header: "Cadastrado em",
       cell: ({ row }) => {
@@ -169,7 +113,6 @@ export default function CompanyClientsPage() {
       header: "",
       cell: ({ row }) => {
         const client = row.original;
-
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -213,48 +156,50 @@ export default function CompanyClientsPage() {
     },
   ];
 
-  // Filtros configuráveis para a tabela
   const filterableColumns = [
     {
       id: "name",
       title: "Nome",
       options: [],
       type: "text" as const,
-      placeholder: "Filtrar por nome...",
+      placeholder: "Filtrar por nome.",
     },
   ];
 
-  return (
-    <DashboardLayout title="Orçamentos">
-      <div className="space-y-6 p-4">
-        {/* Tabela de orçamentos */}
+  const handleCreated = (client: Client) => {
+    router.push(`/dashboard/companies/${companyId}/clients/${client.id}`);
+  };
 
+  const actions = (
+    <CreateClientAction companyId={companyId} onCreated={handleCreated} />
+  );
+
+  return (
+    <DashboardLayout title="Clientes" actions={actions}>
+      <div className="space-y-6 p-4">
         <DataTable
           data={clients}
           columns={columns}
           searchKey="name"
-          searchPlaceholder="Buscar orçamentos..."
-          enableGlobalSearch={true}
+          searchPlaceholder="Buscar clientes."
+          enableGlobalSearch
           filterableColumns={filterableColumns}
-          enableColumnVisibility={true}
-          enableRefresh={true}
-          enableExport={true}
+          enableColumnVisibility
+          enableRefresh
+          enableExport
           isLoading={isLoading}
           error={error}
           onRefresh={fetchClients}
-          onExport={async () => {
-            // Implementar exportação
-            toast.info("Exportação em desenvolvimento");
-          }}
-          onRowClick={(client) => {
+          onExport={async () => toast.info("Exportação em desenvolvimento")}
+          onRowClick={(client) =>
             router.push(
               `/dashboard/companies/${companyId}/clients/${client.id}`
-            );
-          }}
+            )
+          }
           emptyStateMessage={
             error
-              ? "Erro ao carregar orçamentos. Tente novamente."
-              : "Nenhum orçamento encontrado. Adicione o primeiro orçamento para começar."
+              ? "Erro ao carregar clientes. Tente novamente."
+              : "Nenhum cliente encontrado. Adicione o primeiro cliente para começar."
           }
           emptyStateIcon={
             <FileText className="h-8 w-8 text-muted-foreground" />

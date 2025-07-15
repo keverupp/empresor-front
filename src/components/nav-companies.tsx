@@ -17,6 +17,7 @@ import {
   IconReport,
   IconMail,
   IconAlertTriangle,
+  IconX,
 } from "@tabler/icons-react";
 
 import {
@@ -116,7 +117,7 @@ function getCompanyMenuItems(
   return items;
 }
 
-// Componente para cada empresa individual
+// Componente para cada empresa ativa
 interface CompanyItemProps {
   company: Company;
   isActive: boolean;
@@ -276,6 +277,40 @@ function CompanyItem({
   );
 }
 
+// Componente para empresas inativas (apenas o nome)
+interface InactiveCompanyItemProps {
+  company: Company;
+}
+
+function InactiveCompanyItem({ company }: InactiveCompanyItemProps) {
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton disabled className="opacity-60">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          {company.logo_url ? (
+            <img
+              src={company.logo_url}
+              alt={`Logo ${company.name}`}
+              className="w-4 h-4 rounded object-cover flex-shrink-0 grayscale"
+            />
+          ) : (
+            <IconBuilding className="w-4 h-4 flex-shrink-0" />
+          )}
+          <span className="truncate font-medium">{company.name}</span>
+        </div>
+
+        <Badge
+          variant="outline"
+          className="text-xs border-gray-200 bg-gray-100 text-gray-600"
+        >
+          <IconX className="w-3 h-3 mr-1" />
+          Inativa
+        </Badge>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+}
+
 // Componente principal NavCompanies
 export function NavCompanies() {
   const {
@@ -300,6 +335,23 @@ export function NavCompanies() {
     isOpen: false,
     company: null,
   });
+
+  // Separar empresas ativas das inativas
+  const activeCompanies = React.useMemo(() => {
+    return companies.filter(
+      (company) =>
+        company.status === "active" ||
+        company.status === "pending" ||
+        company.status === "pending_validation"
+    );
+  }, [companies]);
+
+  const inactiveCompanies = React.useMemo(() => {
+    return companies.filter(
+      (company) =>
+        company.status === "inactive" || company.status === "suspended"
+    );
+  }, [companies]);
 
   // Expande automaticamente a empresa ativa
   React.useEffect(() => {
@@ -365,7 +417,7 @@ export function NavCompanies() {
 
   return (
     <>
-      {/* Seção principal de empresas */}
+      {/* Seção principal de empresas ATIVAS */}
       <SidebarGroup>
         <SidebarGroupLabel>Empresas</SidebarGroupLabel>
         <SidebarMenu>
@@ -399,10 +451,10 @@ export function NavCompanies() {
             </SidebarMenuItem>
           )}
 
-          {/* Lista de empresas */}
+          {/* Lista de empresas ATIVAS */}
           {!isLoading &&
             !isError &&
-            companies.map((company) => {
+            activeCompanies.map((company) => {
               const isActive = activeCompanyId === company.id;
               const isExpanded = expandedCompanies.has(company.id);
               const menuItems = getCompanyMenuItems(
@@ -424,8 +476,8 @@ export function NavCompanies() {
               );
             })}
 
-          {/* Mensagem quando não há empresas */}
-          {!isLoading && !isError && companies.length === 0 && (
+          {/* Mensagem quando não há empresas ativas */}
+          {!isLoading && !isError && activeCompanies.length === 0 && (
             <SidebarMenuItem>
               <div className="p-2 text-sm text-muted-foreground text-center">
                 Cadastre uma empresa para iniciar!
@@ -434,6 +486,18 @@ export function NavCompanies() {
           )}
         </SidebarMenu>
       </SidebarGroup>
+
+      {/* Seção de empresas INATIVAS (se houver) */}
+      {!isLoading && !isError && inactiveCompanies.length > 0 && (
+        <SidebarGroup>
+          <SidebarGroupLabel>Inativas</SidebarGroupLabel>
+          <SidebarMenu>
+            {inactiveCompanies.map((company) => (
+              <InactiveCompanyItem key={company.id} company={company} />
+            ))}
+          </SidebarMenu>
+        </SidebarGroup>
+      )}
 
       {/* Botão Nova Empresa - sempre disponível */}
       <NewCompanyButton

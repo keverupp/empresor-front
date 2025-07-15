@@ -44,7 +44,7 @@ export default function CompanyClientsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Função para buscar orçamentos da API
+  // Função para buscar clientes da API
   const fetchClients = async () => {
     setIsLoading(true);
     setError(null);
@@ -64,9 +64,9 @@ export default function CompanyClientsPage() {
       const data = await response.json();
       setClients(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Erro ao buscar orçamentos:", err);
+      console.error("Erro ao buscar clientes:", err);
       setError(err instanceof Error ? err.message : "Erro desconhecido");
-      toast.error("Erro ao carregar orçamentos", {
+      toast.error("Erro ao carregar clientes", {
         description: err instanceof Error ? err.message : "Erro desconhecido",
       });
     } finally {
@@ -74,7 +74,7 @@ export default function CompanyClientsPage() {
     }
   };
 
-  // Carregar orçamentos na montagem do componente
+  // Carregar clientes na montagem do componente
   useEffect(() => {
     if (companyId) {
       fetchClients();
@@ -225,15 +225,15 @@ export default function CompanyClientsPage() {
   ];
 
   return (
-    <DashboardLayout title="Orçamentos">
+    <DashboardLayout title="Clientes">
       <div className="space-y-6 p-4">
-        {/* Tabela de orçamentos */}
+        {/* Tabela de clientes */}
 
         <DataTable
           data={clients}
           columns={columns}
           searchKey="name"
-          searchPlaceholder="Buscar orçamentos..."
+          searchPlaceholder="Buscar clientes..."
           enableGlobalSearch={true}
           filterableColumns={filterableColumns}
           enableColumnVisibility={true}
@@ -253,8 +253,8 @@ export default function CompanyClientsPage() {
           }}
           emptyStateMessage={
             error
-              ? "Erro ao carregar orçamentos. Tente novamente."
-              : "Nenhum orçamento encontrado. Adicione o primeiro orçamento para começar."
+              ? "Erro ao carregar clientes. Tente novamente."
+              : "Nenhum cliente encontrado. Adicione o primeiro cliente para começar."
           }
           emptyStateIcon={
             <FileText className="h-8 w-8 text-muted-foreground" />

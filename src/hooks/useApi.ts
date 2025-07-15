@@ -234,8 +234,16 @@ export const useApi = () => {
   );
 
   const del = useCallback(
-    <T = unknown>(endpoint: string, options?: Omit<ApiOptions, "method">) =>
-      apiCall<T>(endpoint, { ...options, method: "DELETE" }),
+    <T = unknown>(
+      endpoint: string,
+      data?: unknown,
+      options?: Omit<ApiOptions, "method" | "body">
+    ) =>
+      apiCall<T>(endpoint, {
+        ...options,
+        method: "DELETE",
+        body: data ? JSON.stringify(data) : JSON.stringify({}),
+      }),
     [apiCall]
   );
 
