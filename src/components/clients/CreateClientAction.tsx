@@ -2,8 +2,7 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { useApi } from "@/hooks/useApi"; // já trata POST, toasts, token refresh :contentReference[oaicite:0]{index=0}
+import { useApi } from "@/hooks/useApi";
 import { Client } from "@/types/apiInterfaces";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,61 +12,92 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog"; // shadcn/ui ou seu wrapper de Dialog
+} from "@/components/ui/dialog";
 import CreateClientForm from "./CreateClientForm";
+import { toast } from "sonner";
 
 interface CreateClientActionProps {
   companyId: string;
   onCreated?: (client: Client) => void;
+  onSuccess?: () => void; // Novo callback para atualizar a tabela
 }
 
 export function CreateClientAction({
   companyId,
   onCreated,
+  onSuccess,
 }: CreateClientActionProps) {
-  const router = useRouter();
   const { post } = useApi();
   const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = useCallback(
     async (payload: Omit<Client, "id" | "created_at" | "updated_at">) => {
-      // chama POST /companies/{companyId}/clients :contentReference[oaicite:1]{index=1}
-      const { data, error } = await post<Client>(
-        `/companies/${companyId}/clients`,
-        payload
-      );
-      if (data) {
-        setOpen(false);
-        onCreated?.(data);
+      setIsSubmitting(true);
+
+      try {
+        const { data, error } = await post<Client>(
+          `/companies/${companyId}/clients`,
+          payload
+        );
+
+        if (data) {
+          // Fecha o modal
+          setOpen(false);
+
+          // Exibe toast de sucesso
+          toast.success("Cliente criado com sucesso!", {
+            description: `${data.name} foi adicionado à sua lista de clientes.`,
+          });
+
+          // Chama os callbacks
+          onCreated?.(data);
+          onSuccess?.(); // Atualiza a tabela
+        }
+      } catch (err) {
+        // O useApi já cuida dos toasts de erro
+        console.error("Erro ao criar cliente:", err);
+      } finally {
+        setIsSubmitting(false);
       }
-      // em caso de erro, useApi já exibe toast
     },
-    [companyId, post, onCreated]
+    [companyId, post, onCreated, onSuccess]
   );
 
+  // Reset do estado quando o modal fecha
+  const handleOpenChange = useCallback((newOpen: boolean) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      setIsSubmitting(false);
+    }
+  }, []);
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="primary" className="flex items-center gap-2">
+        <Button size="sm" className="flex items-center gap-2">
           + Novo cliente
         </Button>
       </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
+
+      <DialogContent className="w-[95vw] max-w-4xl max-h-[95vh] overflow-hidden flex flex-col sm:w-[90vw] sm:max-h-[90vh]">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Novo cliente</DialogTitle>
           <DialogDescription>
-            Preencha os dados abaixo para criar.
+            Preencha os dados abaixo para criar um novo cliente.
           </DialogDescription>
         </DialogHeader>
-        <CreateClientForm companyId={companyId} onSubmit={handleSubmit} />
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => setOpen(false)}>
-            Cancelar
-          </Button>
-        </DialogFooter>
+
+        <div className="flex-1 overflow-y-auto">
+          <CreateClientForm
+            companyId={companyId}
+            onSubmit={handleSubmit}
+            isSubmitting={isSubmitting}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );
 }
+
 export default CreateClientAction;
