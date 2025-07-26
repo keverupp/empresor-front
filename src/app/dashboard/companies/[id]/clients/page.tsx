@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
 import { Phone, Mail, FileText, MoreHorizontal, MapPin } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import { DataTable } from "@/components/data-table/data-table";
@@ -61,6 +62,7 @@ export default function CompanyClientsPage() {
   const params = useParams();
   const router = useRouter();
   const companyId = params.id as string;
+  const { tokens } = useAuth();
 
   const { get, delete: deleteApi } = useApi();
   const [clients, setClients] = useState<Client[]>([]);
@@ -97,10 +99,10 @@ export default function CompanyClientsPage() {
   }, [companyId, get]);
 
   useEffect(() => {
-    if (companyId) {
+    if (tokens?.accessToken) {
       fetchClients();
     }
-  }, [companyId, fetchClients]);
+  }, [tokens?.accessToken, fetchClients]);
 
   // Função para excluir cliente
   const handleDeleteClient = useCallback(
