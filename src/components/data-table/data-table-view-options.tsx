@@ -60,10 +60,13 @@ export function DataTableViewOptions<TData extends RowData>({
         email: "E-mail",
         phone: "Telefone",
         telefone: "Telefone",
+        phone_number: "Telefone",
         address: "Endereço",
-        createdAt: "Criado em",
+        createdAt: "Data de criação",
+        created_at: "Data de criação",
         updatedAt: "Atualizado em",
         ultimaConsulta: "Última Consulta",
+        actions: "Opções",
         id: "ID",
       };
       return columnNames[columnId] || columnId;

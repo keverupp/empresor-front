@@ -12,12 +12,14 @@ import { DataTable } from "@/components/data-table/data-table";
 import { Client } from "@/types/apiInterfaces";
 import { useApi } from "@/hooks/useApi";
 import { CreateClientAction } from "@/components/clients/CreateClientAction";
+import { ClientDeleteDialog } from "@/components/clients/ClientDeleteDialog";
 
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -60,10 +62,11 @@ export default function CompanyClientsPage() {
   const router = useRouter();
   const companyId = params.id as string;
 
-  const { get } = useApi();
+  const { get, delete: deleteApi } = useApi();
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
 
   const fetchClients = useCallback(async () => {
     setIsLoading(true);
@@ -99,6 +102,39 @@ export default function CompanyClientsPage() {
     }
   }, [companyId, fetchClients]);
 
+  // Função para excluir cliente
+  const handleDeleteClient = useCallback(
+    async (clientId: string): Promise<boolean> => {
+      setDeletingClientId(clientId);
+
+      try {
+        const { error } = await deleteApi(
+          `/companies/${companyId}/clients/${clientId}`
+        );
+
+        if (error) {
+          toast.error("Erro ao excluir cliente", { description: error });
+          return false;
+        }
+
+        // Remove o cliente da lista local
+        setClients((prev) => prev.filter((client) => client.id !== clientId));
+
+        toast.success("Cliente excluído com sucesso");
+        return true;
+      } catch (err) {
+        console.error("Erro ao excluir cliente:", err);
+        toast.error("Erro ao excluir cliente", {
+          description: err instanceof Error ? err.message : "Erro desconhecido",
+        });
+        return false;
+      } finally {
+        setDeletingClientId(null);
+      }
+    },
+    [companyId, deleteApi]
+  );
+
   // Função para atualizar a lista após adicionar cliente
   const handleClientCreated = useCallback((newClient: Client) => {
     setClients((prev) => [newClient, ...prev]);
@@ -108,6 +144,15 @@ export default function CompanyClientsPage() {
   const handleRefreshClients = useCallback(() => {
     fetchClients();
   }, [fetchClients]);
+
+  const columnLabels = {
+    name: "Nome",
+    email: "E-mail",
+    phone_number: "Telefone",
+    address: "Endereço",
+    created_at: "Data de Cadastro",
+    actions: "Ações",
+  };
 
   const columns: ColumnDef<Client>[] = [
     {
@@ -201,6 +246,7 @@ export default function CompanyClientsPage() {
       header: "",
       cell: ({ row }) => {
         const client = row.original;
+        const isDeleting = deletingClientId === client.id;
 
         return (
           <DropdownMenu>
@@ -212,6 +258,7 @@ export default function CompanyClientsPage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem
+                className="cursor-pointer"
                 onClick={() =>
                   router.push(
                     `/dashboard/companies/${companyId}/clients/${client.id}`
@@ -221,15 +268,7 @@ export default function CompanyClientsPage() {
                 Ver detalhes
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() =>
-                  router.push(
-                    `/dashboard/companies/${companyId}/clients/${client.id}/edit`
-                  )
-                }
-              >
-                Editar
-              </DropdownMenuItem>
-              <DropdownMenuItem
+                className="cursor-pointer"
                 onClick={() =>
                   router.push(
                     `/dashboard/companies/${companyId}/quotes/new?clientId=${client.id}`
@@ -238,15 +277,26 @@ export default function CompanyClientsPage() {
               >
                 Criar orçamento
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <ClientDeleteDialog
+                client={client}
+                onConfirm={() => handleDeleteClient(client.id)}
+                isLoading={isDeleting}
+              >
+                <DropdownMenuItem
+                  onSelect={(e) => e.preventDefault()}
+                  className="text-destructive cursor-pointer"
+                  disabled={isDeleting}
+                >
+                  Excluir cliente
+                </DropdownMenuItem>
+              </ClientDeleteDialog>
             </DropdownMenuContent>
           </DropdownMenu>
         );
       },
     },
   ];
-
-  // Não utilizamos filterableColumns com type "text" pois não é suportado
-  // A busca por nome e email será feita através do searchKey global
 
   const actions = (
     <CreateClientAction
@@ -261,6 +311,7 @@ export default function CompanyClientsPage() {
       <div className="space-y-4 sm:space-y-6 p-2 sm:p-4">
         <DataTable
           data={clients}
+          columnLabels={columnLabels}
           columns={columns}
           searchKey="name"
           searchPlaceholder="Buscar clientes..."
@@ -271,7 +322,6 @@ export default function CompanyClientsPage() {
           isLoading={isLoading}
           error={error}
           onRefresh={handleRefreshClients}
-          onExport={async () => toast.info("Exportação em desenvolvimento")}
           onRowClick={(client) =>
             router.push(
               `/dashboard/companies/${companyId}/clients/${client.id}`

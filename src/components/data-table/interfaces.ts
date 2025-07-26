@@ -51,6 +51,7 @@ export interface ExportConfig {
 
 export interface DataTableProps<TData extends RowData, TValue> {
   data: TData[];
+  columnLabels?: Record<string, string>;
   columns: ColumnDef<TData, TValue>[];
   searchKey?: string;
   searchPlaceholder?: string;
