@@ -20,7 +20,40 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { formatters } from "@/config/app";
+
+// Importa formatadores do utils.ts
+import { formatCPF, formatCNPJ, formatPhone } from "@/lib/utils";
+
+// Função para detectar e formatar documento (CPF/CNPJ)
+const formatDocument = (document: string | null): string => {
+  if (!document) return "";
+
+  const cleanDocument = document.replace(/\D/g, "");
+
+  if (cleanDocument.length === 11) {
+    return formatCPF(cleanDocument);
+  } else if (cleanDocument.length === 14) {
+    return formatCNPJ(cleanDocument);
+  }
+
+  return document;
+};
+
+// Função para formatar data no padrão brasileiro
+const formatDate = (dateString: string): string => {
+  if (!dateString) return "";
+
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  } catch {
+    return dateString;
+  }
+};
 
 export default function CompanyClientsPage() {
   const params = useParams();
@@ -85,7 +118,7 @@ export default function CompanyClientsPage() {
           <span className="font-medium">{row.getValue("name")}</span>
           {row.original.document_number && (
             <span className="text-xs text-muted-foreground">
-              {row.original.document_number}
+              {formatDocument(row.original.document_number)}
             </span>
           )}
         </div>
@@ -114,7 +147,7 @@ export default function CompanyClientsPage() {
         return phone ? (
           <div className="flex items-center gap-2">
             <Phone className="h-3 w-3 text-muted-foreground" />
-            <span className="text-sm">{phone}</span>
+            <span className="text-sm">{formatPhone(phone)}</span>
           </div>
         ) : (
           <span className="text-muted-foreground text-sm">-</span>
@@ -158,7 +191,7 @@ export default function CompanyClientsPage() {
         const date = row.getValue("created_at") as string;
         return (
           <span className="text-sm text-muted-foreground">
-            {formatters.date(date)}
+            {formatDate(date)}
           </span>
         );
       },
@@ -212,22 +245,8 @@ export default function CompanyClientsPage() {
     },
   ];
 
-  const filterableColumns = [
-    {
-      id: "name",
-      title: "Nome",
-      options: [],
-      type: "text" as const,
-      placeholder: "Filtrar por nome...",
-    },
-    {
-      id: "email",
-      title: "E-mail",
-      options: [],
-      type: "text" as const,
-      placeholder: "Filtrar por e-mail...",
-    },
-  ];
+  // Não utilizamos filterableColumns com type "text" pois não é suportado
+  // A busca por nome e email será feita através do searchKey global
 
   const actions = (
     <CreateClientAction
@@ -246,7 +265,6 @@ export default function CompanyClientsPage() {
           searchKey="name"
           searchPlaceholder="Buscar clientes..."
           enableGlobalSearch
-          filterableColumns={filterableColumns}
           enableColumnVisibility
           enableRefresh
           enableExport
