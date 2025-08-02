@@ -7,7 +7,6 @@ import {
   IconCircleCheck,
   IconArrowRight,
   IconBuilding,
-  IconSettings,
 } from "@tabler/icons-react";
 
 interface SuccessStepProps {
@@ -16,11 +15,7 @@ interface SuccessStepProps {
   onGoToSettings?: () => void;
 }
 
-export function SuccessStep({
-  companyName,
-  onFinish,
-  onGoToSettings,
-}: SuccessStepProps) {
+export function SuccessStep({ companyName, onFinish }: SuccessStepProps) {
   return (
     <div className="space-y-6 text-center">
       {/* Ícone de sucesso + título */}
@@ -55,13 +50,6 @@ export function SuccessStep({
           <IconArrowRight className="w-4 h-4 mr-2" />
           Ir para Dashboard
         </Button>
-
-        {onGoToSettings && (
-          <Button variant="outline" onClick={onGoToSettings} className="w-full">
-            <IconSettings className="w-4 h-4 mr-2" />
-            Editar Dados
-          </Button>
-        )}
       </div>
 
       {/* Mensagem adicional */}

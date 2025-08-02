@@ -5,53 +5,40 @@ import { z } from "zod";
 import {
   isValidCPF,
   isValidCNPJ,
-  formatCPF,
-  formatCNPJ,
   isValidCEP,
   formatCEP,
 } from "@brazilian-utils/brazilian-utils";
+import { formatDocument, formatPhone } from "@/lib/format-utils";
 import {
   ChevronLeft,
   ChevronRight,
   Check,
   Search,
   Loader2,
+  ChevronsUpDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useCNPJ } from "@/hooks/useCNPJ";
-
-// Utilitários centralizados
-const formatDocument = (value: string) => {
-  const cleanValue = value.replace(/\D/g, "");
-
-  if (cleanValue.length <= 11) {
-    return formatCPF(cleanValue);
-  } else {
-    return formatCNPJ(cleanValue);
-  }
-};
-
-const formatPhone = (value: string) => {
-  const cleanValue = value.replace(/\D/g, "");
-
-  if (cleanValue.length <= 10) {
-    return cleanValue.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
-  } else {
-    return cleanValue.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
-  }
-};
+import { StepIndicator } from "@/components/company-register/step-indicator";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 
 const validateDocument = (value: string) => {
   if (!value) return true; // Opcional
@@ -117,6 +104,8 @@ const steps = [
   { id: "notes", title: "Observações", description: "Informações adicionais" },
 ];
 
+const stepLabels = ["CPF/CNPJ", "Dados", "Endereço", "Observações"];
+
 const estados = [
   { value: "AC", label: "Acre" },
   { value: "AL", label: "Alagoas" },
@@ -157,7 +146,9 @@ export default function CreateClientForm({
   onSubmit,
   isSubmitting,
 }: CreateClientFormProps) {
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(1); // StepIndicator começa em 1
+  const [stateComboOpen, setStateComboOpen] = useState(false);
+
   const {
     data: cnpjData,
     isLoading: cnpjLoading,
@@ -263,31 +254,31 @@ export default function CreateClientForm({
     const fieldsToValidate = getFieldsForStep(currentStep);
     const isValid = await trigger(fieldsToValidate);
 
-    if (isValid && currentStep < steps.length - 1) {
+    if (isValid && currentStep < steps.length) {
       setCurrentStep(currentStep + 1);
     }
   };
 
   const prevStep = () => {
-    if (currentStep > 0) {
+    if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
   };
 
   const getFieldsForStep = (step: number): (keyof ClientFormData)[] => {
     switch (step) {
-      case 0:
-        return ["document_number"];
       case 1:
-        return ["name", "email", "phone_number"];
+        return ["document_number"];
       case 2:
+        return ["name", "email", "phone_number"];
+      case 3:
         return [
           "address_zip_code",
           "address_street",
           "address_city",
           "address_state",
         ];
-      case 3:
+      case 4:
         return ["notes"];
       default:
         return [];
@@ -319,7 +310,7 @@ export default function CreateClientForm({
 
       // Reset do formulário após sucesso
       reset();
-      setCurrentStep(0);
+      setCurrentStep(1);
       clearData();
     } catch (error) {
       console.error("Erro ao enviar formulário:", error);
@@ -337,61 +328,31 @@ export default function CreateClientForm({
     <div className="w-full max-w-none">
       <Card className="border-0 shadow-none bg-background">
         <CardContent className="p-0 space-y-6">
-          {/* Stepper - Responsivo */}
+          {/* Step Indicator */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              {steps.map((step, index) => (
-                <div key={step.id} className="flex items-center">
-                  <div
-                    className={`
-                    flex items-center justify-center w-8 h-8 rounded-full border-2 
-                    ${
-                      index <= currentStep
-                        ? "bg-primary border-primary text-primary-foreground"
-                        : "border-muted-foreground/30 text-muted-foreground"
-                    }
-                  `}
-                  >
-                    {index < currentStep ? (
-                      <Check className="w-4 h-4" />
-                    ) : (
-                      <span className="text-sm font-medium">{index + 1}</span>
-                    )}
-                  </div>
-
-                  {index < steps.length - 1 && (
-                    <div
-                      className={`
-                      h-0.5 w-6 sm:w-12 mx-2 
-                      ${
-                        index < currentStep
-                          ? "bg-primary"
-                          : "bg-muted-foreground/30"
-                      }
-                    `}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
+            <StepIndicator
+              currentStep={currentStep}
+              totalSteps={4}
+              stepLabels={stepLabels}
+              onStepChange={setCurrentStep}
+            />
 
             <div className="text-center sm:text-left">
               <h2 className="text-lg font-semibold">
-                {steps[currentStep].title}
+                {steps[currentStep - 1]?.title}
               </h2>
               <p className="text-sm text-muted-foreground">
-                {steps[currentStep].description}
+                {steps[currentStep - 1]?.description}
               </p>
             </div>
           </div>
 
           {/* Formulário */}
           <div className="space-y-4">
-            {/* Etapa 0: CPF/CNPJ */}
-            {currentStep === 0 && (
+            {/* Etapa 1: CPF/CNPJ */}
+            {currentStep === 1 && (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="document_number">CPF/CNPJ</Label>
                   <div className="flex gap-2">
                     <Input
                       id="document_number"
@@ -438,22 +399,11 @@ export default function CreateClientForm({
                     </div>
                   )}
                 </div>
-
-                {!watchedDocument && (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">
-                      Digite um CPF ou CNPJ para começar o cadastro
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-2">
-                      Para CNPJ, os dados serão preenchidos automaticamente
-                    </p>
-                  </div>
-                )}
               </div>
             )}
 
-            {/* Etapa 1: Dados Básicos */}
-            {currentStep === 1 && (
+            {/* Etapa 2: Dados Básicos */}
+            {currentStep === 2 && (
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nome Completo *</Label>
@@ -505,8 +455,8 @@ export default function CreateClientForm({
               </div>
             )}
 
-            {/* Etapa 2: Endereço */}
-            {currentStep === 2 && (
+            {/* Etapa 3: Endereço */}
+            {currentStep === 3 && (
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="address_zip_code">CEP</Label>
@@ -564,27 +514,61 @@ export default function CreateClientForm({
 
                   <div className="space-y-2">
                     <Label htmlFor="address_state">Estado</Label>
-                    <Select
-                      value={watchedState || ""}
-                      onValueChange={(value) =>
-                        setValue("address_state", value)
-                      }
+                    <Popover
+                      open={stateComboOpen}
+                      onOpenChange={setStateComboOpen}
                     >
-                      <SelectTrigger
-                        className={
-                          errors.address_state ? "border-destructive" : ""
-                        }
-                      >
-                        <SelectValue placeholder="Selecione o estado" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {estados.map((estado) => (
-                          <SelectItem key={estado.value} value={estado.value}>
-                            {estado.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={stateComboOpen}
+                          className={cn(
+                            "w-full justify-between",
+                            errors.address_state && "border-destructive"
+                          )}
+                        >
+                          {watchedState
+                            ? estados.find(
+                                (estado) => estado.value === watchedState
+                              )?.label
+                            : "Selecione o estado..."}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Buscar estado..." />
+                          <CommandList>
+                            <CommandEmpty>
+                              Nenhum estado encontrado.
+                            </CommandEmpty>
+                            <CommandGroup>
+                              {estados.map((estado) => (
+                                <CommandItem
+                                  key={estado.value}
+                                  value={estado.label}
+                                  onSelect={() => {
+                                    setValue("address_state", estado.value);
+                                    setStateComboOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      watchedState === estado.value
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                  {estado.label}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     {errors.address_state && (
                       <p className="text-sm text-destructive">
                         {errors.address_state.message}
@@ -595,8 +579,8 @@ export default function CreateClientForm({
               </div>
             )}
 
-            {/* Etapa 3: Observações */}
-            {currentStep === 3 && (
+            {/* Etapa 4: Observações */}
+            {currentStep === 4 && (
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="notes">Observações</Label>
@@ -622,14 +606,14 @@ export default function CreateClientForm({
               type="button"
               variant="outline"
               onClick={prevStep}
-              disabled={currentStep === 0}
+              disabled={currentStep === 1}
               className="order-2 sm:order-1"
             >
               <ChevronLeft className="w-4 h-4 mr-2" />
               Anterior
             </Button>
 
-            {currentStep < steps.length - 1 ? (
+            {currentStep < steps.length ? (
               <Button
                 type="button"
                 onClick={nextStep}
