@@ -68,6 +68,11 @@ export function DataTableViewOptions<TData extends RowData>({
         ultimaConsulta: "Última Consulta",
         actions: "Opções",
         id: "ID",
+        quote_number: "Identificação",
+        client: "Cliente",
+        issue_date: "Emissão",
+        expiry_date: "Validade",
+        total_amount_cents: "Valor Total",
       };
       return columnNames[columnId] || columnId;
     };

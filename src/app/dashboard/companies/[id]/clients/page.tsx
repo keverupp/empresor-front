@@ -24,28 +24,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// Importa formatadores do utils.ts
+// Utils
 import { formatCPF, formatCNPJ, formatPhone } from "@/lib/utils";
 
-// Função para detectar e formatar documento (CPF/CNPJ)
+// Quotes
+import { CreateQuoteDialog } from "@/components/quotes/CreateQuoteDialog";
+import { useQuotes } from "@/hooks/useQuotes";
+
 const formatDocument = (document: string | null): string => {
   if (!document) return "";
-
-  const cleanDocument = document.replace(/\D/g, "");
-
-  if (cleanDocument.length === 11) {
-    return formatCPF(cleanDocument);
-  } else if (cleanDocument.length === 14) {
-    return formatCNPJ(cleanDocument);
-  }
-
+  const clean = document.replace(/\D/g, "");
+  if (clean.length === 11) return formatCPF(clean);
+  if (clean.length === 14) return formatCNPJ(clean);
   return document;
 };
 
-// Função para formatar data no padrão brasileiro
 const formatDate = (dateString: string): string => {
   if (!dateString) return "";
-
   try {
     const date = new Date(dateString);
     return date.toLocaleDateString("pt-BR", {
@@ -70,6 +65,13 @@ export default function CompanyClientsPage() {
   const [error, setError] = useState<string | null>(null);
   const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
 
+  // --- estados do diálogo de criar orçamento ---
+  const [isCreateQuoteOpen, setIsCreateQuoteOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+
+  // Reaproveita utilidades do hook de orçamentos
+  const { createQuote, generateQuoteNumber } = useQuotes({ companyId });
+
   const fetchClients = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -87,7 +89,6 @@ export default function CompanyClientsPage() {
         setClients(data);
       }
     } catch (err) {
-      console.error("Erro ao buscar clientes:", err);
       const errorMessage =
         err instanceof Error ? err.message : "Erro desconhecido";
       setError(errorMessage);
@@ -104,7 +105,7 @@ export default function CompanyClientsPage() {
     }
   }, [tokens?.accessToken, fetchClients]);
 
-  // Função para excluir cliente
+  // Excluir cliente
   const handleDeleteClient = useCallback(
     async (clientId: string): Promise<boolean> => {
       setDeletingClientId(clientId);
@@ -119,13 +120,10 @@ export default function CompanyClientsPage() {
           return false;
         }
 
-        // Remove o cliente da lista local
-        setClients((prev) => prev.filter((client) => client.id !== clientId));
-
+        setClients((prev) => prev.filter((c) => c.id !== clientId));
         toast.success("Cliente excluído com sucesso");
         return true;
       } catch (err) {
-        console.error("Erro ao excluir cliente:", err);
         toast.error("Erro ao excluir cliente", {
           description: err instanceof Error ? err.message : "Erro desconhecido",
         });
@@ -137,15 +135,43 @@ export default function CompanyClientsPage() {
     [companyId, deleteApi]
   );
 
-  // Função para atualizar a lista após adicionar cliente
   const handleClientCreated = useCallback((newClient: Client) => {
     setClients((prev) => [newClient, ...prev]);
   }, []);
 
-  // Função para atualizar a tabela (usada pelo botão refresh)
   const handleRefreshClients = useCallback(() => {
     fetchClients();
   }, [fetchClients]);
+
+  // Abrir dialog de criar orçamento para um cliente
+  const openCreateQuoteForClient = (client: Client) => {
+    setSelectedClient(client);
+    setIsCreateQuoteOpen(true);
+  };
+
+  // onSuccess do dialog: cria orçamento e redireciona para edição
+  const handleCreateQuote = useCallback(
+    async (payload: {
+      client_id: string;
+      quote_number: string;
+      expiry_date?: string;
+      items?: any[];
+    }) => {
+      // garante items: []
+      const ensureItems = Array.isArray(payload.items) ? payload.items : [];
+      const created = await createQuote({
+        ...payload,
+        items: ensureItems,
+      } as any);
+
+      if (created?.id) {
+        router.push(
+          `/dashboard/companies/${companyId}/quotes/${created.id}/edit`
+        );
+      }
+    },
+    [companyId, createQuote, router]
+  );
 
   const columnLabels = {
     name: "Nome",
@@ -269,17 +295,17 @@ export default function CompanyClientsPage() {
               >
                 Ver detalhes
               </DropdownMenuItem>
+
+              {/* 👉 abre o dialog de criar orçamento com o cliente pré-selecionado */}
               <DropdownMenuItem
                 className="cursor-pointer"
-                onClick={() =>
-                  router.push(
-                    `/dashboard/companies/${companyId}/quotes/new?clientId=${client.id}`
-                  )
-                }
+                onClick={() => openCreateQuoteForClient(client)}
               >
                 Criar orçamento
               </DropdownMenuItem>
+
               <DropdownMenuSeparator />
+
               <ClientDeleteDialog
                 client={client}
                 onConfirm={() => handleDeleteClient(client.id)}
@@ -342,6 +368,18 @@ export default function CompanyClientsPage() {
           pageSizeOptions={[10, 15, 25, 50]}
         />
       </div>
+
+      {/* Dialog de Criar Orçamento (reuso) */}
+      <CreateQuoteDialog
+        isOpen={isCreateQuoteOpen}
+        onClose={() => setIsCreateQuoteOpen(false)}
+        onSuccess={handleCreateQuote}
+        companyId={companyId}
+        preSelectedClient={selectedClient ?? undefined}
+        // Como estamos na página de clientes, não precisamos carregar lista
+        onLoadClients={undefined}
+        onGenerateQuoteNumber={generateQuoteNumber}
+      />
     </DashboardLayout>
   );
 }

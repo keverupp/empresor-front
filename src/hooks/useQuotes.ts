@@ -1,461 +1,382 @@
 // src/hooks/useQuotes.ts
-import { useState, useCallback, useEffect } from "react";
-import { useApi } from "./useApi";
-import type {
-  Quote,
-  QuoteListParams,
-  QuoteListResponse,
-  QuoteCreatePayload,
-  QuoteUpdatePayload,
-  QuoteStats,
-  ExpiringQuote,
-  QuoteGenerateNumberResponse,
-} from "@/types/quote";
+"use client";
+
+import { useState, useCallback, useRef } from "react";
+import { useApi } from "@/hooks/useApi";
+import { type Quote, type Client, type Product } from "@/types/apiInterfaces";
+import {
+  type CreateQuoteData,
+  type UpdateQuoteData,
+} from "@/lib/quote-schemas";
 
 interface UseQuotesOptions {
   companyId: string;
-  autoFetch?: boolean;
-  params?: QuoteListParams;
 }
 
-interface UseQuotesReturn {
-  quotes: Quote[];
-  pagination: QuoteListResponse["pagination"] | null;
-  stats: QuoteStats | null;
-  expiringQuotes: ExpiringQuote[];
-  isLoading: boolean;
-  isCreating: boolean;
-  isUpdating: boolean;
-  isDeleting: boolean;
-  error: string | null;
-
-  // Actions
-  fetchQuotes: (params?: QuoteListParams) => Promise<void>;
-  fetchStats: () => Promise<void>;
-  fetchExpiringQuotes: (days?: number) => Promise<void>;
-  createQuote: (data: QuoteCreatePayload) => Promise<Quote>;
-  updateQuote: (quoteId: string, data: QuoteUpdatePayload) => Promise<Quote>;
-  updateQuoteStatus: (
-    quoteId: string,
-    status: Quote["status"]
-  ) => Promise<Quote>;
-  deleteQuote: (quoteId: string) => Promise<void>;
-  generateQuoteNumber: () => Promise<string>;
-  getQuoteById: (quoteId: string) => Promise<Quote>;
-
-  // Utility functions for filtering
-  getQuotesExpiringBetween: (fromDate: string, toDate: string) => Promise<void>;
-  getQuotesExpiringToday: () => Promise<void>;
-  getQuotesExpiringThisWeek: () => Promise<void>;
-
-  // Utility
-  refetch: () => Promise<void>;
-  clearError: () => void;
+interface QuotesListResponse {
+  data: Quote[];
+  pagination?: {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    pageSize: number;
+  };
 }
 
-export const useQuotes = ({
-  companyId,
-  autoFetch = true,
-  params = {},
-}: UseQuotesOptions): UseQuotesReturn => {
-  const { get, post, put, delete: del } = useApi();
+interface QuotesFilters {
+  page?: number;
+  pageSize?: number;
+  status?: string;
+  client_id?: string;
+  quote_number?: string;
+  issue_date_from?: string;
+  issue_date_to?: string;
+  expiry_date_from?: string;
+  expiry_date_to?: string;
+}
 
-  // Estados
+interface QuoteStatsResponse {
+  total_quotes: number;
+  draft_count: number;
+  sent_count: number;
+  accepted_count: number;
+  rejected_count: number;
+  total_accepted_value_cents: number;
+  avg_accepted_value_cents: number;
+  acceptance_rate: number;
+}
+
+interface GenerateNumberResponse {
+  quote_number: string;
+}
+
+/** Normaliza diferentes formatos de retorno (Axios vs fetch vs array) */
+function normalizeQuotesList(payload: any): QuotesListResponse {
+  if (payload?.data && Array.isArray(payload.data)) {
+    return { data: payload.data, pagination: payload.pagination };
+  }
+  if (Array.isArray(payload)) {
+    return { data: payload };
+  }
+  if (payload?.data?.data && Array.isArray(payload.data.data)) {
+    return { data: payload.data.data, pagination: payload.data.pagination };
+  }
+  return { data: [], pagination: undefined };
+}
+
+export function useQuotes({ companyId }: UseQuotesOptions) {
+  const { apiCall } = useApi();
+
   const [quotes, setQuotes] = useState<Quote[]>([]);
-  const [pagination, setPagination] = useState<
-    QuoteListResponse["pagination"] | null
-  >(null);
-  const [stats, setStats] = useState<QuoteStats | null>(null);
-  const [expiringQuotes, setExpiringQuotes] = useState<ExpiringQuote[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState({
+    totalItems: 0,
+    totalPages: 0,
+    currentPage: 1,
+    pageSize: 10,
+  });
 
-  // Buscar lista de orçamentos
+  // Guarda o último filtro usado para refetch após criar/atualizar/excluir
+  const lastFiltersRef = useRef<QuotesFilters>({ page: 1, pageSize: 10 });
+
   const fetchQuotes = useCallback(
-    async (fetchParams: QuoteListParams = {}) => {
+    async (filters: QuotesFilters = {}) => {
       if (!companyId) return;
 
       setIsLoading(true);
       setError(null);
 
       try {
-        const queryParams = new URLSearchParams();
+        lastFiltersRef.current = { page: 1, pageSize: 10, ...filters };
 
-        // Adicionar parâmetros de busca
-        const allParams = { ...params, ...fetchParams };
-        Object.entries(allParams).forEach(([key, value]) => {
-          if (value !== undefined && value !== null && value !== "") {
-            queryParams.append(key, String(value));
+        const params = new URLSearchParams();
+        Object.entries(lastFiltersRef.current).forEach(([k, v]) => {
+          if (v !== undefined && v !== null && v !== "") {
+            params.append(k, String(v));
           }
         });
 
-        const endpoint = `/companies/${companyId}/quotes`;
-        const finalUrl = queryParams.toString()
-          ? `${endpoint}?${queryParams.toString()}`
-          : endpoint;
+        const endpoint = `/companies/${companyId}/quotes${
+          params.toString() ? `?${params.toString()}` : ""
+        }`;
+        const raw = await apiCall(endpoint, { method: "GET" });
+        const normalized = normalizeQuotesList(raw);
 
-        const response = await get<QuoteListResponse>(finalUrl);
+        const list = normalized.data ?? [];
+        const pag = normalized.pagination ?? {
+          totalItems: list.length,
+          totalPages: Math.max(
+            1,
+            Math.ceil(list.length / (lastFiltersRef.current.pageSize ?? 10))
+          ),
+          currentPage: lastFiltersRef.current.page ?? 1,
+          pageSize: lastFiltersRef.current.pageSize ?? 10,
+        };
 
-        if (response.error) {
-          throw new Error(response.error);
-        }
-
-        if (response.data) {
-          setQuotes(response.data.data || []);
-          setPagination(response.data.pagination);
-        }
+        setQuotes(list);
+        setPagination(pag);
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Erro ao carregar orçamentos";
-        setError(errorMessage);
-        console.error("Erro ao buscar orçamentos:", err);
+        const msg =
+          err instanceof Error ? err.message : "Erro ao buscar orçamentos";
+        setError(msg);
+        setQuotes([]);
       } finally {
         setIsLoading(false);
       }
     },
-    [companyId, get, params]
+    [apiCall, companyId]
   );
 
-  // Buscar estatísticas
-  const fetchStats = useCallback(async () => {
-    if (!companyId) return;
-
+  const refetchAfterMutation = useCallback(async () => {
     try {
-      const endpoint = `/companies/${companyId}/quotes/stats`;
-      const response = await get<QuoteStats>(endpoint);
-
-      if (response.error) {
-        throw new Error(response.error);
-      }
-
-      if (response.data) {
-        setStats(response.data);
-      }
-    } catch (err) {
-      console.error("Erro ao buscar estatísticas:", err);
+      await fetchQuotes(lastFiltersRef.current);
+    } catch {
+      // erros já tratados no fetchQuotes
     }
-  }, [companyId, get]);
+  }, [fetchQuotes]);
 
-  // Buscar orçamentos próximos ao vencimento
-  const fetchExpiringQuotes = useCallback(
-    async (days: number = 7) => {
-      if (!companyId) return;
-
+  const fetchQuoteById = useCallback(
+    async (quoteId: string): Promise<Quote | null> => {
+      if (!companyId || !quoteId) return null;
       try {
-        // Calcular a data limite (hoje + X dias)
-        const today = new Date();
-        const limitDate = new Date();
-        limitDate.setDate(today.getDate() + days);
-
-        // Formatar datas no padrão ISO (YYYY-MM-DD)
-        const todayString = today.toISOString().split("T")[0];
-        const limitDateString = limitDate.toISOString().split("T")[0];
-
-        // Usar a rota principal com filtros de data
-        const queryParams = new URLSearchParams({
-          expiry_date_from: todayString,
-          expiry_date_to: limitDateString,
-        });
-
-        const endpoint = `/companies/${companyId}/quotes?${queryParams.toString()}`;
-        const response = await get<QuoteListResponse>(endpoint);
-
-        if (response.error) {
-          throw new Error(response.error);
-        }
-
-        if (response.data) {
-          // Mapear para o formato ExpiringQuote se necessário
-          const expiringData = response.data.data.map((quote) => ({
-            id: quote.id,
-            quote_number: quote.quote_number,
-            expiry_date: quote.expiry_date || "",
-            total_amount_cents: quote.total_amount_cents,
-            client_name: quote.client.name,
-            client_email: quote.client.email || null,
-          }));
-          setExpiringQuotes(expiringData);
-        }
+        const endpoint = `/companies/${companyId}/quotes/${quoteId}`;
+        const res = await apiCall(endpoint, { method: "GET" });
+        return res?.data?.id ? res.data : res?.id ? res : null;
       } catch (err) {
-        console.error("Erro ao buscar orçamentos vencendo:", err);
+        const msg =
+          err instanceof Error ? err.message : "Erro ao buscar orçamento";
+        setError(msg);
+        return null;
       }
     },
-    [companyId, get]
+    [apiCall, companyId]
   );
 
-  // Criar orçamento
   const createQuote = useCallback(
-    async (data: QuoteCreatePayload): Promise<Quote> => {
-      if (!companyId) throw new Error("Company ID é obrigatório");
+    async (data: CreateQuoteData): Promise<Quote | null> => {
+      if (!companyId) return null;
 
       setIsCreating(true);
       setError(null);
 
       try {
         const endpoint = `/companies/${companyId}/quotes`;
-        const response = await post<Quote>(endpoint, data);
+        const res = await apiCall(endpoint, {
+          method: "POST",
+          body: JSON.stringify(data),
+        });
 
-        if (response.error) {
-          throw new Error(response.error);
-        }
-
-        if (!response.data) {
-          throw new Error("Erro ao criar orçamento");
-        }
-
-        // Atualizar lista local
-        await fetchQuotes();
-
-        return response.data;
+        const created: Quote | null = res?.data?.id
+          ? res.data
+          : res?.id
+          ? res
+          : null;
+        await refetchAfterMutation();
+        return created;
       } catch (err) {
-        const errorMessage =
+        const msg =
           err instanceof Error ? err.message : "Erro ao criar orçamento";
-        setError(errorMessage);
-        throw err;
+        setError(msg);
+        return null;
       } finally {
         setIsCreating(false);
       }
     },
-    [companyId, post, fetchQuotes]
+    [apiCall, companyId, refetchAfterMutation]
   );
 
-  // Atualizar orçamento
   const updateQuote = useCallback(
-    async (quoteId: string, data: QuoteUpdatePayload): Promise<Quote> => {
-      if (!companyId) throw new Error("Company ID é obrigatório");
+    async (quoteId: string, data: UpdateQuoteData): Promise<Quote | null> => {
+      if (!companyId || !quoteId) return null;
 
       setIsUpdating(true);
       setError(null);
 
       try {
         const endpoint = `/companies/${companyId}/quotes/${quoteId}`;
-        const response = await put<Quote>(endpoint, data);
+        const res = await apiCall(endpoint, {
+          method: "PUT",
+          body: JSON.stringify(data),
+        });
 
-        if (response.error) {
-          throw new Error(response.error);
-        }
-
-        if (!response.data) {
-          throw new Error("Erro ao atualizar orçamento");
-        }
-
-        // Atualizar lista local
-        await fetchQuotes();
-
-        return response.data;
+        const updated: Quote | null = res?.data?.id
+          ? res.data
+          : res?.id
+          ? res
+          : null;
+        await refetchAfterMutation();
+        return updated;
       } catch (err) {
-        const errorMessage =
+        const msg =
           err instanceof Error ? err.message : "Erro ao atualizar orçamento";
-        setError(errorMessage);
-        throw err;
+        setError(msg);
+        return null;
       } finally {
         setIsUpdating(false);
       }
     },
-    [companyId, put, fetchQuotes]
+    [apiCall, companyId, refetchAfterMutation]
   );
 
-  // Atualizar apenas status do orçamento
   const updateQuoteStatus = useCallback(
-    async (quoteId: string, status: Quote["status"]): Promise<Quote> => {
-      if (!companyId) throw new Error("Company ID é obrigatório");
-
-      setIsUpdating(true);
-      setError(null);
+    async (quoteId: string, status: Quote["status"]): Promise<boolean> => {
+      if (!companyId || !quoteId) return false;
 
       try {
         const endpoint = `/companies/${companyId}/quotes/${quoteId}/status`;
-        const response = await put<Quote>(endpoint, { status });
+        await apiCall(endpoint, {
+          method: "PUT",
+          body: JSON.stringify({ status }),
+        });
 
-        if (response.error) {
-          throw new Error(response.error);
-        }
-
-        if (!response.data) {
-          throw new Error("Erro ao atualizar status do orçamento");
-        }
-
-        // Atualizar lista local
-        await fetchQuotes();
-
-        return response.data;
+        await refetchAfterMutation();
+        return true;
       } catch (err) {
-        const errorMessage =
+        const msg =
           err instanceof Error ? err.message : "Erro ao atualizar status";
-        setError(errorMessage);
-        throw err;
-      } finally {
-        setIsUpdating(false);
+        setError(msg);
+        return false;
       }
     },
-    [companyId, put, fetchQuotes]
+    [apiCall, companyId, refetchAfterMutation]
   );
 
-  // Deletar orçamento
   const deleteQuote = useCallback(
-    async (quoteId: string): Promise<void> => {
-      if (!companyId) throw new Error("Company ID é obrigatório");
+    async (quoteId: string): Promise<boolean> => {
+      if (!companyId || !quoteId) return false;
 
       setIsDeleting(true);
       setError(null);
 
       try {
         const endpoint = `/companies/${companyId}/quotes/${quoteId}`;
-        const response = await del(endpoint);
+        await apiCall(endpoint, {
+          method: "DELETE",
+          body: JSON.stringify({}), // body vazio para compatibilidade com content-type json
+        });
 
-        if (response.error) {
-          throw new Error(response.error);
-        }
-
-        // Atualizar lista local
-        await fetchQuotes();
+        await refetchAfterMutation();
+        return true;
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Erro ao deletar orçamento";
-        setError(errorMessage);
-        throw err;
+        const msg =
+          err instanceof Error ? err.message : "Erro ao excluir orçamento";
+        setError(msg);
+        return false;
       } finally {
         setIsDeleting(false);
       }
     },
-    [companyId, del, fetchQuotes]
+    [apiCall, companyId, refetchAfterMutation]
   );
 
-  // Gerar número do orçamento
   const generateQuoteNumber = useCallback(async (): Promise<string> => {
-    if (!companyId) throw new Error("Company ID é obrigatório");
+    if (!companyId) return "";
 
     try {
       const endpoint = `/companies/${companyId}/quotes/generate-number`;
-      const response = await get<QuoteGenerateNumberResponse>(endpoint);
-
-      if (response.error) {
-        throw new Error(response.error);
-      }
-
-      if (!response.data) {
-        throw new Error("Erro ao gerar número do orçamento");
-      }
-
-      return response.data.quote_number;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Erro ao gerar número";
-      setError(errorMessage);
-      throw err;
+      const res = await apiCall(endpoint, { method: "GET" });
+      const payload: GenerateNumberResponse = res?.data?.quote_number
+        ? res.data
+        : res;
+      return payload?.quote_number ?? "";
+    } catch {
+      // Fallback local
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      const d = String(now.getDate()).padStart(2, "0");
+      const t = String(now.getTime()).slice(-4);
+      return `ORC-${y}${m}${d}-${t}`;
     }
-  }, [companyId, get]);
+  }, [apiCall, companyId]);
 
-  // Buscar orçamento por ID
-  const getQuoteById = useCallback(
-    async (quoteId: string): Promise<Quote> => {
-      if (!companyId) throw new Error("Company ID é obrigatório");
+  const fetchClients = useCallback(async (): Promise<Client[]> => {
+    if (!companyId) return [];
+    try {
+      const endpoint = `/companies/${companyId}/clients`;
+      const res = await apiCall(endpoint, { method: "GET" });
+      return Array.isArray(res)
+        ? res
+        : Array.isArray(res?.data)
+        ? res.data
+        : [];
+    } catch {
+      return [];
+    }
+  }, [apiCall, companyId]);
 
+  const fetchProducts = useCallback(async (): Promise<Product[]> => {
+    if (!companyId) return [];
+    try {
+      const endpoint = `/companies/${companyId}/products/active`;
+      const res = await apiCall(endpoint, { method: "GET" });
+      return Array.isArray(res)
+        ? res
+        : Array.isArray(res?.data)
+        ? res.data
+        : [];
+    } catch {
+      return [];
+    }
+  }, [apiCall, companyId]);
+
+  const fetchQuoteStats =
+    useCallback(async (): Promise<QuoteStatsResponse | null> => {
+      if (!companyId) return null;
       try {
-        const endpoint = `/companies/${companyId}/quotes/${quoteId}`;
-        const response = await get<Quote>(endpoint);
+        const endpoint = `/companies/${companyId}/quotes/stats`;
+        const res = await apiCall(endpoint, { method: "GET" });
+        return res?.data?.total_quotes !== undefined ? res.data : res ?? null;
+      } catch {
+        return null;
+      }
+    }, [apiCall, companyId]);
 
-        if (response.error) {
-          throw new Error(response.error);
-        }
-
-        if (!response.data) {
-          throw new Error("Orçamento não encontrado");
-        }
-
-        return response.data;
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Erro ao buscar orçamento";
-        setError(errorMessage);
-        throw err;
+  const fetchExpiringQuotes = useCallback(
+    async (days: number = 7) => {
+      if (!companyId) return [];
+      try {
+        const endpoint = `/companies/${companyId}/quotes/expiring?days=${days}`;
+        const res = await apiCall(endpoint, { method: "GET" });
+        return Array.isArray(res)
+          ? res
+          : Array.isArray(res?.data)
+          ? res.data
+          : [];
+      } catch {
+        return [];
       }
     },
-    [companyId, get]
+    [apiCall, companyId]
   );
-
-  // Buscar orçamentos em período específico de vencimento
-  const getQuotesExpiringBetween = useCallback(
-    async (fromDate: string, toDate: string) => {
-      await fetchQuotes({
-        expiry_date_from: fromDate,
-        expiry_date_to: toDate,
-      });
-    },
-    [fetchQuotes]
-  );
-
-  // Buscar orçamentos que vencem hoje
-  const getQuotesExpiringToday = useCallback(async () => {
-    const today = new Date().toISOString().split("T")[0];
-    await fetchQuotes({
-      expiry_date_from: today,
-      expiry_date_to: today,
-    });
-  }, [fetchQuotes]);
-
-  // Buscar orçamentos que vencem esta semana
-  const getQuotesExpiringThisWeek = useCallback(async () => {
-    const today = new Date();
-    const weekFromNow = new Date();
-    weekFromNow.setDate(today.getDate() + 7);
-
-    const todayString = today.toISOString().split("T")[0];
-    const weekString = weekFromNow.toISOString().split("T")[0];
-
-    await fetchQuotes({
-      expiry_date_from: todayString,
-      expiry_date_to: weekString,
-    });
-  }, [fetchQuotes]);
-
-  // Função para recarregar dados
-  const refetch = useCallback(async () => {
-    await Promise.all([fetchQuotes(), fetchStats(), fetchExpiringQuotes()]);
-  }, [fetchQuotes, fetchStats, fetchExpiringQuotes]);
-
-  // Limpar erro
-  const clearError = useCallback(() => {
-    setError(null);
-  }, []);
-
-  // Auto fetch na inicialização
-  useEffect(() => {
-    if (autoFetch && companyId) {
-      refetch();
-    }
-  }, [autoFetch, companyId, refetch]);
 
   return {
+    // Estado
     quotes,
-    pagination,
-    stats,
-    expiringQuotes,
     isLoading,
     isCreating,
     isUpdating,
     isDeleting,
     error,
+    pagination,
 
+    // Ações CRUD
     fetchQuotes,
-    fetchStats,
-    fetchExpiringQuotes,
+    fetchQuoteById,
     createQuote,
     updateQuote,
     updateQuoteStatus,
     deleteQuote,
+
+    // Utilitários
     generateQuoteNumber,
-    getQuoteById,
-
-    // Utility functions for date filtering
-    getQuotesExpiringBetween,
-    getQuotesExpiringToday,
-    getQuotesExpiringThisWeek,
-
-    refetch,
-    clearError,
+    fetchClients,
+    fetchProducts,
+    fetchQuoteStats,
+    fetchExpiringQuotes,
   };
-};
+}
