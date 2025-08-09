@@ -51,6 +51,8 @@ import { FinanceTab } from "@/components/quotes/edit/FinanceTab";
 import { ObservationsTab } from "@/components/quotes/edit/ObservationsTab";
 import { FooterActions } from "@/components/quotes/edit/FooterActions";
 
+import { useAuth } from "@/contexts/AuthContext";
+
 type TabValue = "cliente" | "itens" | "financeiro" | "observacoes";
 
 export default function QuoteEditPage() {
@@ -62,7 +64,6 @@ export default function QuoteEditPage() {
     router,
     companyId,
     form,
-    hasCatalog,
     products,
     subtotalCents,
     discountCents,
@@ -80,6 +81,11 @@ export default function QuoteEditPage() {
 
   const { createBreadcrumbs } = useDashboardLayout();
   const [activeTab, setActiveTab] = useState<TabValue>("cliente");
+
+  const { hasCatalog, activePlan } = useAuth();
+  console.log("activePlan", activePlan, "hasCatalog", hasCatalog);
+
+  
 
   // UX
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);

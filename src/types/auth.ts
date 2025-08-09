@@ -4,6 +4,7 @@ export interface User {
   name: string;
   email: string;
   role: string;
+  active_plan?: ActivePlan | null;
 }
 
 export interface AuthTokens {
@@ -48,4 +49,11 @@ export interface ApiOptions extends Omit<RequestInit, "body"> {
   showErrorToast?: boolean;
   showSuccessToast?: boolean;
   body?: BodyInit | null; // explicitando body para não conflitar
+}
+
+export interface ActivePlan {
+  plan_name: string;
+  status: "active" | "trialing" | "canceled" | "past_due" | string;
+  trial_ends_at: string | null;
+  current_period_ends_at: string | null;
 }

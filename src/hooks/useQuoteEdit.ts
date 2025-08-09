@@ -54,10 +54,13 @@ export function useQuoteEdit() {
   const quoteId = (params.quoteId ?? params.qid) as string | undefined;
 
   // Catálogo via plano do usuário (ou você pode manter sua lógica atual)
-  // Catálogo habilitado quando há plano ativo (ou trial)
   const hasCatalog = (() => {
-    const status = user?.active_plan?.status as string | undefined;
-    return !!status && (status === "active" || status === "trialing");
+    const plan = user?.active_plan as
+      | { plan_name?: string; status?: string }
+      | undefined;
+    if (!plan) return false;
+    if (plan.status !== "active" && plan.status !== "trialing") return false;
+    return plan.plan_name === "Profissional" || plan.plan_name === "Premium";
   })();
 
   const [quote, setQuote] = useState<Quote | null>(null);
@@ -90,6 +93,7 @@ export function useQuoteEdit() {
     },
     [form]
   );
+
 
   const fetchAll = useCallback(async () => {
     if (!companyId || !quoteId) {
