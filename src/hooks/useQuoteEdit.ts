@@ -21,10 +21,15 @@ function hydrateFormFromApi(q: Quote): QuoteFormData {
     notes: q.notes ?? "",
     internal_notes: q.internal_notes ?? "",
     terms_and_conditions_content: q.terms_and_conditions_content ?? "",
-    discount_type: (q as any).discount_type ?? "",
-    discount_value: ((q as any).discount_value_cents ?? 0) / 100,
-    tax_amount: ((q as any).tax_amount_cents ?? 0) / 100,
-    items: (q.items ?? []).map((it: any) => ({
+    discount_type:
+      (q as unknown as { discount_type?: string })?.discount_type ?? "",
+    discount_value:
+      ((q as unknown as { discount_value_cents?: number })
+        ?.discount_value_cents ?? 0) / 100,
+    tax_amount:
+      ((q as unknown as { tax_amount_cents?: number })?.tax_amount_cents ?? 0) /
+      100,
+    items: (q.items ?? []).map((it) => ({
       id: it.id,
       product_id: it.product_id ?? undefined,
       description: it.description,
@@ -36,32 +41,26 @@ function hydrateFormFromApi(q: Quote): QuoteFormData {
 
 /** subtotal simples com base nos itens do form (R$ -> cents) */
 function calcSubtotalCents(items: QuoteFormData["items"]) {
-  const sum = (items ?? []).reduce(
-    (acc, it) => acc + Number(it.quantity || 0) * Number(it.unit_price || 0),
-    0
-  );
+  const sum = (items ?? []).reduce((acc, it) => {
+    const qty = Number(it.quantity || 0);
+    const unit = Number(it.unit_price || 0);
+    return acc + qty * unit;
+  }, 0);
   return Math.max(0, Math.round(sum * 100));
 }
 
 export function useQuoteEdit() {
   const params = useParams();
   const router = useRouter();
-  const { tokens, user } = useAuth() as any;
+
+  // ✅ Fonte única de verdade para catálogo e tokens
+  const { tokens, hasCatalog } = useAuth();
+
   const { get, put, post, delete: del } = useApi();
 
   // Aceita [companyId] OU [id] na rota
   const companyId = (params.companyId ?? params.id) as string | undefined;
   const quoteId = (params.quoteId ?? params.qid) as string | undefined;
-
-  // Catálogo via plano do usuário (ou você pode manter sua lógica atual)
-  const hasCatalog = (() => {
-    const plan = user?.active_plan as
-      | { plan_name?: string; status?: string }
-      | undefined;
-    if (!plan) return false;
-    if (plan.status !== "active" && plan.status !== "trialing") return false;
-    return plan.plan_name === "Profissional" || plan.plan_name === "Premium";
-  })();
 
   const [quote, setQuote] = useState<Quote | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -89,11 +88,11 @@ export function useQuoteEdit() {
   const applyQuoteFromApi = useCallback(
     (q: Quote) => {
       setQuote(q);
-      form.reset(hydrateFormFromApi(q), { keepDefaultValues: false });
+      const values = hydrateFormFromApi(q);
+      form.reset(values, { keepDefaultValues: false });
     },
     [form]
   );
-
 
   const fetchAll = useCallback(async () => {
     if (!companyId || !quoteId) {
@@ -130,22 +129,20 @@ export function useQuoteEdit() {
     } finally {
       setLoading(false);
     }
-  }, [companyId, quoteId, get, applyQuoteFromApi, hasCatalog]);
+  }, [applyQuoteFromApi, companyId, get, hasCatalog, quoteId]);
 
   // Aguarda token + params válidos para buscar (evita 401 e toasts precoces)
   useEffect(() => {
-    // Sem params -> erro explícito e encerra loading
     if (!companyId || !quoteId) {
       setError("Parâmetros ausentes na rota.");
       setLoading(false);
       return;
     }
-    // Sem token ainda -> mostra loading, mas não busca
     if (!tokens?.accessToken) {
       setLoading(true);
       return;
     }
-    fetchAll();
+    void fetchAll();
   }, [companyId, quoteId, tokens?.accessToken, fetchAll]);
 
   /** Salvar campos gerais (sem itens) */
@@ -156,10 +153,11 @@ export function useQuoteEdit() {
       setError(null);
 
       try {
-        const payload: any = {
+        const payload = {
           client_id: values.client_id,
           quote_number: values.quote_number,
-          issue_date: values.issue_date, // remova se backend não aceitar
+          // Remova issue_date se o backend realmente não aceitar
+          issue_date: values.issue_date,
           expiry_date: values.expiry_date || null,
           notes: values.notes || null,
           internal_notes: values.internal_notes || null,
@@ -193,7 +191,7 @@ export function useQuoteEdit() {
         setSaving(false);
       }
     },
-    [companyId, quote, put, applyQuoteFromApi]
+    [applyQuoteFromApi, companyId, put, quote]
   );
 
   /** Alterar status */
@@ -223,11 +221,10 @@ export function useQuoteEdit() {
         setUpdatingStatus(false);
       }
     },
-    [companyId, quote, put, applyQuoteFromApi]
+    [applyQuoteFromApi, companyId, put, quote]
   );
 
   /** Itens — novas rotas */
-
   const addItem = useCallback(
     async (payload: {
       description: string;
@@ -237,12 +234,14 @@ export function useQuoteEdit() {
     }) => {
       if (!quote || !companyId) return;
       setError(null);
+
       const body = {
         description: payload.description,
         quantity: Number(payload.quantity),
         unit_price_cents: Math.round(Number(payload.unit_price) * 100),
         product_id: payload.product_id ?? null,
       };
+
       const { data, error: apiErr } = await post<Quote>(
         `/companies/${companyId}/quotes/${quote.id}/items`,
         body
@@ -253,7 +252,7 @@ export function useQuoteEdit() {
       }
       if (data) applyQuoteFromApi(data);
     },
-    [companyId, quote, post, applyQuoteFromApi]
+    [applyQuoteFromApi, companyId, post, quote]
   );
 
   const updateItem = useCallback(
@@ -269,7 +268,7 @@ export function useQuoteEdit() {
       if (!quote || !companyId) return;
       setError(null);
 
-      const body: any = {};
+      const body: Record<string, unknown> = {};
       if (patch.description !== undefined) body.description = patch.description;
       if (patch.quantity !== undefined) body.quantity = Number(patch.quantity);
       if (patch.unit_price !== undefined)
@@ -286,7 +285,7 @@ export function useQuoteEdit() {
       }
       if (data) applyQuoteFromApi(data);
     },
-    [companyId, quote, put, applyQuoteFromApi]
+    [applyQuoteFromApi, companyId, put, quote]
   );
 
   const removeItem = useCallback(
@@ -303,31 +302,32 @@ export function useQuoteEdit() {
       }
       if (data) applyQuoteFromApi(data);
     },
-    [companyId, quote, del, applyQuoteFromApi]
+    [applyQuoteFromApi, companyId, del, quote]
   );
 
-  // Totais básicos para footer/financeiro
+  // ===== Totais (observando os campos do form) =====
+  const watchedItems = form.watch("items");
+  const watchedDiscount = form.watch("discount_value");
+  const watchedTax = form.watch("tax_amount");
+
   const subtotalCents = useMemo(
-    () => calcSubtotalCents(form.getValues("items") ?? []),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [form.watch("items")]
+    () => calcSubtotalCents(watchedItems ?? []),
+    [watchedItems]
   );
+
   const discountCents = useMemo(
-    () =>
-      Math.max(0, Math.round((form.getValues("discount_value") || 0) * 100)),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [form.watch("discount_value")]
+    () => Math.max(0, Math.round(Number(watchedDiscount || 0) * 100)),
+    [watchedDiscount]
   );
+
+  const taxCents = useMemo(
+    () => Math.max(0, Math.round(Number(watchedTax || 0) * 100)),
+    [watchedTax]
+  );
+
   const totalCents = useMemo(
-    () =>
-      Math.max(
-        0,
-        subtotalCents -
-          discountCents +
-          Math.max(0, Math.round((form.getValues("tax_amount") || 0) * 100))
-      ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [subtotalCents, discountCents, form.watch("tax_amount")]
+    () => Math.max(0, subtotalCents - discountCents + taxCents),
+    [discountCents, subtotalCents, taxCents]
   );
 
   return {
@@ -343,7 +343,7 @@ export function useQuoteEdit() {
     error,
 
     // catálogo
-    hasCatalog,
+    hasCatalog, // vindo do AuthContext
     products,
 
     // form

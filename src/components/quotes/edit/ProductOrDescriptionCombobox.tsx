@@ -80,13 +80,15 @@ export function ProductOrDescriptionCombobox({
           className="w-full justify-between"
         >
           {currentLabel || (
-            <span className="text-muted-foreground">{placeholder}</span>
+            <span className="text-muted-foreground overflow-hidden">
+              {placeholder}
+            </span>
           )}
           <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+      <PopoverContent className="p-0 min-w-full">
         <Command
           filter={(value, search) =>
             value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0

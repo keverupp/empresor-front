@@ -70,22 +70,19 @@ export default function QuoteEditPage() {
     totalCents,
     saving,
     updatingStatus,
-    // ações gerais
     onSubmit,
     handleStatus,
-    // ações de itens (rotas novas da API)
     addItem,
     updateItem,
     removeItem,
+    hasCatalog,
   } = useQuoteEdit();
 
   const { createBreadcrumbs } = useDashboardLayout();
   const [activeTab, setActiveTab] = useState<TabValue>("cliente");
 
-  const { hasCatalog, activePlan } = useAuth();
+  const { activePlan } = useAuth();
   console.log("activePlan", activePlan, "hasCatalog", hasCatalog);
-
-  
 
   // UX
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -424,12 +421,6 @@ export default function QuoteEditPage() {
             <div className="mt-6">
               <TabsContent value="cliente" className="mt-0">
                 <div className="text-card-foreground rounded-lg">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Users className="h-5 w-5 text-primary" />
-                    <h2 className="text-lg font-semibold">
-                      Informações do Cliente
-                    </h2>
-                  </div>
                   <ClientTab form={form} quote={quote} />
                 </div>
               </TabsContent>
@@ -449,12 +440,6 @@ export default function QuoteEditPage() {
 
               <TabsContent value="financeiro" className="mt-0">
                 <div className="text-card-foreground rounded-lg">
-                  <div className="flex items-center gap-2 mb-4">
-                    <Calculator className="h-5 w-5 text-primary" />
-                    <h2 className="text-lg font-semibold">
-                      Configurações Financeiras
-                    </h2>
-                  </div>
                   <FinanceTab
                     form={form}
                     subtotalCents={subtotalCents}
@@ -466,12 +451,6 @@ export default function QuoteEditPage() {
 
               <TabsContent value="observacoes" className="mt-0">
                 <div className="text-card-foreground rounded-lg">
-                  <div className="flex items-center gap-2 mb-4">
-                    <MessageSquare className="h-5 w-5 text-primary" />
-                    <h2 className="text-lg font-semibold">
-                      Observações Adicionais
-                    </h2>
-                  </div>
                   <ObservationsTab form={form} />
                 </div>
               </TabsContent>

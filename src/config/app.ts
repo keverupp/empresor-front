@@ -13,7 +13,7 @@ export const appConfig = {
     staging: "https://staging.empresor.com.br",
     development: "http://localhost:3000",
     api: {
-      base: "http://127.0.0.1:3000", // Baseado no servidor de desenvolvimento da API
+      base: "http://127.0.0.1:3001", // Baseado no servidor de desenvolvimento da API
       version: "api",
       endpoints: {
         // Autenticação
@@ -324,7 +324,7 @@ export const appConfig = {
     api: {
       timeout: 30000,
       retries: 3,
-      baseURL: "http://127.0.0.1:3000/api", // Baseado no servidor da API fornecida
+      baseURL: "http://127.0.0.1:3001/api", // Baseado no servidor da API fornecida
     },
     debug: true,
     mockData: false, // Como temos API real, desabilitar mock

@@ -541,11 +541,6 @@ export function ItemsTab({
                           >
                             {it.description}
                           </span>
-                          {it.product_id && hasCatalog && (
-                            <Badge variant="outline" className="mt-1 text-xs">
-                              Produto do catálogo
-                            </Badge>
-                          )}
                         </div>
                       )}
                     </TableCell>

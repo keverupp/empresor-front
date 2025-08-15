@@ -13,6 +13,9 @@ import { storage } from "../utils/storage";
 import { appConfig } from "../config/app";
 import { toast } from "sonner";
 
+// ============================
+// Types do Contexto
+// ============================
 interface AuthContextType extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
@@ -21,9 +24,15 @@ interface AuthContextType extends AuthState {
   resetPassword: (token: string, newPassword: string) => Promise<void>;
   refreshToken: () => Promise<void>;
   validateSession: () => Promise<void>;
+
+  // Derivados
+  activePlan: User["active_plan"] | null;
+  hasCatalog: boolean;
 }
 
-// Actions
+// ============================
+// Actions & Reducer
+// ============================
 type AuthAction =
   | { type: "AUTH_START" }
   | { type: "AUTH_SUCCESS"; payload: { user: User; tokens: AuthTokens } }
@@ -33,7 +42,6 @@ type AuthAction =
   | { type: "SET_USER"; payload: User }
   | { type: "SET_LOADING"; payload: boolean };
 
-// Reducer
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
     case "AUTH_START":
@@ -63,26 +71,21 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         isLoading: false,
       };
     case "UPDATE_TOKENS":
-      return {
-        ...state,
-        tokens: action.payload,
-      };
+      return { ...state, tokens: action.payload };
     case "SET_USER":
-      return {
-        ...state,
-        user: action.payload,
-      };
+      return { ...state, user: action.payload };
     case "SET_LOADING":
-      return {
-        ...state,
-        isLoading: action.payload,
-      };
+      return { ...state, isLoading: action.payload };
     default:
       return state;
   }
 };
 
-// Função para verificar se o JWT está expirado
+// ============================
+// Utils
+// ============================
+
+// Verificar se o JWT está expirado
 const isTokenExpired = (token: string): boolean => {
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
@@ -93,67 +96,81 @@ const isTokenExpired = (token: string): boolean => {
   }
 };
 
-// Initial state
+// Endpoint helper para /users/me
+const getMeUrl = (): string => {
+  const base = appConfig.development.api.baseURL;
+  // Usa endpoint do appConfig se existir; fallback para /api/users/me
+
+  const pathFromConfig = appConfig?.urls?.api?.endpoints?.users?.me as
+    | string
+    | undefined;
+  return pathFromConfig ? `${base}${pathFromConfig}` : `${base}/api/users/me`;
+};
+
+// Buscar o usuário atual (inclui active_plan)
+async function fetchCurrentUser(accessToken: string): Promise<User> {
+  const res = await fetch(getMeUrl(), {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    let message = "Falha ao carregar dados do usuário";
+    try {
+      const body = await res.json();
+      if (body?.message) message = body.message;
+    } catch {
+      // ignore JSON parse errors
+    }
+    throw new Error(message);
+  }
+
+  return (await res.json()) as User;
+}
+
+// Regra simples: qualquer plano diferente de "Gratuito" tem catálogo
+function computeHasCatalog(user: User | null): boolean {
+  const plan = user?.active_plan;
+  if (!plan) return false;
+
+  const isEligibleStatus =
+    plan.status === "active" || plan.status === "trialing";
+  if (!isEligibleStatus) return false;
+
+  return plan.plan_name.toLowerCase() !== "gratuito";
+}
+
+// ============================
+// Initial state & Context
+// ============================
 const initialState: AuthState = {
   user: null,
   tokens: null,
-  isLoading: true, // Inicia como true para validar sessão
+  isLoading: true, // inicia validando sessão
   isAuthenticated: false,
 };
 
-// Context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Provider component
+// ============================
+// Provider
+// ============================
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Função para validar sessão atual
-  const validateSession = async (): Promise<void> => {
-    const tokens = storage.getTokens();
-    const user = storage.getUser();
-
-    if (!tokens || !user) {
-      dispatch({ type: "AUTH_FAILURE" });
-      return;
-    }
-
-    // Verificar se o access token não está expirado
-    if (!isTokenExpired(tokens.accessToken)) {
-      dispatch({
-        type: "AUTH_SUCCESS",
-        payload: { user, tokens },
-      });
-      return;
-    }
-
-    // Se access token expirou, tentar renovar com refresh token
-    if (tokens.refreshToken && !isTokenExpired(tokens.refreshToken)) {
-      try {
-        await refreshTokenInternal(tokens.refreshToken);
-      } catch (error) {
-        console.error("Token refresh failed during validation:", error);
-        storage.clear();
-        dispatch({ type: "AUTH_FAILURE" });
-      }
-    } else {
-      // Refresh token também expirado, limpar sessão
-      storage.clear();
-      dispatch({ type: "AUTH_FAILURE" });
-    }
-  };
-
-  // Função interna para refresh token (sem loops)
+  // ------- Internals -------
   const refreshTokenInternal = async (refreshToken: string): Promise<void> => {
     const apiUrl = `${appConfig.development.api.baseURL}${appConfig.urls.api.endpoints.auth.refresh}`;
 
     const response = await fetch(apiUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refreshToken }),
     });
 
@@ -161,23 +178,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       throw new Error("Token refresh failed");
     }
 
-    const data = await response.json();
-    const user = storage.getUser();
+    const newTokens = (await response.json()) as AuthTokens;
 
-    if (user) {
-      dispatch({
-        type: "AUTH_SUCCESS",
-        payload: { user, tokens: data },
-      });
+    // Após renovar, sempre recarrega /me para garantir active_plan atualizado
+    const me = await fetchCurrentUser(newTokens.accessToken);
+
+    dispatch({
+      type: "AUTH_SUCCESS",
+      payload: { user: me, tokens: newTokens },
+    });
+  };
+
+  const validateSession = async (): Promise<void> => {
+    const tokens = storage.getTokens();
+
+    if (!tokens) {
+      dispatch({ type: "AUTH_FAILURE" });
+      return;
+    }
+
+    // access token válido → busca /me (garante active_plan atualizado)
+    if (!isTokenExpired(tokens.accessToken)) {
+      try {
+        const me = await fetchCurrentUser(tokens.accessToken);
+        dispatch({ type: "AUTH_SUCCESS", payload: { user: me, tokens } });
+        return;
+      } catch (err) {
+        // tenta refresh em seguida
+        // eslint-disable-next-line no-console
+        console.error("Falha ao carregar /me, tentando refresh:", err);
+      }
+    }
+
+    // tenta refresh com refreshToken válido
+    if (tokens.refreshToken && !isTokenExpired(tokens.refreshToken)) {
+      try {
+        await refreshTokenInternal(tokens.refreshToken);
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("Token refresh failed during validation:", error);
+        storage.clear();
+        dispatch({ type: "AUTH_FAILURE" });
+      }
+    } else {
+      storage.clear();
+      dispatch({ type: "AUTH_FAILURE" });
     }
   };
 
   // Inicializar estado ao carregar a aplicação
   useEffect(() => {
-    validateSession();
+    void validateSession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Salvar no localStorage quando state mudar
+  // Persistir no storage quando tokens & user mudarem
   useEffect(() => {
     if (state.tokens && state.user) {
       storage.setTokens(state.tokens);
@@ -185,6 +240,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [state.tokens, state.user]);
 
+  // ------- API Pública (AuthContextType) -------
   const login = async ({
     email,
     password,
@@ -196,37 +252,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       const response = await fetch(apiUrl, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Login failed");
+        let message = "Login failed";
+        try {
+          const errorData = await response.json();
+          message = errorData?.message || message;
+        } catch {
+          // ignore
+        }
+        throw new Error(message);
       }
 
       const data = await response.json();
+      const tokens: AuthTokens = data.tokens;
+
+      // Busca /me com o accessToken recém-obtido (traz active_plan)
+      const me = await fetchCurrentUser(tokens.accessToken);
 
       dispatch({
         type: "AUTH_SUCCESS",
-        payload: {
-          user: data.user,
-          tokens: data.tokens,
-        },
+        payload: { user: me, tokens },
       });
 
-      toast.success(`Bem-vindo, ${data.user.name}!`, {
+      toast.success(`Bem-vindo, ${me.name}!`, {
         description: "Login realizado com sucesso.",
       });
     } catch (error) {
       dispatch({ type: "AUTH_FAILURE" });
       const errorMessage =
         error instanceof Error ? error.message : "Falha no login";
-      toast.error("Erro no login", {
-        description: errorMessage,
-      });
+      toast.error("Erro no login", { description: errorMessage });
       throw error;
     }
   };
@@ -243,37 +302,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       const response = await fetch(apiUrl, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Registration failed");
+        let message = "Registration failed";
+        try {
+          const errorData = await response.json();
+          message = errorData?.message || message;
+        } catch {
+          // ignore
+        }
+        throw new Error(message);
       }
 
       const data = await response.json();
+      const tokens: AuthTokens = data.tokens;
+
+      // Após registrar, também carregue /me (já com active_plan se existir)
+      const me = await fetchCurrentUser(tokens.accessToken);
 
       dispatch({
         type: "AUTH_SUCCESS",
-        payload: {
-          user: data.user,
-          tokens: data.tokens,
-        },
+        payload: { user: me, tokens },
       });
 
       toast.success("Conta criada com sucesso!", {
-        description: `Bem-vindo ao Empresor, ${data.user.name}!`,
+        description: `Bem-vindo ao Empresor, ${me.name}!`,
       });
     } catch (error) {
       dispatch({ type: "AUTH_FAILURE" });
       const errorMessage =
         error instanceof Error ? error.message : "Falha no registro";
-      toast.error("Erro ao criar conta", {
-        description: errorMessage,
-      });
+      toast.error("Erro ao criar conta", { description: errorMessage });
       throw error;
     }
   };
@@ -296,6 +358,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         description: "Você foi desconectado com sucesso.",
       });
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Logout error:", error);
       toast.error("Erro no logout", {
         description: "Houve um problema ao desconectar.",
@@ -312,15 +375,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       const response = await fetch(apiUrl, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Forgot password failed");
+        let message = "Forgot password failed";
+        try {
+          const errorData = await response.json();
+          message = errorData?.message || message;
+        } catch {
+          // ignore
+        }
+        throw new Error(message);
       }
 
       toast.success("E-mail enviado!", {
@@ -329,9 +396,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Erro ao enviar e-mail";
-      toast.error("Erro na recuperação", {
-        description: errorMessage,
-      });
+      toast.error("Erro na recuperação", { description: errorMessage });
       throw error;
     }
   };
@@ -345,15 +410,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       const response = await fetch(apiUrl, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, newPassword }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Reset password failed");
+        let message = "Reset password failed";
+        try {
+          const errorData = await response.json();
+          message = errorData?.message || message;
+        } catch {
+          // ignore
+        }
+        throw new Error(message);
       }
 
       toast.success("Senha redefinida!", {
@@ -362,9 +431,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Erro ao redefinir senha";
-      toast.error("Erro na redefinição", {
-        description: errorMessage,
-      });
+      toast.error("Erro na redefinição", { description: errorMessage });
       throw error;
     }
   };
@@ -377,7 +444,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       await refreshTokenInternal(state.tokens.refreshToken);
     } catch (error) {
-      // Se falhar o refresh, deslogar o usuário
       storage.clear();
       dispatch({ type: "LOGOUT" });
       toast.error("Sessão expirada", {
@@ -386,6 +452,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       throw error;
     }
   };
+
+  // ------- Derivados expostos -------
+  const activePlan = state.user?.active_plan ?? null;
+  const hasCatalog = computeHasCatalog(state.user);
 
   const contextValue: AuthContextType = {
     ...state,
@@ -396,6 +466,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     resetPassword,
     refreshToken,
     validateSession,
+
+    // derivados
+    activePlan,
+    hasCatalog,
   };
 
   return (
@@ -403,7 +477,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-// Hook para usar o contexto
+// ============================
+// Hook
+// ============================
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
