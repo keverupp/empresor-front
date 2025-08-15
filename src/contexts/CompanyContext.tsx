@@ -11,12 +11,16 @@ const CompanyContext = createContext<CompanyContextType | undefined>(undefined);
 // Provider Props
 interface CompanyProviderProps {
   children: ReactNode;
+  autoFetch?: boolean;
 }
 
 // Provider Component
-export function CompanyProvider({ children }: CompanyProviderProps) {
+export function CompanyProvider({
+  children,
+  autoFetch = true,
+}: CompanyProviderProps) {
   const companiesData = useCompanies({
-    autoFetch: true,
+    autoFetch,
     params: {
       pageSize: 50, // Busca mais empresas por vez
     },
