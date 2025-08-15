@@ -94,7 +94,7 @@ export function useQuoteEdit() {
     [form]
   );
 
-  const fetchAll = useCallback(async () => {
+  const fetchQuote = useCallback(async () => {
     if (!companyId || !quoteId) {
       setError("Parâmetros ausentes na rota.");
       setLoading(false);
@@ -104,32 +104,30 @@ export function useQuoteEdit() {
     setLoading(true);
     setError(null);
     try {
-      // Orçamento
       const { data: qData, error: qErr } = await get<Quote>(
         `/companies/${companyId}/quotes/${quoteId}`
       );
       if (qErr) {
         setError(qErr);
-        setLoading(false);
         return;
       }
       if (qData) applyQuoteFromApi(qData);
-
-      // Produtos ativos (para combobox, se plano permitir)
-      if (hasCatalog) {
-        const { data: pData } = await get<Product[]>(
-          `/companies/${companyId}/products/active`
-        );
-        setProducts(Array.isArray(pData) ? pData : []);
-      } else {
-        setProducts([]);
-      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro ao carregar orçamento");
+      setError(
+        e instanceof Error ? e.message : "Erro ao carregar orçamento"
+      );
     } finally {
       setLoading(false);
     }
-  }, [applyQuoteFromApi, companyId, get, hasCatalog, quoteId]);
+  }, [applyQuoteFromApi, companyId, get, quoteId]);
+
+  const fetchProducts = useCallback(async () => {
+    if (!companyId) return;
+    const { data: pData } = await get<Product[]>(
+      `/companies/${companyId}/products/active`
+    );
+    setProducts(Array.isArray(pData) ? pData : []);
+  }, [companyId, get]);
 
   // Aguarda token + params válidos para buscar (evita 401 e toasts precoces)
   useEffect(() => {
@@ -142,8 +140,17 @@ export function useQuoteEdit() {
       setLoading(true);
       return;
     }
-    void fetchAll();
-  }, [companyId, quoteId, tokens?.accessToken, fetchAll]);
+    void fetchQuote();
+  }, [tokens?.accessToken, companyId, quoteId, fetchQuote]);
+
+  useEffect(() => {
+    if (!hasCatalog) {
+      setProducts([]);
+      return;
+    }
+    if (!companyId || !tokens?.accessToken) return;
+    void fetchProducts();
+  }, [hasCatalog, companyId, tokens?.accessToken, fetchProducts]);
 
   /** Salvar campos gerais (sem itens) */
   const onSubmit = useCallback(
