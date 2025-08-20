@@ -54,10 +54,12 @@ export default function CompanyDetailPage() {
     isLoading,
     isUpdating,
     isDeleting,
+    isUploadingLogo,
     error,
     fetchCompany,
     updateCompany,
     deleteCompany,
+    uploadLogo,
   } = useCompanyDetail(companyId);
 
   // Form setup
@@ -249,7 +251,12 @@ export default function CompanyDetailPage() {
     <DashboardLayout breadcrumbs={breadcrumbs} actions={actions}>
       <div className="space-y-6 px-4 py-6 md:px-6">
         {/* Header com avatar e status */}
-        <CompanyHeaderSection company={company} isLoading={isLoading} />
+        <CompanyHeaderSection
+          company={company}
+          isLoading={isLoading}
+          onLogoUpload={uploadLogo}
+          isUploadingLogo={isUploadingLogo}
+        />
 
         {/* Formulário de edição */}
         <form onSubmit={form.handleSubmit(handleSave)} className="space-y-6">

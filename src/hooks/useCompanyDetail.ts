@@ -4,6 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useApi } from "@/hooks/useApi";
 import { detectDocumentType } from "@/lib/format-utils";
 import type { Company } from "@/types/company";
+import { appConfig } from "@/config/app";
+import { toast } from "sonner";
 
 // ... (manter todas as interfaces existentes)
 export interface CompanyApiResponse {
@@ -37,10 +39,12 @@ export interface UseCompanyDetailReturn {
   isLoading: boolean;
   isUpdating: boolean;
   isDeleting: boolean;
+  isUploadingLogo: boolean;
   error: string | null;
   fetchCompany: () => Promise<void>;
   updateCompany: (updateData: Partial<CompanyApiResponse>) => Promise<boolean>;
   deleteCompany: () => Promise<boolean>;
+  uploadLogo: (file: File) => Promise<boolean>;
 }
 
 export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
@@ -52,6 +56,7 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch company
@@ -157,6 +162,48 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
     }
   }, [companyId, tokens?.accessToken, del]);
 
+  // Upload logo
+  const uploadLogo = useCallback(
+    async (file: File): Promise<boolean> => {
+      if (!tokens?.accessToken) return false;
+
+      setIsUploadingLogo(true);
+      const formData = new FormData();
+      formData.append("logo", file);
+
+      try {
+        const endpoint = `${appConfig.development.api.baseURL}${appConfig.urls.api.endpoints.companies.logo(companyId)}`;
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${tokens.accessToken}`,
+          },
+          body: formData,
+        });
+
+        if (!response.ok) {
+          toast.error("Falha ao atualizar logo");
+          return false;
+        }
+
+        const data = (await response.json()) as CompanyApiResponse;
+        const documentType = detectDocumentType(data.document_number);
+        data.document_type =
+          documentType !== "UNKNOWN" ? documentType : undefined;
+        setCompany(data);
+        toast.success("Logo atualizada com sucesso");
+        return true;
+      } catch (err) {
+        console.error("Erro ao enviar logo:", err);
+        toast.error("Erro ao enviar logo");
+        return false;
+      } finally {
+        setIsUploadingLogo(false);
+      }
+    },
+    [companyId, tokens?.accessToken]
+  );
+
   // Effect para carregar dados iniciais
   useEffect(() => {
     if (companyId && tokens?.accessToken) {
@@ -169,10 +216,12 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
     isLoading,
     isUpdating,
     isDeleting,
+    isUploadingLogo,
     error,
     fetchCompany,
     updateCompany,
     deleteCompany,
+    uploadLogo,
   };
 }
 
