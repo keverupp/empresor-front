@@ -60,7 +60,8 @@
     "zod": "^3.25.76",
     "@aws-sdk/client-s3": "^3.744.0",
     "knex": "^2.5.1",
-    "pg": "^8.11.3"
+    "pg": "^8.11.3",
+    "dotenv": "^16.4.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
