@@ -26,7 +26,7 @@ export interface CompanyApiResponse {
   address_zip_code?: string | null;
   address_country?: string | null;
   logo_url?: string | null;
-  status: "active" | "inactive" | "pending_verification";
+  status?: "active" | "inactive" | "pending_verification";
   owner_id: number;
   created_at: string;
   updated_at: string;
@@ -230,13 +230,14 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
 // Função para converter CompanyApiResponse para Company
 export function apiResponseToCompany(apiResponse: CompanyApiResponse): Company {
   const documentType = detectDocumentType(apiResponse.document_number);
+  const status = apiResponse.status ?? "active";
 
   return {
     id: apiResponse.id,
     name: apiResponse.name,
     document_number: apiResponse.document_number,
     document_type: documentType !== "UNKNOWN" ? documentType : "CNPJ",
-    status: apiResponse.status.toUpperCase() as Company["status"],
+    status: status as Company["status"],
     email: apiResponse.email,
     phone: apiResponse.phone_number || undefined,
     logo_url: apiResponse.logo_url || undefined,

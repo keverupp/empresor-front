@@ -30,7 +30,11 @@ export function CompanyHeaderSection({
       .toUpperCase();
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status?: string) => {
+    if (!status) {
+      return { label: "Indefinido", variant: "outline" as const };
+    }
+
     const statusConfig = {
       active: { label: "Ativa", variant: "default" as const },
       pending: { label: "Pendente", variant: "secondary" as const },
