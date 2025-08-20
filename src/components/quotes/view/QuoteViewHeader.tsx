@@ -39,6 +39,7 @@ import {
 import type { Quote } from "@/types/apiInterfaces";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useQuotePdf } from "@/hooks/useQuotePdf";
 
 type Props = {
   companyId: string;
@@ -48,6 +49,8 @@ type Props = {
 
 export function QuoteViewHeader({ companyId, quote, onEdit }: Props) {
   const [copied, setCopied] = useState(false);
+
+  const { generatePdf } = useQuotePdf();
 
   const canDownload = Boolean(quote.pdf_url);
 
@@ -315,6 +318,18 @@ export function QuoteViewHeader({ companyId, quote, onEdit }: Props) {
                     <DropdownMenuItem onClick={copyQuoteLink}>
                       <Copy className="h-4 w-4 mr-2" />
                       {copied ? "Link copiado!" : "Copiar link"}
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem
+                      onClick={async () => {
+                        const url = await generatePdf(quote.id);
+                        if (url) {
+                          window.open(url, "_blank", "noopener,noreferrer");
+                        }
+                      }}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      {canDownload ? "Atualizar PDF" : "Gerar PDF"}
                     </DropdownMenuItem>
 
                     {canDownload && (
