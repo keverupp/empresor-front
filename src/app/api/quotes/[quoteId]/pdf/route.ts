@@ -156,7 +156,7 @@ export async function POST(
     quote_id: quoteId,
     status: "pending",
   });
-  void processJob(jobId, quoteId);
+  await processJob(jobId, quoteId);
   return NextResponse.json({ jobId }, { status: 202 });
 }
 
