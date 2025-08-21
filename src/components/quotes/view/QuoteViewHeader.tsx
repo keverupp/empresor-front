@@ -18,7 +18,6 @@ import {
   formatDateForDisplay,
 } from "@/lib/quote-utils";
 import {
-  Download,
   FileText,
   MoreHorizontal,
   Pencil,
@@ -35,9 +34,12 @@ import {
   User,
   DollarSign,
   Package,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useQuotes } from "@/hooks/useQuotes";
+import type { Quote } from "@/types/apiInterfaces";
 
 type Props = {
   companyId: string;
@@ -47,6 +49,8 @@ type Props = {
 
 export function QuoteViewHeader({ companyId, quote, onEdit }: Props) {
   const [copied, setCopied] = useState(false);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
+  const { generatePdf } = useQuotes({ companyId });
 
   // Calcular status da validade
   const getExpiryStatus = () => {
@@ -126,6 +130,15 @@ export function QuoteViewHeader({ companyId, quote, onEdit }: Props) {
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error("Erro ao copiar link:", err);
+    }
+  };
+
+  const handleGeneratePdf = async () => {
+    setGeneratingPdf(true);
+    try {
+      await generatePdf(quote.id);
+    } finally {
+      setGeneratingPdf(false);
     }
   };
 
@@ -314,9 +327,16 @@ export function QuoteViewHeader({ companyId, quote, onEdit }: Props) {
                       {copied ? "Link copiado!" : "Copiar link"}
                     </DropdownMenuItem>
 
-                    <DropdownMenuItem>
-                      <FileText className="h-4 w-4 mr-2" />
-                      Gerar PDF
+                    <DropdownMenuItem
+                      onClick={() => void handleGeneratePdf()}
+                      disabled={generatingPdf}
+                    >
+                      {generatingPdf ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : (
+                        <FileText className="h-4 w-4 mr-2" />
+                      )}
+                      {generatingPdf ? "Gerando..." : "Gerar PDF"}
                     </DropdownMenuItem>
 
                 

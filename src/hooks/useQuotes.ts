@@ -354,6 +354,61 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
     [apiCall, companyId]
   );
 
+  const generatePdf = useCallback(
+    async (quoteId: string) => {
+      if (!companyId || !quoteId) return;
+
+      try {
+        const pdfDataRes = await apiCall<{ title: string; data: Record<string, unknown> }>(
+          `/companies/${companyId}/quotes/${quoteId}/pdf-data`,
+          { method: "GET" }
+        );
+
+        const payload = {
+          type: "budget-premium",
+          title: pdfDataRes?.title ?? "Orçamento",
+          data: pdfDataRes?.data,
+          config: {
+            format: "A4",
+            orientation: "portrait",
+            margin: {
+              top: "1cm",
+              right: "1cm",
+              bottom: "1cm",
+              left: "1cm",
+            },
+          },
+        };
+
+        const pdfRes = await apiCall<{ url?: string; data?: { url?: string } }>(
+          "https://pdf.empresor.com.br/pdf",
+          {
+            method: "POST",
+            skipAuth: true,
+            headers: {
+              "x-api-key":
+                process.env.NEXT_PUBLIC_PDF_API_KEY ??
+                "33fe697183e1e04440c357bfdf771cdcaa052b1eef294e616c2464dd23d55f4e",
+            },
+            body: JSON.stringify(payload),
+          }
+        );
+
+        const url = pdfRes?.url || pdfRes?.data?.url;
+        if (url) {
+          window.open(url, "_blank");
+        } else {
+          throw new Error("URL do PDF não retornada");
+        }
+      } catch (err) {
+        const msg =
+          err instanceof Error ? err.message : "Erro ao gerar PDF";
+        setError(msg);
+      }
+    },
+    [apiCall, companyId]
+  );
+
   return {
     // Estado
     quotes,
@@ -378,5 +433,6 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
     fetchProducts,
     fetchQuoteStats,
     fetchExpiringQuotes,
+    generatePdf,
   };
 }
