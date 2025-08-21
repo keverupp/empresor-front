@@ -1,8 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ["knex", "pg"],
-  },
+  serverExternalPackages: ["knex", "pg"],
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,

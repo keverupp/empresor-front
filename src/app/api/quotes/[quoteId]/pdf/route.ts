@@ -74,25 +74,27 @@ async function processJob(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { quoteId: string } }
+  context: { params: Promise<{ quoteId: string }> }
 ) {
+  const { quoteId } = await context.params;
   const payload = await req.json().catch(() => undefined);
   const jobId = randomUUID();
   await db("pdf_jobs").insert({
     id: jobId,
-    quote_id: params.quoteId,
+    quote_id: quoteId,
     status: "pending",
   });
-  void processJob(jobId, params.quoteId, payload);
+  void processJob(jobId, quoteId, payload);
   return NextResponse.json({ jobId }, { status: 202 });
 }
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { quoteId: string } }
+  context: { params: Promise<{ quoteId: string }> }
 ) {
+  const { quoteId } = await context.params;
   const jobId = req.nextUrl.searchParams.get("jobId");
-  let query = db("pdf_jobs").where({ quote_id: params.quoteId });
+  let query = db("pdf_jobs").where({ quote_id: quoteId });
   if (jobId) query = query.andWhere({ id: jobId });
   const job = await query.first();
   if (!job) return NextResponse.json({ status: "not_found" }, { status: 404 });
