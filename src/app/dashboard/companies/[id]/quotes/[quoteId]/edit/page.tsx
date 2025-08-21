@@ -176,7 +176,7 @@ export default function QuoteEditPage() {
 
   if (loading) {
     return (
-      <DashboardLayout>
+      <DashboardLayout fetchCompanies={false}>
         <div className="h-[60vh] grid place-items-center">
           <div className="text-center space-y-4">
             <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
@@ -194,7 +194,7 @@ export default function QuoteEditPage() {
 
   if (error || !quote) {
     return (
-      <DashboardLayout>
+      <DashboardLayout fetchCompanies={false}>
         <div className="h-[60vh] grid place-items-center">
           <div className="text-center space-y-4 max-w-md">
             <div className="p-4 rounded-full bg-destructive/10 w-fit mx-auto">
@@ -237,6 +237,7 @@ export default function QuoteEditPage() {
 
   return (
     <DashboardLayout
+      fetchCompanies={false}
       title={
         <div className="flex items-center gap-3">
           <div>

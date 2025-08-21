@@ -22,6 +22,7 @@ interface DashboardLayoutProps {
   breadcrumbs?: BreadcrumbItem[];
   actions?: React.ReactNode;
   className?: string;
+  fetchCompanies?: boolean;
 }
 
 // Componente interno que usa o CompanyContext
@@ -73,6 +74,7 @@ export function DashboardLayout({
   breadcrumbs,
   actions,
   className = "",
+  fetchCompanies = true,
 }: DashboardLayoutProps) {
   const { isAuthenticated, isLoading, validateSession } = useAuth();
   const router = useRouter();
@@ -116,7 +118,7 @@ export function DashboardLayout({
 
   // Envolve todo o dashboard com o CompanyProvider
   return (
-    <CompanyProvider>
+    <CompanyProvider autoFetch={fetchCompanies}>
       <DashboardContent
         title={title}
         description={description}
