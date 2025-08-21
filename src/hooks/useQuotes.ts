@@ -359,12 +359,13 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
       if (!companyId || !quoteId) return;
 
       try {
-        const { data: pdfData } =
+        const pdfResponse =
           await apiCall<{ title: string; data: Record<string, unknown> }>(
             `/companies/${companyId}/quotes/${quoteId}/pdf-data`,
             { method: "GET" }
           );
 
+        const pdfData = pdfResponse.data?.data ?? pdfResponse.data;
         if (!pdfData) {
           throw new Error("Dados do PDF não retornados");
         }
