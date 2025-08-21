@@ -359,15 +359,20 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
       if (!companyId || !quoteId) return;
 
       try {
-        const pdfDataRes = await apiCall<{ title: string; data: Record<string, unknown> }>(
-          `/companies/${companyId}/quotes/${quoteId}/pdf-data`,
-          { method: "GET" }
-        );
+        const { data: pdfData } =
+          await apiCall<{ title: string; data: Record<string, unknown> }>(
+            `/companies/${companyId}/quotes/${quoteId}/pdf-data`,
+            { method: "GET" }
+          );
+
+        if (!pdfData) {
+          throw new Error("Dados do PDF não retornados");
+        }
 
         const payload = {
           type: "budget-premium",
-          title: pdfDataRes?.title ?? "Orçamento",
-          data: pdfDataRes?.data,
+          title: pdfData.title ?? "Orçamento",
+          data: pdfData.data,
           config: {
             format: "A4",
             orientation: "portrait",
