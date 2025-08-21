@@ -4,6 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useApi } from "@/hooks/useApi";
 import { detectDocumentType } from "@/lib/format-utils";
 import type { Company } from "@/types/company";
+import { appConfig } from "@/config/app";
+import { toast } from "sonner";
 
 // ... (manter todas as interfaces existentes)
 export interface CompanyApiResponse {
@@ -24,7 +26,7 @@ export interface CompanyApiResponse {
   address_zip_code?: string | null;
   address_country?: string | null;
   logo_url?: string | null;
-  status: "active" | "inactive" | "pending_verification";
+  status?: "active" | "inactive" | "pending_verification";
   owner_id: number;
   created_at: string;
   updated_at: string;
@@ -37,10 +39,12 @@ export interface UseCompanyDetailReturn {
   isLoading: boolean;
   isUpdating: boolean;
   isDeleting: boolean;
+  isUploadingLogo: boolean;
   error: string | null;
   fetchCompany: () => Promise<void>;
   updateCompany: (updateData: Partial<CompanyApiResponse>) => Promise<boolean>;
   deleteCompany: () => Promise<boolean>;
+  uploadLogo: (file: File) => Promise<boolean>;
 }
 
 export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
@@ -52,6 +56,7 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch company
@@ -157,6 +162,48 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
     }
   }, [companyId, tokens?.accessToken, del]);
 
+  // Upload logo
+  const uploadLogo = useCallback(
+    async (file: File): Promise<boolean> => {
+      if (!tokens?.accessToken) return false;
+
+      setIsUploadingLogo(true);
+      const formData = new FormData();
+      formData.append("logo", file);
+
+      try {
+        const endpoint = `${appConfig.development.api.baseURL}${appConfig.urls.api.endpoints.companies.logo(companyId)}`;
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${tokens.accessToken}`,
+          },
+          body: formData,
+        });
+
+        if (!response.ok) {
+          toast.error("Falha ao atualizar logo");
+          return false;
+        }
+
+        const data = (await response.json()) as CompanyApiResponse;
+        const documentType = detectDocumentType(data.document_number);
+        data.document_type =
+          documentType !== "UNKNOWN" ? documentType : undefined;
+        setCompany(data);
+        toast.success("Logo atualizada com sucesso");
+        return true;
+      } catch (err) {
+        console.error("Erro ao enviar logo:", err);
+        toast.error("Erro ao enviar logo");
+        return false;
+      } finally {
+        setIsUploadingLogo(false);
+      }
+    },
+    [companyId, tokens?.accessToken]
+  );
+
   // Effect para carregar dados iniciais
   useEffect(() => {
     if (companyId && tokens?.accessToken) {
@@ -169,10 +216,12 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
     isLoading,
     isUpdating,
     isDeleting,
+    isUploadingLogo,
     error,
     fetchCompany,
     updateCompany,
     deleteCompany,
+    uploadLogo,
   };
 }
 
@@ -181,13 +230,14 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
 // Função para converter CompanyApiResponse para Company
 export function apiResponseToCompany(apiResponse: CompanyApiResponse): Company {
   const documentType = detectDocumentType(apiResponse.document_number);
+  const status = apiResponse.status ?? "active";
 
   return {
     id: apiResponse.id,
     name: apiResponse.name,
     document_number: apiResponse.document_number,
     document_type: documentType !== "UNKNOWN" ? documentType : "CNPJ",
-    status: apiResponse.status.toUpperCase() as Company["status"],
+    status: status as Company["status"],
     email: apiResponse.email,
     phone: apiResponse.phone_number || undefined,
     logo_url: apiResponse.logo_url || undefined,

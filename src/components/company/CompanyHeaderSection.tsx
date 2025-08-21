@@ -6,15 +6,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { FileText } from "lucide-react";
 import type { CompanyApiResponse } from "@/hooks/useCompanyDetail";
 import { formatCNPJ, detectDocumentType } from "@/lib/format-utils";
+import { toast } from "sonner";
 
 interface CompanyHeaderSectionProps {
   company: CompanyApiResponse | null;
   isLoading: boolean;
+  onLogoUpload?: (file: File) => Promise<boolean>;
+  isUploadingLogo?: boolean;
 }
 
 export function CompanyHeaderSection({
   company,
   isLoading,
+  onLogoUpload,
+  isUploadingLogo,
 }: CompanyHeaderSectionProps) {
   const getCompanyInitials = (name: string) => {
     return name
@@ -25,7 +30,11 @@ export function CompanyHeaderSection({
       .toUpperCase();
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status?: string) => {
+    if (!status) {
+      return { label: "Indefinido", variant: "outline" as const };
+    }
+
     const statusConfig = {
       active: { label: "Ativa", variant: "default" as const },
       pending: { label: "Pendente", variant: "secondary" as const },
@@ -72,15 +81,36 @@ export function CompanyHeaderSection({
     <Card>
       <CardHeader>
         <div className="flex items-start space-x-6">
-          <Avatar className="h-20 w-20">
-            <AvatarImage
-              src={company.logo_url || undefined}
-              alt={company.name}
-            />
-            <AvatarFallback className="text-xl">
-              {getCompanyInitials(company.name)}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="h-20 w-20">
+              <AvatarImage
+                src={company.logo_url || undefined}
+                alt={company.name}
+              />
+              <AvatarFallback className="text-xl">
+                {getCompanyInitials(company.name)}
+              </AvatarFallback>
+            </Avatar>
+            {onLogoUpload && (
+              <input
+                type="file"
+                accept="image/*"
+                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const success = await onLogoUpload(file);
+                  if (success) {
+                    toast.success("Logo atualizada");
+                  } else {
+                    toast.error("Erro ao atualizar logo");
+                  }
+                  e.target.value = "";
+                }}
+                disabled={isUploadingLogo}
+              />
+            )}
+          </div>
 
           <div className="flex-1 space-y-3">
             <div>
