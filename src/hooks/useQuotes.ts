@@ -354,6 +354,66 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
     [apiCall, companyId]
   );
 
+  const generatePdf = useCallback(
+    async (quoteId: string) => {
+      if (!companyId || !quoteId) return;
+
+      try {
+        const pdfResponse = await apiCall<{
+          title: string;
+          data: Record<string, unknown>;
+        }>(
+          `/companies/${companyId}/quotes/${quoteId}/pdf-data`,
+          { method: "GET" }
+        );
+
+        const { title, data } = pdfResponse.data ?? {};
+        if (!title || !data) {
+          throw new Error("Dados do PDF não retornados");
+        }
+
+        const payload = {
+          type: "budget-premium",
+          title,
+          data,
+          config: {
+            format: "A4",
+            orientation: "portrait",
+            margin: {
+              top: "1cm",
+              right: "1cm",
+              bottom: "1cm",
+              left: "1cm",
+            },
+          },
+        };
+
+        const pdfRes = await apiCall<{ url?: string }>(
+          process.env.PDF_API_URL ?? "https://pdf.empresor.com.br/pdf",
+          {
+            method: "POST",
+            skipAuth: true,
+            headers: {
+              "x-api-key": process.env.PDF_API_KEY ?? "",
+            },
+            body: JSON.stringify(payload),
+          }
+        );
+
+        const url = pdfRes.data?.url;
+        if (url) {
+          window.open(url, "_blank");
+        } else {
+          throw new Error("URL do PDF não retornada");
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Erro ao gerar PDF";
+        setError(msg);
+      }
+    },
+    [apiCall, companyId]
+  );
+
   return {
     // Estado
     quotes,
@@ -378,5 +438,6 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
     fetchProducts,
     fetchQuoteStats,
     fetchExpiringQuotes,
+    generatePdf,
   };
 }
