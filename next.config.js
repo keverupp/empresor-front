@@ -1,14 +1,13 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
-      "better-sqlite3": false,
+      'better-sqlite3': false,
       mysql: false,
       mysql2: false,
       oracledb: false,
-      "pg-query-stream": false,
+      'pg-query-stream': false,
       sqlite3: false,
       tedious: false,
     };
@@ -16,4 +15,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
