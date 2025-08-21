@@ -322,7 +322,7 @@ export function QuoteViewHeader({ companyId, quote, onEdit }: Props) {
 
                     <DropdownMenuItem
                       onClick={async () => {
-                        const url = await generatePdf(quote.id);
+                        const url = await generatePdf(companyId, quote.id);
                         if (url) {
                           window.open(url, "_blank", "noopener,noreferrer");
                         }
