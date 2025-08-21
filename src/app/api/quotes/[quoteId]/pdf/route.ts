@@ -8,8 +8,9 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
-import type { Quote, QuoteItem, QuoteClient } from "@/types/quote";
+import type { Quote } from "@/types/apiInterfaces";
 import type { Company } from "@/types/company";
+import { appConfig } from "@/config/app";
 
 const s3 = new S3Client({
   region: process.env.S3_REGION ?? "us-east-1",
@@ -21,16 +22,18 @@ const s3 = new S3Client({
   },
 });
 
-async function buildPdfPayload(quoteId: string) {
-  const quote = await db<Quote>("quotes").where({ id: quoteId }).first();
-  if (!quote) throw new Error("quote not found");
-  const company = await db<Company>("companies")
-    .where({ id: quote.company_id })
-    .first();
-  const client = await db<QuoteClient>("clients")
-    .where({ id: quote.client_id })
-    .first();
-  const items = await db<QuoteItem>("quote_items").where({ quote_id: quoteId });
+async function buildPdfPayload(companyId: string, quoteId: string) {
+  const baseUrl =
+    process.env.API_BASE_URL ?? appConfig.development.api.baseURL;
+  const quoteRes = await fetch(
+    `${baseUrl}/companies/${companyId}/quotes/${quoteId}`
+  );
+  if (!quoteRes.ok) throw new Error("quote fetch failed");
+  const quote = (await quoteRes.json()) as Quote;
+
+  const companyRes = await fetch(`${baseUrl}/companies/${companyId}`);
+  if (!companyRes.ok) throw new Error("company fetch failed");
+  const company = (await companyRes.json()) as Company;
 
   const formatAddress = (c?: Company) => {
     const addr = c?.address ?? {};
@@ -50,29 +53,29 @@ async function buildPdfPayload(quoteId: string) {
     type: "budget-premium",
     title: "ORÇAMENTO PREMIUM",
     data: {
-      logo: { url: company?.logo_url ?? "" },
+      logo: { url: company.logo_url ?? "" },
       watermark: {
         type: "logo",
-        logo: { url: company?.logo_url ?? "" },
+        logo: { url: company.logo_url ?? "" },
       },
       budget: {
         number: quote.quote_number,
         validUntil: quote.expiry_date,
         status: "Em Análise",
         company: {
-          name: company?.name,
-          cnpj: company?.document_number,
+          name: company.name,
+          cnpj: company.document_number,
           address: formatAddress(company),
-          phone: company?.phone,
-          email: company?.email,
-          website: company?.website,
+          phone: company.phone,
+          email: company.email,
+          website: company.website,
         },
         client: {
-          name: client?.name,
-          contact: client?.name,
-          phone: client?.phone_number,
+          name: quote.client.name,
+          contact: quote.client.name,
+          phone: quote.client.phone_number ?? undefined,
         },
-        items: items.map((i) => ({
+        items: quote.items.map((i) => ({
           description: i.description,
           quantity: i.quantity,
           unitPrice: i.unit_price_cents / 100,
@@ -95,9 +98,13 @@ async function buildPdfPayload(quoteId: string) {
   };
 }
 
-async function processJob(jobId: string, quoteId: string): Promise<string> {
+async function processJob(
+  jobId: string,
+  companyId: string,
+  quoteId: string
+): Promise<string> {
   try {
-    const payload = await buildPdfPayload(quoteId);
+    const payload = await buildPdfPayload(companyId, quoteId);
     const response = await fetch(
       process.env.PDF_API_URL ?? "http://pdf.empresor.com.br/pdf",
       {
@@ -150,10 +157,13 @@ async function processJob(jobId: string, quoteId: string): Promise<string> {
 }
 
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   context: { params: Promise<{ quoteId: string }> }
 ) {
   const { quoteId } = await context.params;
+  const companyId = req.nextUrl.searchParams.get("companyId");
+  if (!companyId)
+    return NextResponse.json({ error: "companyId required" }, { status: 400 });
   const jobId = randomUUID();
   await db("pdf_jobs").insert({
     id: jobId,
@@ -161,7 +171,7 @@ export async function POST(
     status: "pending",
   });
   try {
-    const url = await processJob(jobId, quoteId);
+    const url = await processJob(jobId, companyId, quoteId);
     return NextResponse.json({ jobId, url }, { status: 200 });
   } catch {
     return NextResponse.json({ jobId, status: "failed" }, { status: 500 });
