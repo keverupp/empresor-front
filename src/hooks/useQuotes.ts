@@ -359,21 +359,23 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
       if (!companyId || !quoteId) return;
 
       try {
-        const pdfResponse =
-          await apiCall<{ title: string; data: Record<string, unknown> }>(
-            `/companies/${companyId}/quotes/${quoteId}/pdf-data`,
-            { method: "GET" }
-          );
+        const pdfResponse = await apiCall<{
+          title: string;
+          data: Record<string, unknown>;
+        }>(
+          `/companies/${companyId}/quotes/${quoteId}/pdf-data`,
+          { method: "GET" }
+        );
 
-        const pdfData = pdfResponse.data?.data ?? pdfResponse.data;
-        if (!pdfData) {
+        const { title, data } = pdfResponse.data ?? {};
+        if (!title || !data) {
           throw new Error("Dados do PDF não retornados");
         }
 
         const payload = {
           type: "budget-premium",
-          title: pdfData.title ?? "Orçamento",
-          data: pdfData.data,
+          title,
+          data,
           config: {
             format: "A4",
             orientation: "portrait",
@@ -386,29 +388,26 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
           },
         };
 
-        const pdfRes = await apiCall<{ url?: string; data?: { url?: string } }>(
-          "https://pdf.empresor.com.br/pdf",
+        const pdfRes = await apiCall<{ url?: string }>(
+          process.env.PDF_API_URL ?? "https://pdf.empresor.com.br/pdf",
           {
             method: "POST",
             skipAuth: true,
             headers: {
-              "x-api-key":
-                process.env.NEXT_PUBLIC_PDF_API_KEY ??
-                "33fe697183e1e04440c357bfdf771cdcaa052b1eef294e616c2464dd23d55f4e",
+              "x-api-key": process.env.PDF_API_KEY ?? "",
             },
             body: JSON.stringify(payload),
           }
         );
 
-        const url = pdfRes?.url || pdfRes?.data?.url;
+        const url = pdfRes.data?.url;
         if (url) {
           window.open(url, "_blank");
         } else {
           throw new Error("URL do PDF não retornada");
         }
       } catch (err) {
-        const msg =
-          err instanceof Error ? err.message : "Erro ao gerar PDF";
+        const msg = err instanceof Error ? err.message : "Erro ao gerar PDF";
         setError(msg);
       }
     },
