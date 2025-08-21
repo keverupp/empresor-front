@@ -95,7 +95,7 @@ async function buildPdfPayload(quoteId: string) {
   };
 }
 
-async function processJob(jobId: string, quoteId: string): Promise<void> {
+async function processJob(jobId: string, quoteId: string): Promise<string> {
   try {
     const payload = await buildPdfPayload(quoteId);
     const response = await fetch(
@@ -138,10 +138,14 @@ async function processJob(jobId: string, quoteId: string): Promise<void> {
     await db("pdf_jobs")
       .where({ id: jobId })
       .update({ status: "completed", s3_key: key, updated_at: new Date() });
-  } catch {
+
+    return `${process.env.S3_PUBLIC_URL ?? ""}/${key}`;
+  } catch (err) {
+    console.error("processJob failed", err);
     await db("pdf_jobs")
       .where({ id: jobId })
       .update({ status: "failed", updated_at: new Date() });
+    throw err;
   }
 }
 
@@ -156,8 +160,12 @@ export async function POST(
     quote_id: quoteId,
     status: "pending",
   });
-  await processJob(jobId, quoteId);
-  return NextResponse.json({ jobId }, { status: 202 });
+  try {
+    const url = await processJob(jobId, quoteId);
+    return NextResponse.json({ jobId, url }, { status: 200 });
+  } catch {
+    return NextResponse.json({ jobId, status: "failed" }, { status: 500 });
+  }
 }
 
 export async function GET(
