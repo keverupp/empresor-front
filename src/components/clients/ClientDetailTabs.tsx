@@ -254,7 +254,6 @@ export function ClientDetailTabs({
           {Object.entries(tabConfig).map(([key, config]) => {
             const Icon = config.icon;
             const status = getTabStatus(key);
-            const isActive = activeTab === key;
 
             return (
               <TabsTrigger

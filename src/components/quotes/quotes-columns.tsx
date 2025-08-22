@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Eye, Edit, Trash2, User, Copy } from "lucide-react";
+import { MoreHorizontal, Edit, Trash2, User, Copy, Clock } from "lucide-react";
 import { QUOTE_STATUS_CONFIG } from "@/types/quote";
 import type { Quote, QuoteStatus } from "@/types/quote";
 

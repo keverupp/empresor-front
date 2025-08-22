@@ -273,15 +273,6 @@ export function CompanyRegisterDialog({
     }
   };
 
-  // Navegação entre steps
-  const handleBackStep = () => {
-    if (state.currentStep === RegistrationStep.COMPANY_CONFIRMATION) {
-      updateState({ currentStep: RegistrationStep.CNPJ_INPUT });
-    } else if (state.currentStep === RegistrationStep.EMAIL_VERIFICATION) {
-      updateState({ currentStep: RegistrationStep.COMPANY_CONFIRMATION });
-    }
-  };
-
   // Configurações do dialog baseado no step
   const getDialogConfig = () => {
     switch (state.currentStep) {
