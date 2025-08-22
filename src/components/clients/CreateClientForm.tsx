@@ -40,14 +40,15 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 
-const validateDocument = (value: string) => {
+const validateDocument = (value?: string) => {
   if (!value) return true; // Opcional
 
   const cleanValue = value.replace(/\D/g, "");
 
   if (cleanValue.length === 11) {
     return isValidCPF(cleanValue);
-  } else if (cleanValue.length === 14) {
+  }
+  if (cleanValue.length === 14) {
     return isValidCNPJ(cleanValue);
   }
 
