@@ -27,7 +27,7 @@ export function ObservationsTab({
 }: {
   form: UseFormReturn<QuoteFormData>;
 }) {
-  const [setActiveTemplate] = useState<string | null>(null);
+  const [, setActiveTemplate] = useState<string | null>(null);
 
   // Watch form values para contagem de caracteres
   const notes = form.watch("notes") || "";
