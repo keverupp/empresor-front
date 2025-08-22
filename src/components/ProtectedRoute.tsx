@@ -1,7 +1,8 @@
-// src/components/ProtectedRoute.tsx
-import React from "react";
+"use client";
+
+import React, { useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "../contexts/AuthContext";
-import { Navigate, useLocation } from "react-router-dom";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -15,10 +16,20 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   fallback,
 }) => {
   const { isAuthenticated, user, isLoading } = useAuth();
-  const location = useLocation();
+  const router = useRouter();
+  const pathname = usePathname();
 
-  // Mostrar loading enquanto verifica autenticação
-  if (isLoading) {
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.replace(`/login?from=${encodeURIComponent(pathname)}`);
+      } else if (requiredRole && user?.role !== requiredRole) {
+        router.replace("/unauthorized");
+      }
+    }
+  }, [isLoading, isAuthenticated, requiredRole, user?.role, router, pathname]);
+
+  if (isLoading || !isAuthenticated || (requiredRole && user?.role !== requiredRole)) {
     return (
       fallback || (
         <div className="flex items-center justify-center min-h-screen">
@@ -26,16 +37,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         </div>
       )
     );
-  }
-
-  // Redirecionar para login se não autenticado
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  // Verificar papel/role se especificado
-  if (requiredRole && user?.role !== requiredRole) {
-    return <Navigate to="/unauthorized" replace />;
   }
 
   return <>{children}</>;
