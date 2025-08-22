@@ -12,6 +12,7 @@ interface UserProfileResponse {
   role: string;
   status: string;
   created_at: string;
+  avatar_url?: string | null;
   active_plan?: {
     plan_name: string;
     status: string;

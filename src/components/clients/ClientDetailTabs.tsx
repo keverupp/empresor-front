@@ -81,8 +81,20 @@ export function ClientDetailTabs({
 
   // Calcular completude dos dados do cliente
   const calculateCompleteness = () => {
+    const emptySections = {
+      basic: { completed: 0, total: 4 },
+      address: { completed: 0, total: 4 },
+      notes: { completed: 0, total: 1 },
+    };
+
     if (!client || isLoading)
-      return { percentage: 0, completed: 0, total: 0, missing: [] };
+      return {
+        percentage: 0,
+        completed: 0,
+        total: 0,
+        missing: [],
+        sections: emptySections,
+      };
 
     const checks = {
       basic: {

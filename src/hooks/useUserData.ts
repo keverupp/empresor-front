@@ -32,6 +32,7 @@ export const useUserData = () => {
 
     try {
       const profile = await getProfile();
+      if (!profile) throw new Error("Perfil não encontrado");
 
       setUserData({
         name: profile.name,
