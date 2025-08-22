@@ -16,7 +16,8 @@ const productSchema = z.object({
   sku: z.string().optional(),
   unit_price: z.coerce.number().nonnegative(),
   unit: z.string().optional(),
-  is_active: z.boolean().default(true),
+  // is_active is required but defaults to true in the form's defaultValues
+  is_active: z.boolean(),
 });
 
 export type ProductFormValues = z.infer<typeof productSchema>;
