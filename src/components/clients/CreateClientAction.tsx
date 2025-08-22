@@ -36,7 +36,7 @@ export function CreateClientAction({
       setIsSubmitting(true);
 
       try {
-        const { data, error } = await post<Client>(
+        const { data } = await post<Client>(
           `/companies/${companyId}/clients`,
           payload
         );
