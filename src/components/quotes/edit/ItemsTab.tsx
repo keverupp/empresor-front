@@ -41,7 +41,7 @@ import {
   Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { UseFormReturn } from "react-hook-form";
+import { useWatch, type UseFormReturn } from "react-hook-form";
 import type { QuoteFormData } from "@/lib/quote-schemas";
 import type { Product } from "@/types/apiInterfaces";
 import { ProductOrDescriptionCombobox } from "@/components/quotes/edit/ProductOrDescriptionCombobox";
@@ -78,7 +78,11 @@ export function ItemsTab({
   onUpdate,
   onRemove,
 }: Props) {
-  const items = (form.watch("items") as FormItem[] | undefined) ?? [];
+  const rawItems =
+    useWatch({ control: form.control, name: "items" }) as
+      | FormItem[]
+      | undefined;
+  const items = useMemo(() => rawItems ?? [], [rawItems]);
 
   // ---------- Linha de adição ----------
   const [addDesc, setAddDesc] = useState("");

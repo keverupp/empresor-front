@@ -16,6 +16,18 @@ import {
 import CreateClientForm from "./CreateClientForm";
 import { toast } from "sonner";
 
+type ClientApiData = {
+  name: string;
+  email?: string;
+  phone_number?: string;
+  document_number?: string;
+  address_street?: string;
+  address_city?: string;
+  address_state?: string;
+  address_zip_code?: string;
+  notes?: string;
+};
+
 interface CreateClientActionProps {
   companyId: string;
   onCreated?: (client: Client) => void;
@@ -32,7 +44,7 @@ export function CreateClientAction({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = useCallback(
-    async (payload: Omit<Client, "id" | "created_at" | "updated_at">) => {
+    async (payload: ClientApiData) => {
       setIsSubmitting(true);
 
       try {
