@@ -320,7 +320,7 @@ export default function CreateClientForm({
   };
 
   // Verificar se é CNPJ
-  const isCNPJ = (doc: string) => {
+  const isCNPJ = (doc?: string) => {
     const clean = doc?.replace(/\D/g, "") || "";
     return clean.length === 14;
   };
