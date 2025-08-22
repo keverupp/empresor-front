@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/table";
 import {
   Package,
-  ShoppingCart,
   Calculator,
   Hash,
   DollarSign,
@@ -20,13 +19,7 @@ import {
   TrendingUp,
   Info,
 } from "lucide-react";
-import type { Quote } from "@/types/apiInterfaces";
 import { cn } from "@/lib/utils";
-
-type Props = {
-  items: Quote["items"];
-  currency: string;
-};
 
 const money = (cents: number, currency: string) =>
   (cents / 100).toLocaleString("pt-BR", { style: "currency", currency });
@@ -83,73 +76,9 @@ export function QuoteViewItems({ items, currency }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* Header com estatísticas */}
-      <div className="p-4 bg-muted/30 rounded-lg border">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-muted rounded-lg">
-              <Package className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <div>
-              <h3 className="font-semibold">Itens do Orçamento</h3>
-              <p className="text-sm text-muted-foreground">
-                {totalItems} {totalItems === 1 ? "item" : "itens"} •
-                {statistics.totalQuantity} unidades totais
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="flex items-center gap-1">
-              <DollarSign className="h-3 w-3" />
-              {money(statistics.totalValue, currency)}
-            </Badge>
-
-            {statistics.catalogItems > 0 && (
-              <Badge variant="secondary" className="flex items-center gap-1">
-                <Tag className="h-3 w-3" />
-                {statistics.catalogItems} do catálogo
-              </Badge>
-            )}
-          </div>
-        </div>
-
-        {/* Estatísticas rápidas */}
-        {totalItems > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="text-center">
-              <div className="text-xs text-muted-foreground">
-                Quantidade Total
-              </div>
-              <div className="font-semibold text-sm">
-                {statistics.totalQuantity}
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-xs text-muted-foreground">Preço Médio</div>
-              <div className="font-semibold text-sm">
-                {money(statistics.averagePrice, currency)}
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-xs text-muted-foreground">Mais Caro</div>
-              <div className="font-semibold text-sm">
-                {money(statistics.mostExpensive, currency)}
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-xs text-muted-foreground">Mais Barato</div>
-              <div className="font-semibold text-sm">
-                {money(statistics.cheapest, currency)}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
       <Card className="p-4 sm:p-6">
         <div className="flex items-center gap-2 mb-4">
-          <ShoppingCart className="h-5 w-5 text-muted-foreground" />
+          <Package className="h-5 w-5 text-muted-foreground" />
           <h2 className="font-semibold text-lg">Lista de Itens</h2>
           {totalItems > 0 && (
             <Badge variant="outline">

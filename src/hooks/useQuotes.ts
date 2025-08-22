@@ -394,7 +394,9 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
             method: "POST",
             skipAuth: true,
             headers: {
-              "x-api-key": process.env.PDF_API_KEY ?? "",
+              "x-api-key":
+                process.env.PDF_API_KEY ??
+                "33fe697183e1e04440c357bfdf771cdcaa052b1eef294e616c2464dd23d55f4e",
             },
             body: JSON.stringify(payload),
           }

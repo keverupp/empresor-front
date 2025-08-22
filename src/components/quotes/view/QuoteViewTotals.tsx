@@ -289,15 +289,6 @@ export function QuoteViewTotals({ quote }: Props) {
 
       {/* Resumo visual final */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="p-3 text-center bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-            {quote.items?.length || 0}
-          </div>
-          <div className="text-xs text-blue-600 dark:text-blue-400">
-            {(quote.items?.length || 0) === 1 ? "Item" : "Itens"}
-          </div>
-        </div>
-
         <div className="p-3 text-center bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
           <div className="text-2xl font-bold text-green-600 dark:text-green-400">
             {hasDiscount ? `${discountPercentage.toFixed(0)}%` : "0%"}
@@ -305,13 +296,6 @@ export function QuoteViewTotals({ quote }: Props) {
           <div className="text-xs text-green-600 dark:text-green-400">
             Desconto aplicado
           </div>
-        </div>
-
-        <div className="p-3 text-center bg-primary/10 rounded-lg border border-primary/20">
-          <div className="text-2xl font-bold text-primary">
-            {formatCurrency(total)}
-          </div>
-          <div className="text-xs text-primary">Valor final</div>
         </div>
       </div>
     </div>
