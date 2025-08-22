@@ -154,7 +154,7 @@ export default function CompanyClientsPage() {
     async (payload: {
       client_id: string;
       quote_number: string;
-      expiry_date?: string;
+      expiry_date?: string | null;
       items?: any[];
     }) => {
       // garante items: []
