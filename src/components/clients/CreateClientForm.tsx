@@ -79,7 +79,7 @@ const clientSchema = z.object({
 });
 
 // Tipo para envio à API (com null)
-type ClientApiData = {
+export type ClientApiData = {
   name: string;
   email?: string | null;
   phone_number?: string | null;

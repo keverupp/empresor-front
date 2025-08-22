@@ -4,6 +4,7 @@
 import React, { useState, useCallback } from "react";
 import { useApi } from "@/hooks/useApi";
 import { Client } from "@/types/apiInterfaces";
+import type { ClientApiData } from "./CreateClientForm";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,18 +16,6 @@ import {
 } from "@/components/ui/dialog";
 import CreateClientForm from "./CreateClientForm";
 import { toast } from "sonner";
-
-type ClientApiData = {
-  name: string;
-  email?: string;
-  phone_number?: string;
-  document_number?: string;
-  address_street?: string;
-  address_city?: string;
-  address_state?: string;
-  address_zip_code?: string;
-  notes?: string;
-};
 
 interface CreateClientActionProps {
   companyId: string;
