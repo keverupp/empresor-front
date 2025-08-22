@@ -10,6 +10,13 @@ import {
   Info,
   Users,
 } from "lucide-react";
+import type { Quote, QuoteClient } from "@/types/apiInterfaces";
+
+type Props = {
+  client: QuoteClient;
+  quote: Quote;
+  companyId?: string;
+};
 
 export function QuoteViewClient({ client, quote, companyId }: Props) {
   // Usar companyId do prop ou fallback para quote.company_id

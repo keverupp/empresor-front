@@ -20,9 +20,15 @@ import {
   Info,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { QuoteItem } from "@/types/apiInterfaces";
 
 const money = (cents: number, currency: string) =>
   (cents / 100).toLocaleString("pt-BR", { style: "currency", currency });
+
+type Props = {
+  items?: QuoteItem[];
+  currency: string;
+};
 
 export function QuoteViewItems({ items, currency }: Props) {
   const itemsArray = items || [];
