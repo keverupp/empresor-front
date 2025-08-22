@@ -1,175 +1,121 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
-import { Phone, Mail, MapPin, FileText, MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, FileText } from "lucide-react";
 import { toast } from "sonner";
 
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import { DataTable } from "@/components/data-table/data-table";
-
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ProductDialog } from "@/components/products/ProductDialog";
+import { ProductDeleteDialog } from "@/components/products/ProductDeleteDialog";
+import { useApi } from "@/hooks/useApi";
+import { useAuth } from "@/contexts/AuthContext";
+import type { Product } from "@/types/product";
 import { formatters } from "@/config/app";
 
-// Interface baseada no schema def-4 da API
-interface Client {
-  id: string;
-  company_id: string;
-  name: string;
-  email: string | null;
-  phone_number: string | null;
-  document_number: string | null;
-  address_street: string | null;
-  address_city: string | null;
-  address_state: string | null;
-  address_zip_code: string | null;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export default function CompanyClientsPage() {
+export default function CompanyProductsPage() {
   const params = useParams();
-  const router = useRouter();
   const companyId = params.id as string;
+  const { tokens } = useAuth();
+  const { get } = useApi();
 
-  const [clients, setClients] = useState<Client[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Função para buscar clientes da API
-  const fetchClients = async () => {
+  const fetchProducts = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-
-    try {
-      const response = await fetch(`/api/companies/${companyId}/clients`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+    const { data, error } = await get<{ data: Product[] }>(
+      `/companies/${companyId}/products`
+    );
+    if (error) {
+      setError(error);
+      toast.error("Erro ao carregar produtos", { description: error });
+      setProducts([]);
+    } else if (data) {
+      const maybeList = (data as { data?: unknown }).data;
+      if (Array.isArray(maybeList)) {
+        setProducts(maybeList as Product[]);
+      } else if (Array.isArray(data as unknown)) {
+        setProducts(data as unknown as Product[]);
+      } else {
+        setProducts([]);
       }
-
-      const data = await response.json();
-      setClients(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("Erro ao buscar clientes:", err);
-      setError(err instanceof Error ? err.message : "Erro desconhecido");
-      toast.error("Erro ao carregar clientes", {
-        description: err instanceof Error ? err.message : "Erro desconhecido",
-      });
-    } finally {
-      setIsLoading(false);
     }
+    setIsLoading(false);
+  }, [companyId, get]);
+
+  useEffect(() => {
+    if (tokens?.accessToken) {
+      fetchProducts();
+    }
+  }, [tokens?.accessToken, fetchProducts]);
+
+  const handleCreated = (product: Product) => {
+    setProducts((prev) => [product, ...prev]);
   };
 
-  // Carregar clientes na montagem do componente
-  useEffect(() => {
-    if (companyId) {
-      fetchClients();
-    }
-  }, [companyId]);
+  const handleUpdated = (product: Product) => {
+    setProducts((prev) => prev.map((p) => (p.id === product.id ? product : p)));
+  };
 
-  // Definição das colunas da tabela
-  const columns: ColumnDef<Client>[] = [
+  const handleDeleted = (id: string) => {
+    setProducts((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const columns: ColumnDef<Product>[] = [
     {
       accessorKey: "name",
       header: "Nome",
-      cell: ({ row }) => (
-        <div className="flex flex-col">
-          <span className="font-medium">{row.getValue("name")}</span>
-          {row.original.document_number && (
-            <span className="text-xs text-muted-foreground">
-              {row.original.document_number}
-            </span>
-          )}
-        </div>
-      ),
     },
     {
-      accessorKey: "email",
-      header: "E-mail",
+      accessorKey: "sku",
+      header: "SKU",
       cell: ({ row }) => {
-        const email = row.getValue("email") as string | null;
-        return email ? (
-          <div className="flex items-center gap-2">
-            <Mail className="h-3 w-3 text-muted-foreground" />
-            <span>{email}</span>
-          </div>
-        ) : (
-          <span className="text-muted-foreground text-sm">-</span>
-        );
+        const sku = row.getValue("sku") as string | null;
+        return sku || "-";
       },
     },
     {
-      accessorKey: "phone_number",
-      header: "Telefone",
+      accessorKey: "unit_price_cents",
+      header: "Preço",
+      cell: ({ row }) =>
+        formatters.currency(row.getValue("unit_price_cents") as number),
+    },
+    {
+      accessorKey: "unit",
+      header: "Unidade",
       cell: ({ row }) => {
-        const phone = row.getValue("phone_number") as string | null;
-        return phone ? (
-          <div className="flex items-center gap-2">
-            <Phone className="h-3 w-3 text-muted-foreground" />
-            <span>{phone}</span>
-          </div>
-        ) : (
-          <span className="text-muted-foreground text-sm">-</span>
-        );
+        const unit = row.getValue("unit") as string | null;
+        return unit || "-";
       },
     },
     {
-      id: "address",
-      header: "Endereço",
-      cell: ({ row }) => {
-        const { address_street, address_city, address_state } = row.original;
-        const hasAddress = address_street || address_city || address_state;
-
-        if (!hasAddress) {
-          return <span className="text-muted-foreground text-sm">-</span>;
-        }
-
-        const addressParts = [
-          address_street,
-          address_city,
-          address_state,
-        ].filter(Boolean);
-        return (
-          <div className="flex items-center gap-2">
-            <MapPin className="h-3 w-3 text-muted-foreground" />
-            <span
-              className="text-sm truncate max-w-[200px]"
-              title={addressParts.join(", ")}
-            >
-              {addressParts.join(", ")}
-            </span>
-          </div>
-        );
-      },
+      accessorKey: "is_active",
+      header: "Ativo",
+      cell: ({ row }) => ((row.getValue("is_active") as boolean) ? "Sim" : "Não"),
     },
     {
       accessorKey: "created_at",
       header: "Cadastrado em",
-      cell: ({ row }) => {
-        const date = row.getValue("created_at") as string;
-        return <span className="text-sm">{formatters.date(date)}</span>;
-      },
+      cell: ({ row }) => formatters.date(row.getValue("created_at") as string),
     },
     {
       id: "actions",
       header: "",
       cell: ({ row }) => {
-        const client = row.original;
-
+        const product = row.original;
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -179,33 +125,32 @@ export default function CompanyClientsPage() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() =>
-                  router.push(
-                    `/dashboard/companies/${companyId}/clients/${client.id}`
-                  )
+              <ProductDialog
+                companyId={companyId}
+                product={product}
+                onSuccess={handleUpdated}
+                trigger={
+                  <DropdownMenuItem
+                    onSelect={(e) => e.preventDefault()}
+                    className="cursor-pointer"
+                  >
+                    Editar
+                  </DropdownMenuItem>
                 }
+              />
+              <DropdownMenuSeparator />
+              <ProductDeleteDialog
+                companyId={companyId}
+                product={product}
+                onDeleted={handleDeleted}
               >
-                Ver detalhes
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() =>
-                  router.push(
-                    `/dashboard/companies/${companyId}/clients/${client.id}/edit`
-                  )
-                }
-              >
-                Editar
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() =>
-                  router.push(
-                    `/dashboard/companies/${companyId}/quotes/new?clientId=${client.id}`
-                  )
-                }
-              >
-                Criar orçamento
-              </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={(e) => e.preventDefault()}
+                  className="text-destructive cursor-pointer"
+                >
+                  Excluir
+                </DropdownMenuItem>
+              </ProductDeleteDialog>
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -213,53 +158,35 @@ export default function CompanyClientsPage() {
     },
   ];
 
-  // Filtros configuráveis para a tabela
-  const filterableColumns = [
-    {
-      id: "name",
-      title: "Nome",
-      options: [],
-      type: "text" as const,
-      placeholder: "Filtrar por nome...",
-    },
-  ];
+  const actions = (
+    <ProductDialog
+      companyId={companyId}
+      onSuccess={handleCreated}
+      trigger={<Button size="sm">+ Novo produto</Button>}
+    />
+  );
 
   return (
-    <DashboardLayout title="Clientes">
-      <div className="space-y-6 p-4">
-        {/* Tabela de clientes */}
-
+    <DashboardLayout title="Produtos" actions={actions}>
+      <div className="space-y-4 sm:space-y-6 p-2 sm:p-4">
         <DataTable
-          data={clients}
+          data={products}
           columns={columns}
           searchKey="name"
-          searchPlaceholder="Buscar clientes..."
-          enableGlobalSearch={true}
-          filterableColumns={filterableColumns}
-          enableColumnVisibility={true}
-          enableRefresh={true}
-          enableExport={true}
+          searchPlaceholder="Buscar produtos..."
+          enableGlobalSearch
+          enableColumnVisibility
+          enableRefresh
           isLoading={isLoading}
           error={error}
-          onRefresh={fetchClients}
-          onExport={async () => {
-            // Implementar exportação
-            toast.info("Exportação em desenvolvimento");
-          }}
-          onRowClick={(client) => {
-            router.push(
-              `/dashboard/companies/${companyId}/clients/${client.id}`
-            );
-          }}
+          onRefresh={fetchProducts}
           emptyStateMessage={
             error
-              ? "Erro ao carregar clientes. Tente novamente."
-              : "Nenhum cliente encontrado. Adicione o primeiro cliente para começar."
+              ? "Erro ao carregar produtos. Tente novamente."
+              : "Nenhum produto encontrado. Adicione o primeiro produto."
           }
-          emptyStateIcon={
-            <FileText className="h-8 w-8 text-muted-foreground" />
-          }
-          columnStorageKey={`clients-table-${companyId}`}
+          emptyStateIcon={<FileText className="h-8 w-8 text-muted-foreground" />}
+          columnStorageKey={`products-table-${companyId}`}
           pageSize={15}
           pageSizeOptions={[10, 15, 25, 50]}
         />
