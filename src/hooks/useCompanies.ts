@@ -146,10 +146,12 @@ export function useCompanies(
 
   // Busca automática ao montar o componente
   useEffect(() => {
-    if (autoFetch && tokens?.accessToken && hasInitialized && !isLoading) {
+    if (autoFetch && tokens?.accessToken && hasInitialized) {
       fetchCompanies();
     }
-  }, [autoFetch, tokens?.accessToken, hasInitialized, isLoading, fetchCompanies]);
+    // A dependência `fetchCompanies` já contempla mudanças em `params`
+    // e nos tokens; remover `isLoading` evita requisições em loop.
+  }, [autoFetch, tokens?.accessToken, hasInitialized, fetchCompanies]);
 
   // Efeito separado para selecionar primeira empresa
   useEffect(() => {
