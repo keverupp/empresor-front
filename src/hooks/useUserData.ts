@@ -1,5 +1,5 @@
 // src/hooks/useUserData.ts
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 
@@ -24,7 +24,7 @@ export const useUserData = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadUserData = async () => {
+  const loadUserData = useCallback(async () => {
     if (!isAuthenticated || !user) return;
 
     setIsLoading(true);
@@ -63,11 +63,11 @@ export const useUserData = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [getProfile, isAuthenticated, user]);
 
   useEffect(() => {
     loadUserData();
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, loadUserData]);
 
   return {
     userData,
