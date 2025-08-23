@@ -25,6 +25,10 @@ export interface Company {
     zip_code?: string;
   };
   owner_id: string;
+  share_id?: number;
+  shared_at?: string;
+  permissions?: CompanyPermissions;
+  is_shared?: boolean;
   created_at: string;
   updated_at: string;
   verified_at?: string;

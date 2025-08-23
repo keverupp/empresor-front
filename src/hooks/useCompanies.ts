@@ -102,7 +102,9 @@ export function useCompanies(
       if (params.document_number)
         searchParams.append("document_number", params.document_number);
 
-      const url = `${appConfig.development.api.baseURL}${
+      const baseUrl = appConfig.development.api.baseURL;
+
+      const url = `${baseUrl}${
         appConfig.urls.api.endpoints.companies.list
       }${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
 
@@ -119,13 +121,46 @@ export function useCompanies(
       }
 
       const data: CompanyListResponse = await response.json();
-      const mapped = (data.data || []).map((c) => ({
+      const mappedOwned = (data.data || []).map((c) => ({
         ...c,
         logo_url: c.logo_url
           ? `${c.logo_url}${c.logo_url.includes("?") ? "&" : "?"}v=${encodeURIComponent(c.updated_at)}`
           : undefined,
       }));
-      setCompanies(mapped);
+
+      // Busca empresas compartilhadas com o usuário
+      let sharedCompanies: Company[] = [];
+      try {
+        const sharedUrl = `${baseUrl}${appConfig.urls.api.endpoints.companies.shared}`;
+        const sharedResponse = await fetch(sharedUrl, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${tokens.accessToken}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (sharedResponse.ok) {
+          const sharedData: CompanyListResponse = await sharedResponse.json();
+          sharedCompanies = (sharedData.data || []).map((c) => ({
+            ...c,
+            logo_url: c.logo_url
+              ? `${c.logo_url}${c.logo_url.includes("?") ? "&" : "?"}v=${encodeURIComponent(c.updated_at)}`
+              : undefined,
+            is_shared: true,
+          }));
+        }
+      } catch (error) {
+        console.error("Erro ao buscar empresas compartilhadas:", error);
+      }
+
+      // Combina e remove duplicadas
+      const combined = [...mappedOwned, ...sharedCompanies];
+      const unique = Array.from(
+        new Map(combined.map((c) => [c.id, c])).values()
+      );
+
+      setCompanies(unique);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Erro desconhecido";
@@ -190,19 +225,19 @@ export function useCompanies(
   );
 
   // Obtém permissões da empresa ativa
-  // TODO: Implementar busca de permissões específicas via API quando for compartilhada
   const permissions: CompanyPermissions = useMemo(() => {
     if (!activeCompany) return DEFAULT_PERMISSIONS;
-    return isOwner(activeCompany)
-      ? {
-          can_view_clients: true,
-          can_create_quotes: true,
-          can_edit_settings: true,
-          can_view_finance: true,
-          can_manage_products: true,
-          can_view_reports: true,
-        }
-      : DEFAULT_PERMISSIONS; // TODO: Buscar permissões reais da API de shares
+    if (isOwner(activeCompany)) {
+      return {
+        can_view_clients: true,
+        can_create_quotes: true,
+        can_edit_settings: true,
+        can_view_finance: true,
+        can_manage_products: true,
+        can_view_reports: true,
+      };
+    }
+    return activeCompany.permissions || DEFAULT_PERMISSIONS;
   }, [activeCompany, isOwner]);
 
   // Verifica se tem permissão específica
