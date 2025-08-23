@@ -11,7 +11,7 @@ export type QuoteStatus =
 export type DiscountType = "percentage" | "fixed_amount";
 
 export interface QuoteItem {
-  id?: string;
+  id?: number;
   product_id?: string | null;
   description: string;
   quantity: number;
