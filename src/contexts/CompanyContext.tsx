@@ -6,7 +6,9 @@ import { useCompanies } from "@/hooks/useCompanies";
 import type { CompanyContextType } from "@/types/company";
 
 // Criação do contexto
-const CompanyContext = createContext<CompanyContextType | undefined>(undefined);
+export const CompanyContext = createContext<CompanyContextType | undefined>(
+  undefined
+);
 
 // Provider Props
 interface CompanyProviderProps {

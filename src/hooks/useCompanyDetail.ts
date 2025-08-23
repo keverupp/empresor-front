@@ -1,12 +1,12 @@
 // src/hooks/useCompanyDetail.ts
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useContext } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useApi } from "@/hooks/useApi";
 import { detectDocumentType } from "@/lib/format-utils";
 import type { Company } from "@/types/company";
 import { appConfig } from "@/config/app";
 import { toast } from "sonner";
-import { useCompanyActions } from "@/contexts/CompanyContext";
+import { CompanyContext } from "@/contexts/CompanyContext";
 
 // ... (manter todas as interfaces existentes)
 export interface CompanyApiResponse {
@@ -51,7 +51,8 @@ export interface UseCompanyDetailReturn {
 export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
   const { tokens } = useAuth();
   const { get, put, delete: del } = useApi(); // ✅ Usar o sistema centralizado
-  const { refreshCompanies } = useCompanyActions();
+  const companyContext = useContext(CompanyContext);
+  const refreshCompanies = companyContext?.refreshCompanies;
 
   // Estados
   const [company, setCompany] = useState<CompanyApiResponse | null>(null);
@@ -219,7 +220,7 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
           }
           return merged;
         });
-        await refreshCompanies();
+        await refreshCompanies?.();
         toast.success("Logo atualizada com sucesso");
         return true;
       } catch (err) {
