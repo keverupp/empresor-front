@@ -378,8 +378,8 @@ export function NavCompanies() {
     isError,
     hasPermission,
     refreshCompanies,
-    isOwner,
   } = useCompanyContext();
+  const { user } = useAuth();
 
   const [expandedCompanies, setExpandedCompanies] = React.useState<Set<string>>(
     new Set(activeCompanyId ? [activeCompanyId] : [])
@@ -519,7 +519,7 @@ export function NavCompanies() {
                 company.id,
                 companyPermissions
               );
-              const canShare = isOwner(company);
+              const canShare = company.owner_id === Number(user?.id);
 
               return (
                 <CompanyItem
