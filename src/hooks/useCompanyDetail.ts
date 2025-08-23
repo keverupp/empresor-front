@@ -27,7 +27,7 @@ export interface CompanyApiResponse {
   address_country?: string | null;
   logo_url?: string | null;
   status?: "active" | "inactive" | "pending_verification";
-  owner_id: number;
+  owner_id?: number | string | null;
   created_at: string;
   updated_at: string;
 }
@@ -250,7 +250,7 @@ export function apiResponseToCompany(apiResponse: CompanyApiResponse): Company {
       state: apiResponse.address_state || undefined,
       zip_code: apiResponse.address_zip_code || undefined,
     },
-    owner_id: parseInt(apiResponse.owner_id.toString()), // Garantir conversão
+    owner_id: Number(apiResponse.owner_id ?? 0),
     created_at: apiResponse.created_at,
     updated_at: apiResponse.updated_at,
   };
