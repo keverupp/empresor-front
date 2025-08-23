@@ -186,11 +186,19 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
           return false;
         }
 
-        const data = (await response.json()) as CompanyApiResponse;
-        const documentType = detectDocumentType(data.document_number);
-        data.document_type =
-          documentType !== "UNKNOWN" ? documentType : undefined;
-        setCompany(data);
+        const data = (await response.json()) as Partial<CompanyApiResponse>;
+        setCompany((prev) => {
+          const merged = { ...(prev ?? {}), ...data } as CompanyApiResponse;
+          if (merged.document_number) {
+            const documentType = detectDocumentType(merged.document_number);
+            merged.document_type =
+              documentType !== "UNKNOWN" ? documentType : undefined;
+          }
+          if (merged.owner_id != null) {
+            merged.owner_id = Number(merged.owner_id);
+          }
+          return merged;
+        });
         toast.success("Logo atualizada com sucesso");
         return true;
       } catch (err) {
