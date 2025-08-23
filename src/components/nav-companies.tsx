@@ -18,6 +18,7 @@ import {
   IconMail,
   IconAlertTriangle,
   IconX,
+  IconShare3,
 } from "@tabler/icons-react";
 
 import {
@@ -50,6 +51,9 @@ import { CompanyActivationModal } from "@/components/company-activation-modal";
 import { NewCompanyButton } from "@/components/new-company-button";
 
 import { useCompanyContext } from "@/contexts/CompanyContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { appConfig } from "@/config/app";
+import { toast } from "sonner";
 import type { Company, CompanyMenuItem } from "@/types/company";
 
 // Função para gerar os itens do menu baseado nas permissões
@@ -126,6 +130,7 @@ interface CompanyItemProps {
   onSelect: () => void;
   menuItems: CompanyMenuItem[];
   onActivationClick: () => void;
+  canShare?: boolean;
 }
 
 function CompanyItem({
@@ -136,9 +141,52 @@ function CompanyItem({
   onSelect,
   menuItems,
   onActivationClick,
+  canShare = false,
 }: CompanyItemProps) {
   const pathname = usePathname();
   const { isMobile } = useSidebar();
+  const { tokens } = useAuth();
+
+  const handleShare = async () => {
+    if (!tokens?.accessToken) {
+      toast.error("Token de acesso não encontrado");
+      return;
+    }
+
+    const email = window.prompt("Digite o e-mail para compartilhar:");
+    if (!email) return;
+
+    try {
+      const url = `${appConfig.development.api.baseURL}${appConfig.urls.api.endpoints.companies.shares(company.id)}`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${tokens.accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          permissions: {
+            can_view_clients: true,
+            can_create_quotes: true,
+            can_edit_settings: false,
+            can_view_finance: true,
+            can_manage_products: true,
+            can_view_reports: true,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao compartilhar empresa");
+      }
+
+      toast.success("Empresa compartilhada com sucesso");
+    } catch (error) {
+      console.error("Erro ao compartilhar empresa:", error);
+      toast.error("Falha ao compartilhar empresa");
+    }
+  };
 
   // Verifica se a empresa está pendente de validação
   const isPending =
@@ -213,6 +261,15 @@ function CompanyItem({
                 <DropdownMenuItem onClick={onActivationClick}>
                   <IconMail className="w-4 h-4 mr-2" />
                   Ativar Empresa
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
+            {canShare && (
+              <>
+                <DropdownMenuItem onClick={handleShare}>
+                  <IconShare3 className="w-4 h-4 mr-2" />
+                  Compartilhar
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
               </>
@@ -321,6 +378,7 @@ export function NavCompanies() {
     isError,
     hasPermission,
     refreshCompanies,
+    isOwner,
   } = useCompanyContext();
 
   const [expandedCompanies, setExpandedCompanies] = React.useState<Set<string>>(
@@ -461,6 +519,7 @@ export function NavCompanies() {
                 company.id,
                 companyPermissions
               );
+              const canShare = isOwner(company);
 
               return (
                 <CompanyItem
@@ -472,6 +531,7 @@ export function NavCompanies() {
                   onSelect={() => selectCompany(company.id)}
                   onActivationClick={() => openActivationModal(company)}
                   menuItems={menuItems}
+                  canShare={canShare}
                 />
               );
             })}
