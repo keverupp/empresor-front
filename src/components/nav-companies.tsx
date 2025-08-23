@@ -519,7 +519,7 @@ export function NavCompanies() {
                 company.id,
                 companyPermissions
               );
-              const canShare = company.owner_id === Number(user?.id);
+              const canShare = company.owner_id === user?.id;
 
               return (
                 <CompanyItem

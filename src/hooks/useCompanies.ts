@@ -183,9 +183,8 @@ export function useCompanies(
   // Verifica se é proprietário da empresa
   const isOwner = useCallback(
     (company: Company): boolean => {
-      // Converte user.id (string) para number para comparar com owner_id (number)
-      const userId = user?.id ? parseInt(user.id, 10) : null;
-      return userId === company.owner_id;
+      // Compara owner_id (string) com o id do usuário
+      return user?.id === company.owner_id;
     },
     [user?.id]
   );

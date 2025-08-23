@@ -24,7 +24,7 @@ export interface Company {
     state?: string;
     zip_code?: string;
   };
-  owner_id: number;
+  owner_id: string;
   created_at: string;
   updated_at: string;
   verified_at?: string;

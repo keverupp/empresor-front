@@ -28,7 +28,7 @@ export interface CompanyApiResponse {
   address_country?: string | null;
   logo_url?: string | null;
   status?: "active" | "inactive" | "pending_verification";
-  owner_id?: number | string | null;
+  owner_id?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -210,7 +210,7 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
               documentType !== "UNKNOWN" ? documentType : undefined;
           }
           if (merged.owner_id != null) {
-            merged.owner_id = Number(merged.owner_id);
+            merged.owner_id = String(merged.owner_id);
           }
           if (merged.logo_url) {
             const cacheKey = merged.updated_at
@@ -280,7 +280,7 @@ export function apiResponseToCompany(apiResponse: CompanyApiResponse): Company {
       state: apiResponse.address_state || undefined,
       zip_code: apiResponse.address_zip_code || undefined,
     },
-    owner_id: Number(apiResponse.owner_id ?? 0),
+    owner_id: apiResponse.owner_id ?? "",
     created_at: apiResponse.created_at,
     updated_at: apiResponse.updated_at,
   };
