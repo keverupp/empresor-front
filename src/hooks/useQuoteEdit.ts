@@ -21,8 +21,10 @@ function hydrateFormFromApi(q: Quote): QuoteFormData {
     notes: q.notes ?? "",
     internal_notes: q.internal_notes ?? "",
     terms_and_conditions_content: q.terms_and_conditions_content ?? "",
-    discount_type:
-      (q as unknown as { discount_type?: string })?.discount_type ?? "",
+    discount_type: (() => {
+      const dt = (q as unknown as { discount_type?: string })?.discount_type;
+      return dt === "percentage" || dt === "fixed_amount" ? dt : "";
+    })(),
     discount_value:
       ((q as unknown as { discount_value_cents?: number })
         ?.discount_value_cents ?? 0) / 100,
