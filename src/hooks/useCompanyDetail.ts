@@ -6,6 +6,7 @@ import { detectDocumentType } from "@/lib/format-utils";
 import type { Company } from "@/types/company";
 import { appConfig } from "@/config/app";
 import { toast } from "sonner";
+import { useCompanyActions } from "@/contexts/CompanyContext";
 
 // ... (manter todas as interfaces existentes)
 export interface CompanyApiResponse {
@@ -50,6 +51,7 @@ export interface UseCompanyDetailReturn {
 export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
   const { tokens } = useAuth();
   const { get, put, delete: del } = useApi(); // ✅ Usar o sistema centralizado
+  const { refreshCompanies } = useCompanyActions();
 
   // Estados
   const [company, setCompany] = useState<CompanyApiResponse | null>(null);
@@ -81,9 +83,15 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
       if (response.data) {
         // Derivar document_type baseado no document_number para compatibilidade
         const documentType = detectDocumentType(response.data.document_number);
-        response.data.document_type =
-          documentType !== "UNKNOWN" ? documentType : undefined;
-        setCompany(response.data);
+        const processed = {
+          ...response.data,
+          document_type:
+            documentType !== "UNKNOWN" ? documentType : undefined,
+        };
+        if (processed.logo_url) {
+          processed.logo_url = `${processed.logo_url}${processed.logo_url.includes("?") ? "&" : "?"}v=${encodeURIComponent(processed.updated_at)}`;
+        }
+        setCompany(processed);
       }
     } catch (err) {
       const errorMessage =
@@ -122,9 +130,15 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
           const documentType = detectDocumentType(
             response.data.document_number
           );
-          response.data.document_type =
-            documentType !== "UNKNOWN" ? documentType : undefined;
-          setCompany(response.data);
+          const processed = {
+            ...response.data,
+            document_type:
+              documentType !== "UNKNOWN" ? documentType : undefined,
+          };
+          if (processed.logo_url) {
+            processed.logo_url = `${processed.logo_url}${processed.logo_url.includes("?") ? "&" : "?"}v=${encodeURIComponent(processed.updated_at)}`;
+          }
+          setCompany(processed);
           return true;
         }
 
@@ -197,8 +211,15 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
           if (merged.owner_id != null) {
             merged.owner_id = Number(merged.owner_id);
           }
+          if (merged.logo_url) {
+            const cacheKey = merged.updated_at
+              ? encodeURIComponent(merged.updated_at)
+              : Date.now();
+            merged.logo_url = `${merged.logo_url}${merged.logo_url.includes("?") ? "&" : "?"}v=${cacheKey}`;
+          }
           return merged;
         });
+        await refreshCompanies();
         toast.success("Logo atualizada com sucesso");
         return true;
       } catch (err) {
@@ -209,7 +230,7 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
         setIsUploadingLogo(false);
       }
     },
-    [companyId, tokens?.accessToken]
+    [companyId, tokens?.accessToken, refreshCompanies]
   );
 
   // Effect para carregar dados iniciais
