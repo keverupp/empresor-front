@@ -44,6 +44,7 @@ export function CompanyProvider({
       // Ações
       switchCompany: companiesData.switchCompany,
       refreshCompanies: companiesData.refreshCompanies,
+      updateCompany: companiesData.updateCompany,
 
       // Permissões
       permissions: companiesData.permissions,
@@ -62,6 +63,7 @@ export function CompanyProvider({
       companiesData.error,
       companiesData.switchCompany,
       companiesData.refreshCompanies,
+      companiesData.updateCompany,
       companiesData.permissions,
       companiesData.hasPermission,
       companiesData.getCompanyById,

@@ -30,6 +30,7 @@ interface UseCompaniesReturn {
   // Ações
   fetchCompanies: () => Promise<void>;
   refreshCompanies: () => Promise<void>;
+  updateCompany: (id: string, data: Partial<Company>) => void;
   switchCompany: (companyId: string) => void;
   getCompanyById: (id: string) => Company | undefined;
 
@@ -150,6 +151,16 @@ export function useCompanies(
     await fetchCompanies();
   }, [fetchCompanies]);
 
+  // Atualiza dados de uma empresa específica no estado
+  const updateCompany = useCallback(
+    (id: string, data: Partial<Company>) => {
+      setCompanies((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, ...data } : c))
+      );
+    },
+    []
+  );
+
   // Busca automática ao montar o componente
   useEffect(() => {
     if (autoFetch && tokens?.accessToken && hasInitialized) {
@@ -228,6 +239,7 @@ export function useCompanies(
     // Ações
     fetchCompanies,
     refreshCompanies,
+    updateCompany,
     switchCompany,
     getCompanyById,
 

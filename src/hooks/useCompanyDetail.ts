@@ -53,6 +53,7 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
   const { get, put, delete: del } = useApi(); // ✅ Usar o sistema centralizado
   const companyContext = useContext(CompanyContext);
   const refreshCompanies = companyContext?.refreshCompanies;
+  const updateCompanyInContext = companyContext?.updateCompany;
 
   // Estados
   const [company, setCompany] = useState<CompanyApiResponse | null>(null);
@@ -218,6 +219,10 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
               : Date.now();
             merged.logo_url = `${merged.logo_url}${merged.logo_url.includes("?") ? "&" : "?"}v=${cacheKey}`;
           }
+          updateCompanyInContext?.(companyId, {
+            logo_url: merged.logo_url || undefined,
+            updated_at: merged.updated_at,
+          });
           return merged;
         });
         await refreshCompanies?.();
@@ -231,7 +236,7 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
         setIsUploadingLogo(false);
       }
     },
-    [companyId, tokens?.accessToken, refreshCompanies]
+    [companyId, tokens?.accessToken, refreshCompanies, updateCompanyInContext]
   );
 
   // Effect para carregar dados iniciais

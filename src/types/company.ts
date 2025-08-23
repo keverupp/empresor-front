@@ -144,6 +144,7 @@ export interface CompanyContextType {
   // Ações
   switchCompany: (companyId: string) => void;
   refreshCompanies: () => Promise<void>;
+  updateCompany: (id: string, data: Partial<Company>) => void;
 
   // Permissões da empresa ativa
   permissions: CompanyPermissions;
