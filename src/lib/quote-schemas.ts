@@ -112,6 +112,7 @@ export type QuoteFormData = z.infer<typeof quoteFormSchema>;
 export function transformQuoteFormToApi(data: QuoteFormData): CreateQuoteData {
   return {
     ...data,
+    currency: "BRL",
     expiry_date: data.expiry_date || null,
     notes: data.notes || null,
     internal_notes: data.internal_notes || null,

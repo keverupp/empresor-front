@@ -72,7 +72,6 @@ export default function QuotesPage() {
     updateQuoteStatus,
     deleteQuote,
     fetchClients,
-    fetchProducts,
     generateQuoteNumber,
   } = useQuotes({ companyId });
 
@@ -391,7 +390,6 @@ export default function QuotesPage() {
         onSuccess={handleCreateQuote}
         companyId={companyId}
         onLoadClients={fetchClients}
-        onLoadProducts={fetchProducts}
         onGenerateQuoteNumber={generateQuoteNumber}
       />
     </DashboardLayout>

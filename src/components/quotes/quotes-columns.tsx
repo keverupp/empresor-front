@@ -15,6 +15,7 @@ import {
 import { MoreHorizontal, Edit, Trash2, User, Copy, Clock } from "lucide-react";
 import { QUOTE_STATUS_CONFIG } from "@/types/quote";
 import type { Quote, QuoteStatus } from "@/types/quote";
+import { formatters } from "@/config/app";
 
 interface QuoteActionsProps {
   quote: Quote;
@@ -122,11 +123,10 @@ interface CreateQuoteColumnsProps {
 }
 
 export const createQuoteColumns = ({
-  onView,
   onEdit,
   onDelete,
-  onUpdateStatus,
-  onGeneratePDF,
+  onViewClient,
+  onDuplicate,
 }: CreateQuoteColumnsProps): ColumnDef<Quote>[] => [
   {
     accessorKey: "quote_number",
@@ -231,15 +231,14 @@ export const createQuoteColumns = ({
     enableHiding: false,
     cell: ({ row }) => {
       const quote = row.original;
-
+      
       return (
         <QuoteActions
           quote={quote}
-          onView={onView}
           onEdit={onEdit}
           onDelete={onDelete}
-          onUpdateStatus={onUpdateStatus}
-          onGeneratePDF={onGeneratePDF}
+          onViewClient={onViewClient}
+          onDuplicate={onDuplicate}
         />
       );
     },

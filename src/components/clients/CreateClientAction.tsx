@@ -4,6 +4,7 @@
 import React, { useState, useCallback } from "react";
 import { useApi } from "@/hooks/useApi";
 import { Client } from "@/types/apiInterfaces";
+import type { ClientApiData } from "./CreateClientForm";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,7 +33,7 @@ export function CreateClientAction({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = useCallback(
-    async (payload: Omit<Client, "id" | "created_at" | "updated_at">) => {
+    async (payload: ClientApiData) => {
       setIsSubmitting(true);
 
       try {

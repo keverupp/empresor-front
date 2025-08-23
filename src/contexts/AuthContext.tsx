@@ -205,7 +205,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         return;
       } catch (err) {
         // tenta refresh em seguida
-        // eslint-disable-next-line no-console
         console.error("Falha ao carregar /me, tentando refresh:", err);
       }
     }
@@ -215,7 +214,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         await refreshTokenInternal(tokens.refreshToken);
       } catch (error) {
-        // eslint-disable-next-line no-console
         console.error("Token refresh failed during validation:", error);
         storage.clear();
         dispatch({ type: "AUTH_FAILURE" });
@@ -358,7 +356,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         description: "Você foi desconectado com sucesso.",
       });
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error("Logout error:", error);
       toast.error("Erro no logout", {
         description: "Houve um problema ao desconectar.",

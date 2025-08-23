@@ -168,10 +168,10 @@ export function ClientTab({
                       </div>
                     )}
 
-                    {quote.client?.phone && (
+                    {quote.client?.phone_number && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                         <span>📞</span>
-                        <span>{quote.client.phone}</span>
+                        <span>{quote.client.phone_number}</span>
                       </div>
                     )}
                   </div>

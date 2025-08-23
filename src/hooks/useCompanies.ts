@@ -1,7 +1,7 @@
 // src/hooks/useCompanies.ts
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { appConfig } from "@/config/app";
 import type {
@@ -129,7 +129,15 @@ export function useCompanies(
     } finally {
       setIsLoading(false);
     }
-  }, [tokens?.accessToken, JSON.stringify(params)]);
+  }, [
+    tokens?.accessToken,
+    params.page,
+    params.pageSize,
+    params.name,
+    params.status,
+    params.owner_id,
+    params.document_number,
+  ]);
 
   // Refresh que limpa cache
   const refreshCompanies = useCallback(async () => {
@@ -138,10 +146,12 @@ export function useCompanies(
 
   // Busca automática ao montar o componente
   useEffect(() => {
-    if (autoFetch && tokens?.accessToken && hasInitialized && !isLoading) {
+    if (autoFetch && tokens?.accessToken && hasInitialized) {
       fetchCompanies();
     }
-  }, [autoFetch, tokens?.accessToken, hasInitialized]);
+    // A dependência `fetchCompanies` já contempla mudanças em `params`
+    // e nos tokens; remover `isLoading` evita requisições em loop.
+  }, [autoFetch, tokens?.accessToken, hasInitialized, fetchCompanies]);
 
   // Efeito separado para selecionar primeira empresa
   useEffect(() => {
@@ -149,7 +159,7 @@ export function useCompanies(
       const firstCompany = companies[0];
       switchCompany(firstCompany.id);
     }
-  }, [hasInitialized, activeCompanyId, companies.length]);
+  }, [hasInitialized, activeCompanyId, companies, switchCompany]);
 
   // Busca empresa por ID
   const getCompanyById = useCallback(
@@ -176,8 +186,9 @@ export function useCompanies(
 
   // Obtém permissões da empresa ativa
   // TODO: Implementar busca de permissões específicas via API quando for compartilhada
-  const permissions: CompanyPermissions = activeCompany
-    ? isOwner(activeCompany)
+  const permissions: CompanyPermissions = useMemo(() => {
+    if (!activeCompany) return DEFAULT_PERMISSIONS;
+    return isOwner(activeCompany)
       ? {
           can_view_clients: true,
           can_create_quotes: true,
@@ -186,8 +197,8 @@ export function useCompanies(
           can_manage_products: true,
           can_view_reports: true,
         }
-      : DEFAULT_PERMISSIONS // TODO: Buscar permissões reais da API de shares
-    : DEFAULT_PERMISSIONS;
+      : DEFAULT_PERMISSIONS; // TODO: Buscar permissões reais da API de shares
+  }, [activeCompany, isOwner]);
 
   // Verifica se tem permissão específica
   const hasPermission = useCallback(

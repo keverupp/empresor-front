@@ -144,8 +144,8 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
       if (!companyId || !quoteId) return null;
       try {
         const endpoint = `/companies/${companyId}/quotes/${quoteId}`;
-        const res = await apiCall(endpoint, { method: "GET" });
-        return res?.data?.id ? res.data : res?.id ? res : null;
+        const res = await apiCall<Quote>(endpoint, { method: "GET" });
+        return res.data;
       } catch (err) {
         const msg =
           err instanceof Error ? err.message : "Erro ao buscar orçamento";
@@ -165,18 +165,12 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
 
       try {
         const endpoint = `/companies/${companyId}/quotes`;
-        const res = await apiCall(endpoint, {
+        const res = await apiCall<Quote>(endpoint, {
           method: "POST",
           body: JSON.stringify(data),
         });
-
-        const created: Quote | null = res?.data?.id
-          ? res.data
-          : res?.id
-          ? res
-          : null;
         await refetchAfterMutation();
-        return created;
+        return res.data;
       } catch (err) {
         const msg =
           err instanceof Error ? err.message : "Erro ao criar orçamento";
@@ -198,18 +192,12 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
 
       try {
         const endpoint = `/companies/${companyId}/quotes/${quoteId}`;
-        const res = await apiCall(endpoint, {
+        const res = await apiCall<Quote>(endpoint, {
           method: "PUT",
           body: JSON.stringify(data),
         });
-
-        const updated: Quote | null = res?.data?.id
-          ? res.data
-          : res?.id
-          ? res
-          : null;
         await refetchAfterMutation();
-        return updated;
+        return res.data;
       } catch (err) {
         const msg =
           err instanceof Error ? err.message : "Erro ao atualizar orçamento";
@@ -278,11 +266,10 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
 
     try {
       const endpoint = `/companies/${companyId}/quotes/generate-number`;
-      const res = await apiCall(endpoint, { method: "GET" });
-      const payload: GenerateNumberResponse = res?.data?.quote_number
-        ? res.data
-        : res;
-      return payload?.quote_number ?? "";
+      const res = await apiCall<GenerateNumberResponse>(endpoint, {
+        method: "GET",
+      });
+      return res.data?.quote_number ?? "";
     } catch {
       // Fallback local
       const now = new Date();
@@ -298,12 +285,8 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
     if (!companyId) return [];
     try {
       const endpoint = `/companies/${companyId}/clients`;
-      const res = await apiCall(endpoint, { method: "GET" });
-      return Array.isArray(res)
-        ? res
-        : Array.isArray(res?.data)
-        ? res.data
-        : [];
+      const res = await apiCall<Client[]>(endpoint, { method: "GET" });
+      return res.data ?? [];
     } catch {
       return [];
     }
@@ -313,12 +296,8 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
     if (!companyId) return [];
     try {
       const endpoint = `/companies/${companyId}/products/active`;
-      const res = await apiCall(endpoint, { method: "GET" });
-      return Array.isArray(res)
-        ? res
-        : Array.isArray(res?.data)
-        ? res.data
-        : [];
+      const res = await apiCall<Product[]>(endpoint, { method: "GET" });
+      return res.data ?? [];
     } catch {
       return [];
     }
@@ -329,8 +308,10 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
       if (!companyId) return null;
       try {
         const endpoint = `/companies/${companyId}/quotes/stats`;
-        const res = await apiCall(endpoint, { method: "GET" });
-        return res?.data?.total_quotes !== undefined ? res.data : res ?? null;
+        const res = await apiCall<QuoteStatsResponse>(endpoint, {
+          method: "GET",
+        });
+        return res.data;
       } catch {
         return null;
       }
@@ -341,12 +322,8 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
       if (!companyId) return [];
       try {
         const endpoint = `/companies/${companyId}/quotes/expiring?days=${days}`;
-        const res = await apiCall(endpoint, { method: "GET" });
-        return Array.isArray(res)
-          ? res
-          : Array.isArray(res?.data)
-          ? res.data
-          : [];
+        const res = await apiCall<Quote[]>(endpoint, { method: "GET" });
+        return res.data ?? [];
       } catch {
         return [];
       }

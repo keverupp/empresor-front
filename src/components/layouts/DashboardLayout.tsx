@@ -1,7 +1,7 @@
 // src/components/layouts/DashboardLayout.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { CompanyProvider } from "@/contexts/CompanyContext";
@@ -16,11 +16,11 @@ interface BreadcrumbItem {
 }
 
 interface DashboardLayoutProps {
-  children: React.ReactNode;
-  title?: string;
-  description?: string;
+  children: ReactNode;
+  title?: ReactNode;
+  description?: ReactNode;
   breadcrumbs?: BreadcrumbItem[];
-  actions?: React.ReactNode;
+  actions?: ReactNode;
   className?: string;
   fetchCompanies?: boolean;
 }

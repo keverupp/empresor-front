@@ -40,14 +40,15 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 
-const validateDocument = (value: string) => {
+const validateDocument = (value?: string) => {
   if (!value) return true; // Opcional
 
   const cleanValue = value.replace(/\D/g, "");
 
   if (cleanValue.length === 11) {
     return isValidCPF(cleanValue);
-  } else if (cleanValue.length === 14) {
+  }
+  if (cleanValue.length === 14) {
     return isValidCNPJ(cleanValue);
   }
 
@@ -79,7 +80,7 @@ const clientSchema = z.object({
 });
 
 // Tipo para envio à API (com null)
-type ClientApiData = {
+export type ClientApiData = {
   name: string;
   email?: string | null;
   phone_number?: string | null;
@@ -319,7 +320,7 @@ export default function CreateClientForm({
   };
 
   // Verificar se é CNPJ
-  const isCNPJ = (doc: string) => {
+  const isCNPJ = (doc?: string) => {
     const clean = doc?.replace(/\D/g, "") || "";
     return clean.length === 14;
   };
