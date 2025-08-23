@@ -1,11 +1,12 @@
 // src/hooks/useCompanyDetail.ts
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useContext } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useApi } from "@/hooks/useApi";
 import { detectDocumentType } from "@/lib/format-utils";
 import type { Company } from "@/types/company";
 import { appConfig } from "@/config/app";
 import { toast } from "sonner";
+import { CompanyContext } from "@/contexts/CompanyContext";
 
 // ... (manter todas as interfaces existentes)
 export interface CompanyApiResponse {
@@ -27,7 +28,7 @@ export interface CompanyApiResponse {
   address_country?: string | null;
   logo_url?: string | null;
   status?: "active" | "inactive" | "pending_verification";
-  owner_id: number;
+  owner_id?: number | string | null;
   created_at: string;
   updated_at: string;
 }
@@ -50,6 +51,8 @@ export interface UseCompanyDetailReturn {
 export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
   const { tokens } = useAuth();
   const { get, put, delete: del } = useApi(); // ✅ Usar o sistema centralizado
+  const companyContext = useContext(CompanyContext);
+  const refreshCompanies = companyContext?.refreshCompanies;
 
   // Estados
   const [company, setCompany] = useState<CompanyApiResponse | null>(null);
@@ -81,9 +84,15 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
       if (response.data) {
         // Derivar document_type baseado no document_number para compatibilidade
         const documentType = detectDocumentType(response.data.document_number);
-        response.data.document_type =
-          documentType !== "UNKNOWN" ? documentType : undefined;
-        setCompany(response.data);
+        const processed = {
+          ...response.data,
+          document_type:
+            documentType !== "UNKNOWN" ? documentType : undefined,
+        };
+        if (processed.logo_url) {
+          processed.logo_url = `${processed.logo_url}${processed.logo_url.includes("?") ? "&" : "?"}v=${encodeURIComponent(processed.updated_at)}`;
+        }
+        setCompany(processed);
       }
     } catch (err) {
       const errorMessage =
@@ -122,9 +131,15 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
           const documentType = detectDocumentType(
             response.data.document_number
           );
-          response.data.document_type =
-            documentType !== "UNKNOWN" ? documentType : undefined;
-          setCompany(response.data);
+          const processed = {
+            ...response.data,
+            document_type:
+              documentType !== "UNKNOWN" ? documentType : undefined,
+          };
+          if (processed.logo_url) {
+            processed.logo_url = `${processed.logo_url}${processed.logo_url.includes("?") ? "&" : "?"}v=${encodeURIComponent(processed.updated_at)}`;
+          }
+          setCompany(processed);
           return true;
         }
 
@@ -186,11 +201,26 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
           return false;
         }
 
-        const data = (await response.json()) as CompanyApiResponse;
-        const documentType = detectDocumentType(data.document_number);
-        data.document_type =
-          documentType !== "UNKNOWN" ? documentType : undefined;
-        setCompany(data);
+        const data = (await response.json()) as Partial<CompanyApiResponse>;
+        setCompany((prev) => {
+          const merged = { ...(prev ?? {}), ...data } as CompanyApiResponse;
+          if (merged.document_number) {
+            const documentType = detectDocumentType(merged.document_number);
+            merged.document_type =
+              documentType !== "UNKNOWN" ? documentType : undefined;
+          }
+          if (merged.owner_id != null) {
+            merged.owner_id = Number(merged.owner_id);
+          }
+          if (merged.logo_url) {
+            const cacheKey = merged.updated_at
+              ? encodeURIComponent(merged.updated_at)
+              : Date.now();
+            merged.logo_url = `${merged.logo_url}${merged.logo_url.includes("?") ? "&" : "?"}v=${cacheKey}`;
+          }
+          return merged;
+        });
+        await refreshCompanies?.();
         toast.success("Logo atualizada com sucesso");
         return true;
       } catch (err) {
@@ -201,7 +231,7 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
         setIsUploadingLogo(false);
       }
     },
-    [companyId, tokens?.accessToken]
+    [companyId, tokens?.accessToken, refreshCompanies]
   );
 
   // Effect para carregar dados iniciais
@@ -250,7 +280,7 @@ export function apiResponseToCompany(apiResponse: CompanyApiResponse): Company {
       state: apiResponse.address_state || undefined,
       zip_code: apiResponse.address_zip_code || undefined,
     },
-    owner_id: parseInt(apiResponse.owner_id.toString()), // Garantir conversão
+    owner_id: Number(apiResponse.owner_id ?? 0),
     created_at: apiResponse.created_at,
     updated_at: apiResponse.updated_at,
   };

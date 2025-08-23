@@ -21,12 +21,13 @@ export function CompanyHeaderSection({
   onLogoUpload,
   isUploadingLogo,
 }: CompanyHeaderSectionProps) {
-  const getCompanyInitials = (name: string) => {
-    return name
+  const getCompanyInitials = (name?: string) => {
+    return (name ?? "")
       .split(" ")
+      .filter(Boolean)
       .map((word) => word.charAt(0))
+      .slice(0, 2)
       .join("")
-      .substring(0, 2)
       .toUpperCase();
   };
 

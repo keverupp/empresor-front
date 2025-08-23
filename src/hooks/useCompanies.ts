@@ -119,7 +119,13 @@ export function useCompanies(
       }
 
       const data: CompanyListResponse = await response.json();
-      setCompanies(data.data || []);
+      const mapped = (data.data || []).map((c) => ({
+        ...c,
+        logo_url: c.logo_url
+          ? `${c.logo_url}${c.logo_url.includes("?") ? "&" : "?"}v=${encodeURIComponent(c.updated_at)}`
+          : undefined,
+      }));
+      setCompanies(mapped);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Erro desconhecido";
