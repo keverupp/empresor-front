@@ -18,6 +18,7 @@ import {
   IconMail,
   IconAlertTriangle,
   IconX,
+  IconShare3,
 } from "@tabler/icons-react";
 
 import {
@@ -50,6 +51,7 @@ import { CompanyActivationModal } from "@/components/company-activation-modal";
 import { NewCompanyButton } from "@/components/new-company-button";
 
 import { useCompanyContext } from "@/contexts/CompanyContext";
+import { useAuth } from "@/contexts/AuthContext";
 import type { Company, CompanyMenuItem } from "@/types/company";
 
 // Função para gerar os itens do menu baseado nas permissões
@@ -126,6 +128,7 @@ interface CompanyItemProps {
   onSelect: () => void;
   menuItems: CompanyMenuItem[];
   onActivationClick: () => void;
+  canShare?: boolean;
 }
 
 function CompanyItem({
@@ -136,6 +139,7 @@ function CompanyItem({
   onSelect,
   menuItems,
   onActivationClick,
+  canShare = false,
 }: CompanyItemProps) {
   const pathname = usePathname();
   const { isMobile } = useSidebar();
@@ -213,6 +217,17 @@ function CompanyItem({
                 <DropdownMenuItem onClick={onActivationClick}>
                   <IconMail className="w-4 h-4 mr-2" />
                   Ativar Empresa
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
+            {canShare && (
+              <>
+                <DropdownMenuItem asChild>
+                  <Link href={`/dashboard/companies/${company.id}/shares`}>
+                    <IconShare3 className="w-4 h-4 mr-2" />
+                    Compartilhar
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
               </>
@@ -322,6 +337,7 @@ export function NavCompanies() {
     hasPermission,
     refreshCompanies,
   } = useCompanyContext();
+  const { user } = useAuth();
 
   const [expandedCompanies, setExpandedCompanies] = React.useState<Set<string>>(
     new Set(activeCompanyId ? [activeCompanyId] : [])
@@ -461,6 +477,7 @@ export function NavCompanies() {
                 company.id,
                 companyPermissions
               );
+              const canShare = company.owner_id === user?.id;
 
               return (
                 <CompanyItem
@@ -472,6 +489,7 @@ export function NavCompanies() {
                   onSelect={() => selectCompany(company.id)}
                   onActivationClick={() => openActivationModal(company)}
                   menuItems={menuItems}
+                  canShare={canShare}
                 />
               );
             })}
