@@ -120,3 +120,11 @@
     @apply bg-background text-foreground;
   }
 }
+
+body {
+  @apply !min-w-full;
+}
+
+html {
+  @apply overflow-x-hidden;
+}
