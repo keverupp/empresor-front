@@ -45,6 +45,7 @@ export const appConfig = {
           verify: (id: string) => `/companies/${id}/verify`,
           resendValidation: (id: string) =>
             `/companies/${id}/resend-validation`,
+          shared: "/companies/shared",
           shares: (companyId: string) => `/companies/${companyId}/shares`,
           removeShare: (companyId: string, userId: string) =>
             `/companies/${companyId}/shares/${userId}`,
@@ -363,6 +364,7 @@ export const buildApiUrl = {
     byId: (id: string) => appConfig.urls.api.endpoints.companies.byId(id),
     logo: (id: string) => appConfig.urls.api.endpoints.companies.logo(id),
     verify: (id: string) => appConfig.urls.api.endpoints.companies.verify(id),
+    shared: () => appConfig.urls.api.endpoints.companies.shared,
   },
   // Clientes
   clients: {
