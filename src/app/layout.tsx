@@ -52,25 +52,25 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased min-h-screen bg-background`}
-        suppressHydrationWarning
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
+      <AuthWrapper>
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased min-h-screen bg-background`}
+          suppressHydrationWarning
         >
-          <AuthWrapper>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
             <main className="relative flex min-h-screen flex-col">
               {children}
             </main>
-          </AuthWrapper>
 
-          <Toaster position="top-right" />
-        </ThemeProvider>
-      </body>
+            <Toaster position="top-right" />
+          </ThemeProvider>
+        </body>
+      </AuthWrapper>
     </html>
   );
 }

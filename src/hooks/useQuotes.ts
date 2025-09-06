@@ -373,7 +373,7 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
             headers: {
               "x-api-key":
                 process.env.PDF_API_KEY ??
-                "33fe697183e1e04440c357bfdf771cdcaa052b1eef294e616c2464dd23d55f4e",
+                "9dbfce7254de4aa79dd6224df978d83c1cfced4092d2bf8a098c520aa20f25de",
             },
             body: JSON.stringify(payload),
           }
