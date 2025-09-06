@@ -5,7 +5,6 @@ import * as React from "react";
 import {
   IconDashboard,
   IconDatabase,
-  IconFileWord,
   IconHelp,
   IconInnerShadowTop,
   IconReport,
@@ -72,11 +71,6 @@ const documentsNavigation = [
     name: "Relatórios",
     url: "/dashboard/reports",
     icon: IconReport,
-  },
-  {
-    name: "Assistente de Documentos",
-    url: "/dashboard/document-assistant",
-    icon: IconFileWord,
   },
 ];
 
