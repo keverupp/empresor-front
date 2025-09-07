@@ -45,6 +45,7 @@ import {
 } from "lucide-react";
 
 import { useQuoteEdit } from "@/hooks/useQuoteEdit";
+import { useQuotes } from "@/hooks/useQuotes";
 import { ClientTab } from "@/components/quotes/edit/ClientTab";
 import { ItemsTab } from "@/components/quotes/edit/ItemsTab";
 import { FinanceTab } from "@/components/quotes/edit/FinanceTab";
@@ -79,7 +80,9 @@ export default function QuoteEditPage() {
   } = useQuoteEdit();
 
   const { createBreadcrumbs } = useDashboardLayout();
-  const [activeTab, setActiveTab] = useState<TabValue>("cliente");
+  const [activeTab, setActiveTab] = useState<TabValue>("itens");
+  const { generatePdf } = useQuotes({ companyId });
+  const [generatingPdf, setGeneratingPdf] = useState(false);
 
   const { activePlan } = useAuth();
   console.log("activePlan", activePlan, "hasCatalog", hasCatalog);
@@ -91,8 +94,8 @@ export default function QuoteEditPage() {
   // Tabs (theme-aware, sem cores fixas)
   const tabConfig = useMemo(
     () => ({
-      cliente: { icon: Users, label: "Cliente" },
       itens: { icon: Package, label: "Itens" },
+      cliente: { icon: Users, label: "Cliente" },
       financeiro: { icon: Calculator, label: "Financeiro" },
       observacoes: { icon: MessageSquare, label: "Observações" },
     }),
@@ -174,9 +177,19 @@ export default function QuoteEditPage() {
     }
   }, [saving, hasUnsavedChanges]);
 
+  const handleGeneratePdf = useCallback(async () => {
+    if (!quote) return;
+    setGeneratingPdf(true);
+    try {
+      await generatePdf(quote.id);
+    } finally {
+      setGeneratingPdf(false);
+    }
+  }, [generatePdf, quote]);
+
   if (loading) {
     return (
-      <DashboardLayout fetchCompanies={false}>
+      <DashboardLayout>
         <div className="h-[60vh] grid place-items-center">
           <div className="text-center space-y-4">
             <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
@@ -194,7 +207,7 @@ export default function QuoteEditPage() {
 
   if (error || !quote) {
     return (
-      <DashboardLayout fetchCompanies={false}>
+      <DashboardLayout>
         <div className="h-[60vh] grid place-items-center">
           <div className="text-center space-y-4 max-w-md">
             <div className="p-4 rounded-full bg-destructive/10 w-fit mx-auto">
@@ -237,7 +250,6 @@ export default function QuoteEditPage() {
 
   return (
     <DashboardLayout
-      fetchCompanies={false}
       title={
         <div className="flex items-center gap-3">
           <div>
@@ -346,6 +358,18 @@ export default function QuoteEditPage() {
                 <Eye className="h-4 w-4" />
                 Visualizar Orçamento
               </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => void handleGeneratePdf()}
+                disabled={generatingPdf}
+                className="flex items-center gap-2"
+              >
+                {generatingPdf ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <FileText className="h-4 w-4" />
+                )}
+                {generatingPdf ? "Gerando PDF..." : "Gerar PDF"}
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -420,12 +444,6 @@ export default function QuoteEditPage() {
             </div>
 
             <div className="mt-6">
-              <TabsContent value="cliente" className="mt-0">
-                <div className="text-card-foreground rounded-lg">
-                  <ClientTab form={form} quote={quote} />
-                </div>
-              </TabsContent>
-
               <TabsContent value="itens" className="mt-0">
                 <div className="text-card-foreground rounded-lg">
                   <ItemsTab
@@ -436,6 +454,12 @@ export default function QuoteEditPage() {
                     onUpdate={updateItem}
                     onRemove={removeItem}
                   />
+                </div>
+              </TabsContent>
+
+              <TabsContent value="cliente" className="mt-0">
+                <div className="text-card-foreground rounded-lg">
+                  <ClientTab form={form} quote={quote} />
                 </div>
               </TabsContent>
 

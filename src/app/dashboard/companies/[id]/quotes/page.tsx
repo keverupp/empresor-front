@@ -92,7 +92,10 @@ export default function QuotesPage() {
 
   const handleCreateQuote = async (data: any) => {
     const result = await createQuote(data);
-    if (result) setIsCreateDialogOpen(false);
+    if (result) {
+      setIsCreateDialogOpen(false);
+      router.push(`/dashboard/companies/${companyId}/quotes/${result.id}/edit`);
+    }
   };
 
   const handleStatusChange = async (
