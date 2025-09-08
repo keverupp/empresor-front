@@ -81,7 +81,8 @@ export default function QuoteEditPage() {
 
   const { createBreadcrumbs } = useDashboardLayout();
   const [activeTab, setActiveTab] = useState<TabValue>("itens");
-  const { generatePdf } = useQuotes({ companyId });
+  const safeCompanyId = (companyId ?? quote?.company_id)!; // se uma das duas existir
+  const { generatePdf } = useQuotes({ companyId: safeCompanyId });
   const [generatingPdf, setGeneratingPdf] = useState(false);
 
   const { activePlan } = useAuth();

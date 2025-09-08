@@ -253,57 +253,6 @@ export function QuoteViewItems({ items, currency }: Props) {
           </div>
         )}
       </Card>
-
-      {/* Insights sobre os itens */}
-      {totalItems > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {statistics.catalogItems > 0 && (
-            <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-              <div className="flex items-center gap-2 mb-1">
-                <Tag className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <span className="font-medium text-blue-800 dark:text-blue-200 text-sm">
-                  Produtos do Catálogo
-                </span>
-              </div>
-              <p className="text-xs text-blue-700 dark:text-blue-300">
-                {statistics.catalogItems} de {totalItems} itens são do catálogo
-                ({((statistics.catalogItems / totalItems) * 100).toFixed(0)}%)
-              </p>
-            </div>
-          )}
-
-          {statistics.totalQuantity > totalItems * 5 && (
-            <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
-              <div className="flex items-center gap-2 mb-1">
-                <TrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
-                <span className="font-medium text-green-800 dark:text-green-200 text-sm">
-                  Alto Volume
-                </span>
-              </div>
-              <p className="text-xs text-green-700 dark:text-green-300">
-                Quantidade média de{" "}
-                {(statistics.totalQuantity / totalItems).toFixed(1)} unidades
-                por item
-              </p>
-            </div>
-          )}
-
-          {mostValuableItem && (
-            <div className="p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800">
-              <div className="flex items-center gap-2 mb-1">
-                <DollarSign className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                <span className="font-medium text-amber-800 dark:text-amber-200 text-sm">
-                  Item Principal
-                </span>
-              </div>
-              <p className="text-xs text-amber-700 dark:text-amber-300">
-                {mostValuableItem.description} representa o maior valor
-                individual
-              </p>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }

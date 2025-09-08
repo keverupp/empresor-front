@@ -286,18 +286,6 @@ export function QuoteViewTotals({ quote }: Props) {
           )}
         </div>
       )}
-
-      {/* Resumo visual final */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="p-3 text-center bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
-          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-            {hasDiscount ? `${discountPercentage.toFixed(0)}%` : "0%"}
-          </div>
-          <div className="text-xs text-green-600 dark:text-green-400">
-            Desconto aplicado
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
