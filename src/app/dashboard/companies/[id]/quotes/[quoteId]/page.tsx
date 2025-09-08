@@ -90,6 +90,9 @@ export default function QuoteViewPage() {
     ]);
   }, [quote, companyId, createBreadcrumbs]);
 
+  const isConsumidor =
+    (quote?.client?.name ?? "").trim().toUpperCase() === "CONSUMIDOR";
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -140,7 +143,11 @@ export default function QuoteViewPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 space-y-4">
-            <QuoteViewClient client={quote.client} quote={quote} />
+            {/* Só mostra os dados do cliente se NÃO for CONSUMIDOR */}
+            {!isConsumidor && (
+              <QuoteViewClient client={quote.client} quote={quote} />
+            )}
+
             <QuoteViewItems
               items={quote.items ?? []}
               currency={quote.currency ?? "BRL"}

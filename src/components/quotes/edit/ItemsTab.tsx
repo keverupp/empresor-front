@@ -97,12 +97,14 @@ export function ItemsTab({
   }>({});
 
   const refDesc = useRef<HTMLInputElement>(null);
+  const refProduct = useRef<{ focus: () => void }>(null);
   const refQty = useRef<HTMLInputElement>(null);
   const refPrice = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    refDesc.current?.focus();
-  }, []);
+    if (hasCatalog) refProduct.current?.focus();
+    else refDesc.current?.focus();
+  }, [hasCatalog]);
 
   const isAddFormValid =
     addDesc.trim().length > 0 && addQty > 0 && addPrice >= 0;
@@ -135,7 +137,8 @@ export function ItemsTab({
         product_id: addProductId ?? null,
       });
       resetAddForm();
-      refDesc.current?.focus();
+      if (hasCatalog) refProduct.current?.focus();
+      else refDesc.current?.focus();
     } finally {
       setAdding(false);
     }
@@ -147,6 +150,7 @@ export function ItemsTab({
     addPrice,
     addProductId,
     resetAddForm,
+    hasCatalog,
   ]);
 
   const handleAddKeyDown = useCallback(
@@ -289,6 +293,7 @@ export function ItemsTab({
                 Produto ou descrição *
               </Label>
               <ProductOrDescriptionCombobox
+                ref={refProduct}
                 products={products}
                 description={addDesc}
                 selectedProductId={addProductId}

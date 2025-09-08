@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -32,19 +39,32 @@ type Props = {
   inputId?: string;
 };
 
-export function ProductOrDescriptionCombobox({
-  products,
-  placeholder = "Selecione um produto ou digite uma descrição",
-  description,
-  selectedProductId,
-  onPickProduct,
-  onPickCustom,
-  confirmOnEnter = true,
-  inputId,
-}: Props) {
+export const ProductOrDescriptionCombobox = forwardRef<
+  { focus: () => void },
+  Props
+>(function ProductOrDescriptionCombobox(
+  {
+    products,
+    placeholder = "Selecione um produto ou digite uma descrição",
+    description,
+    selectedProductId,
+    onPickProduct,
+    onPickCustom,
+    confirmOnEnter = true,
+    inputId,
+  },
+  ref
+) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState(description ?? "");
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      setOpen(true);
+      setTimeout(() => inputRef.current?.focus(), 0);
+    },
+  }));
 
   useEffect(() => {
     setQuery(description ?? "");
@@ -170,4 +190,4 @@ export function ProductOrDescriptionCombobox({
       </PopoverContent>
     </Popover>
   );
-}
+});
