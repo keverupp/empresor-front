@@ -32,7 +32,7 @@ export default function QuotesKanbanPage() {
     quoteId: string,
     newStatus: Quote["status"]
   ) => {
-    await updateQuoteStatus(quoteId, newStatus);
+    return await updateQuoteStatus(quoteId, newStatus);
   };
 
   return (

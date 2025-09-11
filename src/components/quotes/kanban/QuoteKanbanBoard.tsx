@@ -21,7 +21,10 @@ import { cn } from "@/lib/utils";
 
 interface QuoteKanbanBoardProps {
   quotes: Quote[];
-  onStatusChange?: (quoteId: string, status: QuoteStatus) => void;
+  onStatusChange?: (
+    quoteId: string,
+    status: QuoteStatus,
+  ) => Promise<boolean> | boolean;
 }
 
 const statusOrder = Object.keys(QUOTE_STATUS_CONFIG) as QuoteStatus[];
@@ -115,7 +118,7 @@ export function QuoteKanbanBoard({ quotes, onStatusChange }: QuoteKanbanBoardPro
     setColumns(groupByStatus(quotes));
   }, [quotes]);
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over) return;
     const fromStatus = active.data.current?.status as QuoteStatus | undefined;
@@ -132,7 +135,19 @@ export function QuoteKanbanBoard({ quotes, onStatusChange }: QuoteKanbanBoardPro
       return next;
     });
 
-    onStatusChange?.(active.id as string, toStatus);
+    const success = await onStatusChange?.(active.id as string, toStatus);
+    if (success === false) {
+      // Reverte mudança visual em caso de falha
+      setColumns((prev) => {
+        const movedQuote = prev[toStatus].find((q) => q.id === active.id);
+        if (!movedQuote) return prev;
+        const next = { ...prev } as Record<QuoteStatus, Quote[]>;
+        next[toStatus] = prev[toStatus].filter((q) => q.id !== active.id);
+        const revertedQuote = { ...movedQuote, status: fromStatus };
+        next[fromStatus] = [revertedQuote, ...prev[fromStatus]];
+        return next;
+      });
+    }
   };
 
   return (
