@@ -65,8 +65,8 @@ function QuoteCardContent({
   return (
     <Card
       className={cn(
-        "w-64 cursor-grab active:cursor-grabbing",
-        isOverlay && "pointer-events-none",
+        "w-full cursor-grab active:cursor-grabbing",
+        isOverlay && "pointer-events-none w-64",
       )}
     >
       <CardHeader className="p-2">
@@ -104,13 +104,21 @@ function QuoteCardContent({
 }
 
 function QuoteCard({ quote, status }: { quote: Quote; status: QuoteStatus }) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
     id: quote.id,
     data: { status },
   });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+    opacity: isDragging ? 0 : 1,
   } as React.CSSProperties;
 
   return (
@@ -132,7 +140,7 @@ function StatusColumn({
   return (
     <div
       ref={setNodeRef}
-      className="flex w-64 flex-col rounded-md border bg-muted p-2"
+      className="flex w-64 flex-shrink-0 flex-col rounded-md border bg-muted p-2"
     >
       <h3
         className={cn(
