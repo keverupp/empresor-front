@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useParams } from "next/navigation";
 import { DashboardLayout, useDashboardLayout } from "@/components/layouts/DashboardLayout";
-import { QuoteKanbanBoard } from "@/components/quotes/QuoteKanbanBoard";
+import { QuoteKanbanBoard } from "@/components/quotes/kanban/QuoteKanbanBoard";
 import { useQuotes } from "@/hooks/useQuotes";
 import type { Quote } from "@/types/apiInterfaces";
 
