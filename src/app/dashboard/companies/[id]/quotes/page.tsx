@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
 import {
@@ -17,6 +18,7 @@ import {
   Send,
   CheckCircle,
   XCircle,
+  Kanban,
 } from "lucide-react";
 
 // UI Components
@@ -346,10 +348,18 @@ export default function QuotesPage() {
 
   // Ações do cabeçalho
   const actions = (
-    <Button onClick={() => setIsCreateDialogOpen(true)}>
-      <Plus className="h-4 w-4 mr-2" />
-      Novo Orçamento
-    </Button>
+    <div className="flex gap-2">
+      <Button variant="outline" asChild>
+        <Link href={`/dashboard/companies/${companyId}/quotes/kanban`}>
+          <Kanban className="h-4 w-4 mr-2" />
+          Kanban
+        </Link>
+      </Button>
+      <Button onClick={() => setIsCreateDialogOpen(true)}>
+        <Plus className="h-4 w-4 mr-2" />
+        Novo Orçamento
+      </Button>
+    </div>
   );
 
   return (
