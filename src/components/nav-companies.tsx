@@ -8,6 +8,7 @@ import {
   IconBuilding,
   IconUsers,
   IconFileText,
+  IconLayoutKanban,
   IconCurrencyDollar,
   IconSettings,
   IconFolder,
@@ -75,6 +76,13 @@ function getCompanyMenuItems(
     title: "Orçamentos",
     href: `${baseUrl}/quotes`,
     icon: IconFileText,
+  });
+
+  // Kanban de Orçamentos - sempre visível
+  items.push({
+    title: "Kanban",
+    href: `${baseUrl}/quotes/kanban`,
+    icon: IconLayoutKanban,
   });
 
   // Clientes - sempre visível

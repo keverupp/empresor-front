@@ -214,6 +214,11 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
     async (quoteId: string, status: Quote["status"]): Promise<boolean> => {
       if (!companyId || !quoteId) return false;
 
+      // Atualiza otimisticamente o estado local
+      setQuotes((prev) =>
+        prev.map((q) => (q.id === quoteId ? { ...q, status } : q)),
+      );
+
       try {
         const endpoint = `/companies/${companyId}/quotes/${quoteId}/status`;
         await apiCall(endpoint, {
@@ -227,6 +232,8 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
         const msg =
           err instanceof Error ? err.message : "Erro ao atualizar status";
         setError(msg);
+        // Recarrega lista para desfazer alteração otimista
+        await refetchAfterMutation();
         return false;
       }
     },
