@@ -20,7 +20,9 @@ export function useCompanyDashboardData(companyId: string) {
 
     const [statsRes, quotesRes] = await Promise.all([
       get<CompanyStatsItem[]>(buildApiUrl.dashboard.companiesStats()),
-      get<{ data: DashboardQuote[] }>(buildApiUrl.dashboard.quotations()),
+      get<{ data: DashboardQuote[] }>(
+        `${buildApiUrl.dashboard.quotations()}?company_id=${companyId}`
+      ),
     ]);
 
     if (!statsRes.error && statsRes.data) {
@@ -36,9 +38,7 @@ export function useCompanyDashboardData(companyId: string) {
     }
 
     if (!quotesRes.error && quotesRes.data) {
-      setQuotations(
-        quotesRes.data.data.filter((q) => q.company?.id === companyId)
-      );
+      setQuotations(quotesRes.data.data);
     }
 
     setIsLoading(false);
