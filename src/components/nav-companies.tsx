@@ -9,13 +9,11 @@ import {
   IconUsers,
   IconFileText,
   IconLayoutKanban,
-  IconCurrencyDollar,
   IconSettings,
   IconFolder,
   IconChevronDown,
   IconChevronRight,
   IconDots,
-  IconReport,
   IconMail,
   IconAlertTriangle,
   IconX,
@@ -99,21 +97,7 @@ function getCompanyMenuItems(
     icon: IconFolder,
   });
 
-  // Relatórios - sempre visível
-  items.push({
-    title: "Relatórios",
-    href: `${baseUrl}/reports`,
-    icon: IconReport,
-  });
-
-  // Financeiro - baseado em permissão
-  if (permissions.canViewFinance) {
-    items.push({
-      title: "Financeiro",
-      href: `${baseUrl}/finance`,
-      icon: IconCurrencyDollar,
-    });
-  }
+  // TODO: Reabilitar "Relatórios" e "Financeiro" quando as páginas estiverem prontas
 
   // Configurações - baseado em permissão (sempre por último se disponível)
   if (permissions.canEditSettings) {

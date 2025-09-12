@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 
 import {
   Card,
@@ -18,11 +18,11 @@ import {
 } from "@/components/ui/chart";
 import type { TimelineItem } from "@/hooks/useDashboard";
 
-interface ChartAreaInteractiveProps {
+interface ChartBarInteractiveProps {
   data: TimelineItem[];
 }
 
-export function ChartAreaInteractive({ data }: ChartAreaInteractiveProps) {
+export function ChartBarInteractive({ data }: ChartBarInteractiveProps) {
   const chartData = React.useMemo(
     () =>
       data.map((item) => ({
@@ -55,7 +55,7 @@ export function ChartAreaInteractive({ data }: ChartAreaInteractiveProps) {
           config={chartConfig}
           className="aspect-auto h-[250px] w-full"
         >
-          <AreaChart data={chartData}>
+          <BarChart data={chartData}>
             <CartesianGrid vertical={false} />
             <XAxis
               dataKey="date"
@@ -64,21 +64,17 @@ export function ChartAreaInteractive({ data }: ChartAreaInteractiveProps) {
               tickMargin={8}
             />
             <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-            <Area
+            <Bar
               dataKey="sent"
-              type="monotone"
-              stroke="var(--color-sent)"
               fill="var(--color-sent)"
-              fillOpacity={0.2}
+              radius={[4, 4, 0, 0]}
             />
-            <Area
+            <Bar
               dataKey="accepted"
-              type="monotone"
-              stroke="var(--color-accepted)"
               fill="var(--color-accepted)"
-              fillOpacity={0.2}
+              radius={[4, 4, 0, 0]}
             />
-          </AreaChart>
+          </BarChart>
         </ChartContainer>
       </CardContent>
     </Card>
