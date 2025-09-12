@@ -3,12 +3,13 @@
 
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
-import { DataTable } from "@/components/data-table";
 import { SectionCards } from "@/components/section-cards";
-
-import data from "./data.json";
+import { DashboardQuotesTable } from "@/components/dashboard-quotes-table";
+import { useDashboard } from "@/hooks/useDashboard";
 
 export default function DashboardPage() {
+  const { summary, timeline, quotations, isLoading } = useDashboard();
+
   return (
     <DashboardLayout
       title="Dashboard Geral"
@@ -16,13 +17,14 @@ export default function DashboardPage() {
     >
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-          <SectionCards />
+          <SectionCards summary={summary} />
           <div className="px-4 lg:px-6">
-            <ChartAreaInteractive />
+            <ChartAreaInteractive data={timeline} />
           </div>
-          <DataTable data={data} />
+          <DashboardQuotesTable data={quotations} isLoading={isLoading} />
         </div>
       </div>
     </DashboardLayout>
   );
 }
+
