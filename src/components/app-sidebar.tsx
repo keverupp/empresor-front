@@ -15,6 +15,8 @@ import { NavCompanies } from "@/components/nav-companies";
 import { NavDocuments } from "@/components/nav-documents";
 import { NavSecondary } from "@/components/nav-secondary";
 import { NavUser } from "@/components/nav-user";
+import { NavMain } from "@/components/nav-main";
+import { SidebarThemeToggle } from "@/components/sidebar-theme-toggle";
 import {
   Sidebar,
   SidebarContent,
@@ -23,8 +25,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarGroup,
-  SidebarGroupContent,
 } from "@/components/ui/sidebar";
 import { useUserData } from "@/hooks/useUserData";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -68,28 +68,6 @@ const documentsNavigation = [
   },
 ];
 
-// Componente para navegação principal
-function NavMain() {
-  return (
-    <SidebarGroup>
-      <SidebarGroupContent>
-        <SidebarMenu>
-          {mainNavigation.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild tooltip={item.description}>
-                <Link href={item.url}>
-                  <item.icon />
-                  <span>{item.title}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
-  );
-}
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { userData, isLoading, error } = useUserData();
 
@@ -123,7 +101,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {/* Conteúdo principal */}
       <SidebarContent>
         {/* Dashboard Geral - sempre visível */}
-        <NavMain />
+        <NavMain items={mainNavigation} />
 
         {/* Empresas com accordion - seção principal */}
         <NavCompanies />
@@ -135,8 +113,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={secondaryNavigation} className="mt-auto" />
       </SidebarContent>
 
-      {/* Footer com dados do usuário */}
+      {/* Footer com dados do usuário e opções */}
       <SidebarFooter>
+        <SidebarThemeToggle />
         {isLoading ? (
           <div className="flex items-center gap-2 p-2">
             <Skeleton className="h-8 w-8 rounded-lg" />

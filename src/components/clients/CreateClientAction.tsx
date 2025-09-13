@@ -21,16 +21,28 @@ interface CreateClientActionProps {
   companyId: string;
   onCreated?: (client: Client) => void;
   onSuccess?: () => void; // Novo callback para atualizar a tabela
+  /** Controle externo do estado do dialog */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** Conteúdo opcional que aciona o dialog (ex.: botão) */
+  trigger?: React.ReactNode | null;
 }
 
 export function CreateClientAction({
   companyId,
   onCreated,
   onSuccess,
+  open: controlledOpen,
+  onOpenChange,
+  trigger,
 }: CreateClientActionProps) {
   const { post } = useApi();
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const isControlled = controlledOpen !== undefined && onOpenChange;
+  const open = isControlled ? controlledOpen : uncontrolledOpen;
+  const setOpen = isControlled ? onOpenChange! : setUncontrolledOpen;
 
   const handleSubmit = useCallback(
     async (payload: ClientApiData) => {
@@ -66,20 +78,26 @@ export function CreateClientAction({
   );
 
   // Reset do estado quando o modal fecha
-  const handleOpenChange = useCallback((newOpen: boolean) => {
-    setOpen(newOpen);
-    if (!newOpen) {
-      setIsSubmitting(false);
-    }
-  }, []);
+  const handleOpenChange = useCallback(
+    (newOpen: boolean) => {
+      setOpen(newOpen);
+      if (!newOpen) {
+        setIsSubmitting(false);
+      }
+    },
+    [setOpen]
+  );
+
+  const dialogTrigger =
+    trigger === undefined ? (
+      <Button size="sm" className="flex items-center gap-2">
+        + Novo cliente
+      </Button>
+    ) : trigger;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button size="sm" className="flex items-center gap-2">
-          + Novo cliente
-        </Button>
-      </DialogTrigger>
+      {dialogTrigger && <DialogTrigger asChild>{dialogTrigger}</DialogTrigger>}
 
       <DialogContent className="w-[95vw] max-w-4xl max-h-[95vh] overflow-hidden flex flex-col sm:w-[90vw] sm:max-h-[90vh]">
         <DialogHeader className="flex-shrink-0">

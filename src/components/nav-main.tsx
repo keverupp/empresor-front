@@ -30,6 +30,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { CreateClientAction } from "@/components/clients/CreateClientAction";
+import { CreateQuoteDialog } from "@/components/quotes/CreateQuoteDialog";
+import { ProductDialog } from "@/components/products/ProductDialog";
+import { useActiveCompany } from "@/contexts/CompanyContext";
+import { useQuotes } from "@/hooks/useQuotes";
 
 // Definição dos comandos/atalhos disponíveis
 const quickCommands = [
@@ -40,21 +45,21 @@ const quickCommands = [
         title: "Novo Orçamento",
         description: "Criar um novo orçamento",
         icon: IconFileText,
-        action: "/dashboard/quotes/new",
+        action: "new-quote",
         keywords: ["orcamento", "quote", "novo", "criar"],
       },
       {
         title: "Novo Cliente",
         description: "Adicionar novo cliente",
         icon: IconUsers,
-        action: "/dashboard/clients/new",
+        action: "new-client",
         keywords: ["cliente", "client", "novo", "adicionar"],
       },
       {
         title: "Novo Produto",
         description: "Cadastrar novo produto",
         icon: IconPlus,
-        action: "/dashboard/products/new",
+        action: "new-product",
         keywords: ["produto", "product", "novo", "cadastrar"],
       },
       {
@@ -97,7 +102,14 @@ export function NavMain({
   }[];
 }) {
   const [open, setOpen] = useState(false);
+  const [clientDialogOpen, setClientDialogOpen] = useState(false);
+  const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
+  const [productDialogOpen, setProductDialogOpen] = useState(false);
   const router = useRouter();
+  const { companyId } = useActiveCompany();
+  const { createQuote, fetchClients, generateQuoteNumber } = useQuotes({
+    companyId: companyId || "",
+  });
 
   // Atalho de teclado para abrir o Command Dialog
   useEffect(() => {
@@ -115,7 +127,29 @@ export function NavMain({
   // Função para executar comandos
   const handleCommandSelect = (action: string) => {
     setOpen(false);
-    router.push(action);
+    switch (action) {
+      case "new-client":
+        setClientDialogOpen(true);
+        break;
+      case "new-quote":
+        setQuoteDialogOpen(true);
+        break;
+      case "new-product":
+        setProductDialogOpen(true);
+        break;
+      default:
+        router.push(action);
+    }
+  };
+
+  const handleCreateQuote = async (data: any) => {
+    const result = await createQuote(data);
+    if (result) {
+      setQuoteDialogOpen(false);
+      router.push(
+        `/dashboard/companies/${companyId}/quotes/${result.id}/edit`
+      );
+    }
   };
 
   return (
@@ -197,6 +231,31 @@ export function NavMain({
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
+
+        {/* Dialogs acionados pelos atalhos */}
+        {companyId && (
+          <>
+            <CreateClientAction
+              companyId={companyId}
+              open={clientDialogOpen}
+              onOpenChange={setClientDialogOpen}
+              trigger={null}
+            />
+            <CreateQuoteDialog
+              isOpen={quoteDialogOpen}
+              onClose={() => setQuoteDialogOpen(false)}
+              onSuccess={handleCreateQuote}
+              companyId={companyId}
+              onLoadClients={fetchClients}
+              onGenerateQuoteNumber={generateQuoteNumber}
+            />
+            <ProductDialog
+              companyId={companyId}
+              open={productDialogOpen}
+              onOpenChange={setProductDialogOpen}
+            />
+          </>
+        )}
       </SidebarGroupContent>
     </SidebarGroup>
   );
