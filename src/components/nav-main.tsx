@@ -239,6 +239,7 @@ export function NavMain({
               companyId={companyId}
               open={clientDialogOpen}
               onOpenChange={setClientDialogOpen}
+              trigger={null}
             />
             <CreateQuoteDialog
               isOpen={quoteDialogOpen}

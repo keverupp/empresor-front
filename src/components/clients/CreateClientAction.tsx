@@ -25,7 +25,7 @@ interface CreateClientActionProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   /** Conteúdo opcional que aciona o dialog (ex.: botão) */
-  trigger?: React.ReactNode;
+  trigger?: React.ReactNode | null;
 }
 
 export function CreateClientAction({
@@ -89,11 +89,11 @@ export function CreateClientAction({
   );
 
   const dialogTrigger =
-    trigger ?? (
+    trigger === undefined ? (
       <Button size="sm" className="flex items-center gap-2">
         + Novo cliente
       </Button>
-    );
+    ) : trigger;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
