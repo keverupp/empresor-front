@@ -13,12 +13,25 @@ interface ProductDialogProps {
   product?: Product;
   trigger?: React.ReactNode;
   onSuccess?: (product: Product) => void;
+  /** Controle externo do estado do dialog */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function ProductDialog({ companyId, product, trigger, onSuccess }: ProductDialogProps) {
+export function ProductDialog({
+  companyId,
+  product,
+  trigger,
+  onSuccess,
+  open: controlledOpen,
+  onOpenChange,
+}: ProductDialogProps) {
   const { post, put } = useApi();
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const open = controlledOpen !== undefined ? controlledOpen : uncontrolledOpen;
+  const setOpen = onOpenChange ?? setUncontrolledOpen;
 
   const handleSubmit = useCallback(
     async (values: ProductFormValues) => {
@@ -54,7 +67,7 @@ export function ProductDialog({ companyId, product, trigger, onSuccess }: Produc
         setIsSubmitting(false);
       }
     },
-    [companyId, post, put, product, onSuccess]
+    [companyId, post, put, product, onSuccess, setOpen]
   );
 
   const defaultValues = product
@@ -69,24 +82,26 @@ export function ProductDialog({ companyId, product, trigger, onSuccess }: Produc
     : undefined;
 
   return (
-  <Dialog open={open} onOpenChange={setOpen}>
-    {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-    <DialogContent className="max-w-lg">
-      <DialogHeader>
-        <DialogTitle>{product ? "Editar produto" : "Novo produto"}</DialogTitle>
-        <DialogDescription>
-          {product
-            ? "Atualize as informações do produto."
-            : "Preencha os dados para criar um novo produto."}
-        </DialogDescription>
-      </DialogHeader>
-      <ProductForm
-        defaultValues={defaultValues}
-        onSubmit={handleSubmit}
-        isSubmitting={isSubmitting}
-      />
-    </DialogContent>
-  </Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>
+            {product ? "Editar produto" : "Novo produto"}
+          </DialogTitle>
+          <DialogDescription>
+            {product
+              ? "Atualize as informações do produto."
+              : "Preencha os dados para criar um novo produto."}
+          </DialogDescription>
+        </DialogHeader>
+        <ProductForm
+          defaultValues={defaultValues}
+          onSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
+        />
+      </DialogContent>
+    </Dialog>
   );
 }
 
