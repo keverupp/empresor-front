@@ -37,20 +37,29 @@ export interface DashboardQuote {
 
 export function useDashboard() {
   const { get } = useApi();
-  const { tokens } = useAuth();
+  const { tokens, isLoading: authLoading } = useAuth();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [timeline, setTimeline] = useState<TimelineItem[]>([]);
   const [quotations, setQuotations] = useState<DashboardQuote[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
-    if (!tokens?.accessToken) return;
+    if (!tokens?.accessToken) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
 
     const [summaryRes, timelineRes, quotesRes] = await Promise.all([
-      get<DashboardSummary>(buildApiUrl.dashboard.summary()),
-      get<TimelineItem[]>(buildApiUrl.dashboard.timeline()),
-      get<{ data: DashboardQuote[] }>(buildApiUrl.dashboard.quotations()),
+      get<DashboardSummary>(buildApiUrl.dashboard.summary(), {
+        showErrorToast: false,
+      }),
+      get<TimelineItem[]>(buildApiUrl.dashboard.timeline(), {
+        showErrorToast: false,
+      }),
+      get<{ data: DashboardQuote[] }>(buildApiUrl.dashboard.quotations(), {
+        showErrorToast: false,
+      }),
     ]);
 
     if (!summaryRes.error && summaryRes.data) {
@@ -69,10 +78,10 @@ export function useDashboard() {
   }, [get, tokens?.accessToken]);
 
   useEffect(() => {
-    if (tokens?.accessToken) {
+    if (!authLoading && tokens?.accessToken) {
       fetchData();
     }
-  }, [fetchData, tokens?.accessToken]);
+  }, [authLoading, fetchData, tokens?.accessToken]);
 
   return { summary, timeline, quotations, isLoading, refetch: fetchData };
 }
