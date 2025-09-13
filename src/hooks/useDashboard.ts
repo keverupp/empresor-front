@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { buildApiUrl } from "@/config/app";
 import { useApi } from "@/hooks/useApi";
+import { useAuth } from "@/contexts/AuthContext";
 import type { QuoteStatus } from "@/types/quote";
 
 export interface DashboardSummary {
@@ -36,12 +37,14 @@ export interface DashboardQuote {
 
 export function useDashboard() {
   const { get } = useApi();
+  const { tokens } = useAuth();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [timeline, setTimeline] = useState<TimelineItem[]>([]);
   const [quotations, setQuotations] = useState<DashboardQuote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
+    if (!tokens?.accessToken) return;
     setIsLoading(true);
 
     const [summaryRes, timelineRes, quotesRes] = await Promise.all([
@@ -63,11 +66,13 @@ export function useDashboard() {
     }
 
     setIsLoading(false);
-  }, [get]);
+  }, [get, tokens?.accessToken]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (tokens?.accessToken) {
+      fetchData();
+    }
+  }, [fetchData, tokens?.accessToken]);
 
   return { summary, timeline, quotations, isLoading, refetch: fetchData };
 }
