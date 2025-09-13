@@ -2,7 +2,7 @@
 "use client";
 
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
-import { ChartAreaInteractive } from "@/components/chart-area-interactive";
+import { ChartBarInteractive } from "@/components/chart-bar-interactive";
 import { SectionCards } from "@/components/section-cards";
 import { DashboardQuotesTable } from "@/components/dashboard-quotes-table";
 import { useDashboard } from "@/hooks/useDashboard";
@@ -19,7 +19,7 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
           <SectionCards summary={summary} />
           <div className="px-4 lg:px-6">
-            <ChartAreaInteractive data={timeline} />
+            <ChartBarInteractive data={timeline} />
           </div>
           <DashboardQuotesTable data={quotations} isLoading={isLoading} />
         </div>

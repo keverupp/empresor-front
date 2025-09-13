@@ -7,7 +7,6 @@ import {
   IconDatabase,
   IconHelp,
   IconInnerShadowTop,
-  IconReport,
   IconSearch,
   IconSettings,
 } from "@tabler/icons-react";
@@ -66,11 +65,6 @@ const documentsNavigation = [
     name: "Biblioteca de Dados",
     url: "/dashboard/data-library",
     icon: IconDatabase,
-  },
-  {
-    name: "Relatórios",
-    url: "/dashboard/reports",
-    icon: IconReport,
   },
 ];
 

@@ -8,7 +8,6 @@ import {
   IconUsers,
   IconCalendar,
   IconSettings,
-  IconCalculator,
   type Icon,
 } from "@tabler/icons-react";
 import { useState, useEffect } from "react";
@@ -76,13 +75,6 @@ const quickCommands = [
         icon: IconSearch,
         action: "/dashboard",
         keywords: ["dashboard", "home", "inicio"],
-      },
-      {
-        title: "Relatórios",
-        description: "Ver relatórios e analytics",
-        icon: IconCalculator,
-        action: "/dashboard/reports",
-        keywords: ["relatorios", "reports", "analytics"],
       },
       {
         title: "Configurações",

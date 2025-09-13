@@ -398,6 +398,8 @@ export const buildApiUrl = {
     summary: () => appConfig.urls.api.endpoints.dashboard.summary,
     quotations: () => appConfig.urls.api.endpoints.dashboard.quotations,
     timeline: () => appConfig.urls.api.endpoints.dashboard.timeline,
+    companiesStats: () =>
+      appConfig.urls.api.endpoints.dashboard.companiesStats,
   },
 };
 
