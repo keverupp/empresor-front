@@ -11,6 +11,11 @@ import type {
   CompanyPermissions,
 } from "@/types/company";
 
+// Cache global para evitar refetch ao navegar entre páginas
+let companiesCache: Company[] = [];
+let activeCompanyIdCache: string | null = null;
+let lastUserId: string | null = null;
+
 interface UseCompaniesOptions {
   autoFetch?: boolean;
   params?: CompanyListParams;
@@ -55,12 +60,25 @@ export function useCompanies(
   const { tokens, user } = useAuth();
 
   // Estados
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [activeCompanyId, setActiveCompanyId] = useState<string | null>(null);
+  const [companies, setCompanies] = useState<Company[]>(companiesCache);
+  const [activeCompanyId, setActiveCompanyId] = useState<string | null>(
+    activeCompanyIdCache
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [hasInitialized, setHasInitialized] = useState(false);
+
+  // Limpa cache quando o usuário autenticado mudar
+  useEffect(() => {
+    if (lastUserId !== null && user?.id !== lastUserId) {
+      companiesCache = [];
+      activeCompanyIdCache = null;
+      setCompanies([]);
+      setActiveCompanyId(null);
+    }
+    lastUserId = user?.id ?? null;
+  }, [user?.id]);
 
   // Recupera empresa ativa do localStorage apenas uma vez
   useEffect(() => {
@@ -71,9 +89,19 @@ export function useCompanies(
     setHasInitialized(true);
   }, []);
 
+  // Mantém caches sincronizados com o estado
+  useEffect(() => {
+    companiesCache = companies;
+  }, [companies]);
+
+  useEffect(() => {
+    activeCompanyIdCache = activeCompanyId;
+  }, [activeCompanyId]);
+
   // Persiste empresa ativa no localStorage
   const switchCompany = useCallback((companyId: string) => {
     setActiveCompanyId(companyId);
+    activeCompanyIdCache = companyId;
     localStorage.setItem("activeCompanyId", companyId);
   }, []);
 
@@ -161,6 +189,7 @@ export function useCompanies(
       );
 
       setCompanies(unique);
+      companiesCache = unique;
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Erro desconhecido";
@@ -187,12 +216,23 @@ export function useCompanies(
 
   // Busca automática ao montar o componente
   useEffect(() => {
-    if (autoFetch && tokens?.accessToken && hasInitialized) {
+    if (
+      autoFetch &&
+      tokens?.accessToken &&
+      hasInitialized &&
+      companies.length === 0
+    ) {
       fetchCompanies();
     }
     // A dependência `fetchCompanies` já contempla mudanças em `params`
     // e nos tokens; remover `isLoading` evita requisições em loop.
-  }, [autoFetch, tokens?.accessToken, hasInitialized, fetchCompanies]);
+  }, [
+    autoFetch,
+    tokens?.accessToken,
+    hasInitialized,
+    companies.length,
+    fetchCompanies,
+  ]);
 
   // Efeito separado para selecionar primeira empresa
   useEffect(() => {
