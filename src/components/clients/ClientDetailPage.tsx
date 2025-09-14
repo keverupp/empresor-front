@@ -8,7 +8,9 @@ import { ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardLayout } from "@/components/layouts/DashboardLayout";
 import { useClientDetail } from "@/hooks/useClientDetail";
+import { useQuotes } from "@/hooks/useQuotes";
 import { formatDocument } from "@/lib/client-utils";
+import { CreateQuoteDialog } from "@/components/quotes/CreateQuoteDialog";
 
 import { ClientActions } from "./ClientActions";
 import { ClientDetailTabs } from "./ClientDetailTabs";
@@ -19,6 +21,7 @@ export default function ClientDetailPage() {
   const companyId = params.id as string;
   const clientId = params.clientId as string;
   const [isEditing, setIsEditing] = useState(false);
+  const [isCreateQuoteOpen, setIsCreateQuoteOpen] = useState(false);
 
   const {
     client,
@@ -29,6 +32,8 @@ export default function ClientDetailPage() {
     updateClient,
     deleteClient,
   } = useClientDetail(companyId, clientId);
+
+  const { createQuote, generateQuoteNumber } = useQuotes({ companyId });
 
   useEffect(() => {
     if (companyId && clientId) {
@@ -42,6 +47,25 @@ export default function ClientDetailPage() {
       router.push(`/dashboard/companies/${companyId}/clients`);
     }
     return success;
+  };
+
+  const handleCreateQuote = async (payload: {
+    client_id: string;
+    quote_number: string;
+    expiry_date?: string | null;
+    items?: any[];
+  }) => {
+    const ensureItems = Array.isArray(payload.items) ? payload.items : [];
+    const created = await createQuote({
+      ...payload,
+      items: ensureItems,
+    } as any);
+
+    if (created?.id) {
+      router.push(
+        `/dashboard/companies/${companyId}/quotes/${created.id}/edit`
+      );
+    }
   };
 
   const pageTitle = (
@@ -80,11 +104,10 @@ export default function ClientDetailPage() {
       isLoading={isLoading}
       isUpdating={isUpdating}
       isDeleting={isDeleting}
-      companyId={companyId}
-      clientId={clientId}
       onEdit={() => setIsEditing(true)}
       onCancelEdit={() => setIsEditing(false)}
       onDelete={handleDelete}
+      onCreateQuote={() => setIsCreateQuoteOpen(true)}
     />
   );
 
@@ -100,6 +123,16 @@ export default function ClientDetailPage() {
           onCancelEdit={() => setIsEditing(false)}
         />
       </div>
+
+      <CreateQuoteDialog
+        isOpen={isCreateQuoteOpen}
+        onClose={() => setIsCreateQuoteOpen(false)}
+        onSuccess={handleCreateQuote}
+        companyId={companyId}
+        preSelectedClient={client ?? undefined}
+        onLoadClients={undefined}
+        onGenerateQuoteNumber={generateQuoteNumber}
+      />
     </DashboardLayout>
   );
 }

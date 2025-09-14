@@ -48,6 +48,10 @@ const DEFAULT_PERMISSIONS: CompanyPermissions = {
   can_view_reports: false,
 };
 
+// Cache simples para evitar refetch entre páginas
+let cachedCompanies: Company[] | null = null;
+let cachedActiveCompanyId: string | null = null;
+
 export function useCompanies(
   options: UseCompaniesOptions = {}
 ): UseCompaniesReturn {
@@ -55,18 +59,29 @@ export function useCompanies(
   const { tokens, user } = useAuth();
 
   // Estados
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [activeCompanyId, setActiveCompanyId] = useState<string | null>(null);
+  const [companies, setCompanies] = useState<Company[]>(
+    cachedCompanies ?? []
+  );
+  const [activeCompanyId, setActiveCompanyId] = useState<string | null>(
+    cachedActiveCompanyId ?? null
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [hasInitialized, setHasInitialized] = useState(false);
 
-  // Recupera empresa ativa do localStorage apenas uma vez
+  // Recupera empresa ativa do cache ou localStorage apenas uma vez
   useEffect(() => {
+    if (cachedActiveCompanyId) {
+      setActiveCompanyId(cachedActiveCompanyId);
+      setHasInitialized(true);
+      return;
+    }
+
     const stored = localStorage.getItem("activeCompanyId");
     if (stored) {
       setActiveCompanyId(stored);
+      cachedActiveCompanyId = stored;
     }
     setHasInitialized(true);
   }, []);
@@ -74,6 +89,7 @@ export function useCompanies(
   // Persiste empresa ativa no localStorage
   const switchCompany = useCallback((companyId: string) => {
     setActiveCompanyId(companyId);
+    cachedActiveCompanyId = companyId;
     localStorage.setItem("activeCompanyId", companyId);
   }, []);
 
@@ -160,7 +176,8 @@ export function useCompanies(
         new Map(combined.map((c) => [c.id, c])).values()
       );
 
-      setCompanies(unique);
+        setCompanies(unique);
+        cachedCompanies = unique;
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Erro desconhecido";
@@ -182,13 +199,15 @@ export function useCompanies(
 
   // Refresh que limpa cache
   const refreshCompanies = useCallback(async () => {
-    await fetchCompanies();
-  }, [fetchCompanies]);
+      await fetchCompanies();
+    }, [fetchCompanies]);
 
   // Busca automática ao montar o componente
   useEffect(() => {
     if (autoFetch && tokens?.accessToken && hasInitialized) {
-      fetchCompanies();
+      if (cachedCompanies === null) {
+        fetchCompanies();
+      }
     }
     // A dependência `fetchCompanies` já contempla mudanças em `params`
     // e nos tokens; remover `isLoading` evita requisições em loop.

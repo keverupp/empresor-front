@@ -1,7 +1,7 @@
 // src/components/layouts/DashboardLayout.tsx
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { CompanyProvider } from "@/contexts/CompanyContext";
@@ -76,31 +76,18 @@ export function DashboardLayout({
   className = "",
   fetchCompanies = true,
 }: DashboardLayoutProps) {
-  const { isAuthenticated, isLoading, validateSession } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
-  const [hasValidated, setHasValidated] = useState(false);
-
-  // Validar sessão uma única vez no mount
-  useEffect(() => {
-    const validateAuth = async () => {
-      if (!hasValidated) {
-        await validateSession();
-        setHasValidated(true);
-      }
-    };
-
-    validateAuth();
-  }, [validateSession, hasValidated]);
 
   // Redirecionar para login quando sessão for inválida
   useEffect(() => {
-    if (hasValidated && !isLoading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       router.replace("/login");
     }
-  }, [isAuthenticated, isLoading, hasValidated, router]);
+  }, [isAuthenticated, isLoading, router]);
 
   // Loading enquanto valida
-  if (isLoading || !hasValidated) {
+  if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="text-center space-y-4">

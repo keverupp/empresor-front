@@ -1,7 +1,6 @@
 // src/components/clients/ClientActions.tsx
 "use client";
 
-import { useRouter } from "next/navigation";
 import { Edit3, Save, X, Trash2, FileText, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,12 +17,11 @@ interface ClientActionsProps {
   isLoading: boolean;
   isUpdating: boolean;
   isDeleting: boolean;
-  companyId: string;
-  clientId: string;
   onEdit: () => void;
   onCancelEdit: () => void;
   onDelete: () => Promise<boolean>;
   onSave?: () => void;
+  onCreateQuote?: () => void;
 }
 
 export function ClientActions({
@@ -32,15 +30,12 @@ export function ClientActions({
   isLoading,
   isUpdating,
   isDeleting,
-  companyId,
-  clientId,
   onEdit,
   onCancelEdit,
   onDelete,
   onSave,
+  onCreateQuote,
 }: ClientActionsProps) {
-  const router = useRouter();
-
   if (!isEditing) {
     return (
       <div className="flex items-center gap-2">
@@ -59,14 +54,8 @@ export function ClientActions({
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              onClick={() =>
-                router.push(
-                  `/dashboard/companies/${companyId}/quotes/new?clientId=${clientId}`
-                )
-              }
-            >
+            <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={onCreateQuote}>
               <FileText className="h-4 w-4 mr-2" />
               Criar orçamento
             </DropdownMenuItem>

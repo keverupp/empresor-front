@@ -141,7 +141,11 @@ export const useApi = () => {
               (errorData?.error as string) ||
               `Erro ${response.status}: ${response.statusText}`;
 
-            if (showErrorToast) {
+            const shouldToast =
+              showErrorToast &&
+              !(response.status === 401 && !latestTokens?.accessToken);
+
+            if (shouldToast) {
               toast.error("Erro na operação", { description: errorMessage });
             }
 
