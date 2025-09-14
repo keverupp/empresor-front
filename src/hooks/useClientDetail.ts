@@ -1,6 +1,7 @@
 // src/hooks/useClientDetail.ts
 import { useState, useCallback } from "react";
 import { useApi } from "@/hooks/useApi";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import type { Client } from "@/types/apiInterfaces";
 
@@ -32,6 +33,7 @@ export function useClientDetail(
   companyId: string,
   clientId: string
 ): UseClientDetailReturn {
+  const { tokens } = useAuth();
   const { get, put, delete: del } = useApi();
 
   // Estados
@@ -42,8 +44,8 @@ export function useClientDetail(
   const [error, setError] = useState<string | null>(null);
 
   // Buscar cliente
-  const fetchClient = useCallback(async () => {
-    if (!companyId || !clientId) return;
+    const fetchClient = useCallback(async () => {
+      if (!companyId || !clientId || !tokens?.accessToken) return;
 
     setIsLoading(true);
     setError(null);
@@ -70,12 +72,12 @@ export function useClientDetail(
     } finally {
       setIsLoading(false);
     }
-  }, [companyId, clientId, get]);
+    }, [companyId, clientId, tokens?.accessToken, get]);
 
   // Atualizar cliente
   const updateClient = useCallback(
-    async (updateData: ClientUpdatePayload): Promise<boolean> => {
-      if (!companyId || !clientId) return false;
+      async (updateData: ClientUpdatePayload): Promise<boolean> => {
+        if (!companyId || !clientId || !tokens?.accessToken) return false;
 
       setIsUpdating(true);
       setError(null);
@@ -118,12 +120,12 @@ export function useClientDetail(
         setIsUpdating(false);
       }
     },
-    [companyId, clientId, put]
-  );
+      [companyId, clientId, tokens?.accessToken, put]
+    );
 
   // Excluir cliente
-  const deleteClient = useCallback(async (): Promise<boolean> => {
-    if (!companyId || !clientId) return false;
+    const deleteClient = useCallback(async (): Promise<boolean> => {
+      if (!companyId || !clientId || !tokens?.accessToken) return false;
 
     setIsDeleting(true);
     setError(null);
@@ -151,7 +153,7 @@ export function useClientDetail(
     } finally {
       setIsDeleting(false);
     }
-  }, [companyId, clientId, del]);
+    }, [companyId, clientId, tokens?.accessToken, del]);
 
   // Limpar erro
   const clearError = useCallback(() => {
