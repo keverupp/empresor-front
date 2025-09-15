@@ -374,7 +374,7 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
           },
         };
 
-        const pdfRes = await apiCall<{ url?: string }>(
+        const pdfRes = await apiCall<Blob>(
           process.env.PDF_API_URL ?? "https://pdf.empresor.com.br/pdf",
           {
             method: "POST",
@@ -383,17 +383,67 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
               "x-api-key":
                 process.env.PDF_API_KEY ??
                 "9dbfce7254de4aa79dd6224df978d83c1cfced4092d2bf8a098c520aa20f25de",
+              Accept: "application/pdf",
             },
             body: JSON.stringify(payload),
+            responseType: "blob",
           }
         );
 
-        const url = pdfRes.data?.url;
-        if (url) {
-          window.open(url, "_blank");
+        if (pdfRes.error) {
+          throw new Error(pdfRes.error);
+        }
+
+        const pdfBlob = pdfRes.data;
+
+        if (pdfBlob instanceof Blob && pdfBlob.size > 0) {
+          const disposition = pdfRes.headers?.get("content-disposition") ?? "";
+          const fallbackName = title?.toLowerCase().endsWith(".pdf")
+            ? title
+            : `${title ?? "document"}.pdf`;
+          const match = disposition.match(
+            /filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i
+          );
+          const encodedName = match?.[1] ?? match?.[2];
+          let fileName = fallbackName;
+          if (encodedName) {
+            try {
+              fileName = decodeURIComponent(encodedName);
+            } catch {
+              fileName = encodedName;
+            }
+          }
+
+          const blob =
+            pdfBlob.type === "application/pdf"
+              ? pdfBlob
+              : new Blob([pdfBlob], { type: "application/pdf" });
+          const blobUrl = URL.createObjectURL(blob);
+
+          const openInNewTab = () => {
+            const pdfWindow = window.open(blobUrl, "_blank", "noopener,noreferrer");
+            if (pdfWindow) {
+              pdfWindow.document.title = fileName;
+            } else {
+              const link = document.createElement("a");
+              link.href = blobUrl;
+              link.target = "_blank";
+              link.rel = "noopener noreferrer";
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }
+          };
+
+          openInNewTab();
+
+          setTimeout(() => {
+            URL.revokeObjectURL(blobUrl);
+          }, 300000);
+
           toast.success("PDF gerado com sucesso", { id: toastId });
         } else {
-          throw new Error("URL do PDF não retornada");
+          throw new Error("PDF não retornado");
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Erro ao gerar PDF";

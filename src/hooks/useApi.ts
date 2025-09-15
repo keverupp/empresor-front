@@ -21,6 +21,7 @@ export const useApi = () => {
         skipAuth = false,
         showErrorToast = true,
         showSuccessToast = false,
+        responseType = "json",
         ...fetchOptions
       } = options;
 
@@ -34,7 +35,12 @@ export const useApi = () => {
       while (retries <= maxRetries) {
         try {
           const headers = new Headers(fetchOptions.headers);
-          headers.set("Content-Type", "application/json");
+          if (
+            !(fetchOptions.body instanceof FormData) &&
+            !headers.has("Content-Type")
+          ) {
+            headers.set("Content-Type", "application/json");
+          }
 
           if (
             !skipAuth &&
@@ -112,20 +118,35 @@ export const useApi = () => {
             }
           }
 
-          let responseData: T | null = null;
-          const contentType = response.headers.get("content-type");
-
-          if (contentType?.includes("application/json")) {
-            responseData = (await response.json()) as T;
-          } else if (response.ok) {
-            responseData = (await response.text()) as unknown as T;
-          }
+          const contentType = response.headers.get("content-type") ?? "";
+          const hasBody = response.status !== 204 && response.status !== 205;
 
           if (response.ok) {
+            let responseData: T | null = null;
+
+            try {
+              if (responseType === "blob") {
+                responseData = (await response.blob()) as unknown as T;
+              } else if (responseType === "arrayBuffer") {
+                responseData = (await response.arrayBuffer()) as unknown as T;
+              } else if (responseType === "text") {
+                responseData = (await response.text()) as unknown as T;
+              } else if (hasBody && contentType.includes("application/json")) {
+                responseData = (await response.json()) as T;
+              } else if (contentType.includes("application/pdf")) {
+                responseData = (await response.blob()) as unknown as T;
+              } else if (hasBody) {
+                responseData = (await response.text()) as unknown as T;
+              }
+            } catch (parseError) {
+              console.error("Failed to parse response:", parseError);
+              responseData = null;
+            }
+
             if (showSuccessToast && responseData) {
               const message =
-                ((responseData as Record<string, unknown>)
-                  ?.message as string) ?? "Operação realizada com sucesso";
+                ((responseData as Record<string, unknown>)?.message as string) ??
+                "Operação realizada com sucesso";
               toast.success("Sucesso", { description: message });
             }
 
@@ -133,28 +154,53 @@ export const useApi = () => {
               data: responseData,
               error: null,
               status: response.status,
-            };
-          } else {
-            const errorData = responseData as Record<string, unknown> | null;
-            const errorMessage =
-              (errorData?.message as string) ||
-              (errorData?.error as string) ||
-              `Erro ${response.status}: ${response.statusText}`;
-
-            const shouldToast =
-              showErrorToast &&
-              !(response.status === 401 && !latestTokens?.accessToken);
-
-            if (shouldToast) {
-              toast.error("Erro na operação", { description: errorMessage });
-            }
-
-            return {
-              error: errorMessage,
-              data: null,
-              status: response.status,
+              headers: response.headers,
             };
           }
+
+          let errorBody: unknown = null;
+
+          if (hasBody && contentType.includes("application/json")) {
+            try {
+              errorBody = await response.json();
+            } catch (jsonError) {
+              console.error("Failed to parse error response as JSON:", jsonError);
+              errorBody = null;
+            }
+          } else if (hasBody) {
+            try {
+              errorBody = await response.text();
+            } catch (textError) {
+              console.error("Failed to parse error response as text:", textError);
+              errorBody = null;
+            }
+          }
+
+          const errorData =
+            typeof errorBody === "string" ? null : (errorBody as Record<string, unknown> | null);
+
+          const errorMessage =
+            (errorData?.message as string) ||
+            (errorData?.error as string) ||
+            (typeof errorBody === "string" && errorBody.trim()
+              ? errorBody.trim()
+              : undefined) ||
+            `Erro ${response.status}: ${response.statusText}`;
+
+          const shouldToast =
+            showErrorToast &&
+            !(response.status === 401 && !latestTokens?.accessToken);
+
+          if (shouldToast) {
+            toast.error("Erro na operação", { description: errorMessage });
+          }
+
+          return {
+            error: errorMessage,
+            data: null,
+            status: response.status,
+            headers: response.headers,
+          };
         } catch (err: unknown) {
           console.error(`API call error (retry ${retries}):`, err);
 
@@ -172,6 +218,7 @@ export const useApi = () => {
               error: errorMessage,
               data: null,
               status: 0,
+              headers: undefined,
             };
           }
 
@@ -184,6 +231,7 @@ export const useApi = () => {
         error: "Falha após múltiplas tentativas",
         data: null,
         status: 0,
+        headers: undefined,
       };
     },
     [refreshToken, logout]

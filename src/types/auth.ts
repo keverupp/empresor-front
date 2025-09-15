@@ -42,13 +42,17 @@ export interface ApiResponse<T = unknown> {
   data: T | null;
   error: string | null;
   status: number;
+  headers?: Headers;
 }
+
+export type ApiResponseType = "json" | "text" | "blob" | "arrayBuffer";
 
 export interface ApiOptions extends Omit<RequestInit, "body"> {
   skipAuth?: boolean;
   showErrorToast?: boolean;
   showSuccessToast?: boolean;
   body?: BodyInit | null; // explicitando body para não conflitar
+  responseType?: ApiResponseType;
 }
 
 export interface ActivePlan {
