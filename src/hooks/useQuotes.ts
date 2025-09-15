@@ -3,6 +3,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useApi } from "@/hooks/useApi";
+import { toast } from "sonner";
 import { type Quote, type Client, type Product } from "@/types/apiInterfaces";
 import {
   type CreateQuoteData,
@@ -342,6 +343,7 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
     async (quoteId: string) => {
       if (!companyId || !quoteId) return;
 
+      const toastId = toast.loading("Gerando PDF...");
       try {
         const pdfResponse = await apiCall<{
           title: string;
@@ -389,12 +391,14 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
         const url = pdfRes.data?.url;
         if (url) {
           window.open(url, "_blank");
+          toast.success("PDF gerado com sucesso", { id: toastId });
         } else {
           throw new Error("URL do PDF não retornada");
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Erro ao gerar PDF";
         setError(msg);
+        toast.error(msg, { id: toastId });
       }
     },
     [apiCall, companyId]
