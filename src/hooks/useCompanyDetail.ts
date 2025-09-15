@@ -221,7 +221,6 @@ export function useCompanyDetail(companyId: string): UseCompanyDetailReturn {
           return merged;
         });
         await refreshCompanies?.();
-        toast.success("Logo atualizada com sucesso");
         return true;
       } catch (err) {
         console.error("Erro ao enviar logo:", err);

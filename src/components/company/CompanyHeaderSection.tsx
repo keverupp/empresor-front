@@ -101,9 +101,7 @@ export function CompanyHeaderSection({
                   const file = e.target.files?.[0];
                   if (!file) return;
                   const success = await onLogoUpload(file);
-                  if (success) {
-                    toast.success("Logo atualizada");
-                  } else {
+                  if (!success) {
                     toast.error("Erro ao atualizar logo");
                   }
                   e.target.value = "";
