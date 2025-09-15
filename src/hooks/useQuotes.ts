@@ -375,7 +375,7 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
         };
 
         const pdfRes = await apiCall<Blob>(
-          process.env.PDF_API_URL ?? "https://pdf.empresor.com.br/pdf",
+          process.env.PDF_API_URL ?? "https://pdfv2.empresor.com.br/pdf/view",
           {
             method: "POST",
             skipAuth: true,
@@ -420,28 +420,19 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
               : new Blob([pdfBlob], { type: "application/pdf" });
           const blobUrl = URL.createObjectURL(blob);
 
-          const openInNewTab = () => {
-            const pdfWindow = window.open(blobUrl, "_blank", "noopener,noreferrer");
-            if (pdfWindow) {
-              pdfWindow.document.title = fileName;
-            } else {
-              const link = document.createElement("a");
-              link.href = blobUrl;
-              link.target = "_blank";
-              link.rel = "noopener noreferrer";
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-            }
-          };
-
-          openInNewTab();
+          const link = document.createElement("a");
+          link.href = blobUrl;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
 
           setTimeout(() => {
             URL.revokeObjectURL(blobUrl);
           }, 300000);
 
-          toast.success("PDF gerado com sucesso", { id: toastId });
+          toast.success(`PDF "${fileName}" gerado com sucesso`, { id: toastId });
         } else {
           throw new Error("PDF não retornado");
         }
