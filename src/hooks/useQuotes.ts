@@ -9,6 +9,7 @@ import {
   type CreateQuoteData,
   type UpdateQuoteData,
 } from "@/lib/quote-schemas";
+import { addPdfToastHistoryEntry } from "@/utils/pdfToastHistory";
 
 interface UseQuotesOptions {
   companyId: string;
@@ -391,6 +392,12 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
         const url = pdfRes.data?.url;
         if (url) {
           window.open(url, "_blank");
+          addPdfToastHistoryEntry({
+            companyId,
+            quoteId,
+            title,
+            url,
+          });
           toast.success("PDF gerado com sucesso", { id: toastId });
         } else {
           throw new Error("URL do PDF não retornada");

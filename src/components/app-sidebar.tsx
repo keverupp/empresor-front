@@ -6,6 +6,7 @@ import {
   IconDashboard,
   IconDatabase,
   IconHelp,
+  IconHistory,
   IconInnerShadowTop,
   IconSearch,
   IconSettings,
@@ -65,6 +66,11 @@ const documentsNavigation = [
     name: "Biblioteca de Dados",
     url: "/dashboard/data-library",
     icon: IconDatabase,
+  },
+  {
+    name: "Histórico de Toasts",
+    url: "/dashboard/toast-history",
+    icon: IconHistory,
   },
 ];
 
