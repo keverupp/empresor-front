@@ -187,9 +187,11 @@ function QuoteCard({ quote, status }: { quote: Quote; status: QuoteStatus }) {
 function StatusColumn({
   status,
   quotes,
+  className,
 }: {
   status: QuoteStatus;
   quotes: Quote[];
+  className?: string;
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: status,
@@ -203,11 +205,13 @@ function StatusColumn({
     <div
       ref={setNodeRef}
       className={cn(
-        "flex flex-col rounded-lg border bg-card transition-colors min-w-0 w-full max-w-full",
-        isOver && "bg-accent/50"
+        "flex h-full w-full min-w-[15rem] flex-col rounded-lg border bg-card transition-colors",
+        "sm:min-w-[16rem] lg:min-w-[18rem]",
+        isOver && "bg-accent/50",
+        className
       )}
     >
-      <div className="p-4 pb-2">
+      <div className="p-3 pb-2 sm:p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
             <h3 className="font-semibold text-sm">{config.label}</h3>
@@ -219,7 +223,7 @@ function StatusColumn({
         <Separator className="mt-3" />
       </div>
 
-      <div className="flex-1 p-3 xl:p-4 pt-1 min-h-[500px]">
+      <div className="flex-1 p-2 pt-1 sm:p-3 lg:p-4 min-h-[420px] md:min-h-[460px] lg:min-h-[500px]">
         <SortableContext
           items={quotes.map((q) => q.id)}
           strategy={verticalListSortingStrategy}
@@ -316,8 +320,8 @@ export function QuoteKanbanBoard({
   const totalQuotes = quotes.length;
 
   return (
-    <div className="p-4 md:p-6 lg:p-8">
-      <div className="space-y-4 min-w-0 w-full max-w-full overflow-x-hidden">
+    <div className="p-3 md:p-4 lg:p-6 xl:p-8">
+      <div className="space-y-3 md:space-y-4 min-w-0 w-full max-w-full">
         <div className="flex items-center justify-between">
           <div className="min-w-0">
             <h2 className="text-lg font-semibold">Board de Cotações</h2>
@@ -353,20 +357,23 @@ export function QuoteKanbanBoard({
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
         >
-          {/* Grid responsivo sem scroll horizontal */}
-          <div
-            className={cn(
-              "hidden md:grid gap-4 min-w-0 w-full max-w-full overflow-x-hidden",
-              "grid-cols-[repeat(auto-fit,minmax(18rem,1fr))]"
-            )}
-          >
-            {statusOrder.map((status) => (
-              <StatusColumn
-                key={status}
-                status={status}
-                quotes={columns[status] || []}
-              />
-            ))}
+          <div className="hidden md:block">
+            <div
+              className={cn(
+                "grid grid-flow-col auto-cols-[minmax(15rem,1fr)]",
+                "gap-3 lg:gap-4",
+                "overflow-x-auto pb-2 pr-2",
+                "xl:[grid-auto-columns:minmax(18rem,1fr)]"
+              )}
+            >
+              {statusOrder.map((status) => (
+                <StatusColumn
+                  key={status}
+                  status={status}
+                  quotes={columns[status] || []}
+                />
+              ))}
+            </div>
           </div>
 
           <DragOverlay>
