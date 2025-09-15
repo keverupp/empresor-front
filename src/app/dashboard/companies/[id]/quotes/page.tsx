@@ -75,6 +75,7 @@ export default function QuotesPage() {
     deleteQuote,
     fetchClients,
     generateQuoteNumber,
+    generatePdf,
   } = useQuotes({ companyId });
 
   // Breadcrumbs
@@ -265,6 +266,13 @@ export default function QuotesPage() {
               >
                 <Edit className="h-4 w-4 mr-2" />
                 Editar
+              </DropdownMenuItem>
+
+              <DropdownMenuItem
+                onClick={() => generatePdf(quote.id)}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Gerar PDF
               </DropdownMenuItem>
 
               <DropdownMenuSeparator />
