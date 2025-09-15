@@ -200,8 +200,11 @@ export function DataTable<TData, TValue>({
         columnStorageKey={columnStorageKey}
       />
 
-      <div className="overflow-hidden rounded-lg border">
-        <Table className={tableClassName}>
+      <div className="rounded-lg border shadow-sm">
+        <Table
+          containerClassName="rounded-lg"
+          className={tableClassName}
+        >
           <TableHeader className="bg-muted">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="border-b">
