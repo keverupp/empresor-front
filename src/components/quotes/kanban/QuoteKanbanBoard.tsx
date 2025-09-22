@@ -23,7 +23,7 @@ import {
   Card,
   CardHeader,
   CardTitle,
-  CardDescription,
+
   CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,6 @@ import {
   DollarSign,
   ExternalLink,
   GripVertical,
-  MonitorX,
 } from "lucide-react";
 
 interface QuoteKanbanBoardProps {
@@ -76,20 +75,22 @@ function groupByStatus(quotes: Quote[]): Record<QuoteStatus, Quote[]> {
 function QuoteCardContent({
   quote,
   isOverlay = false,
+  isMobile = false,
 }: {
   quote: Quote;
   isOverlay?: boolean;
+  isMobile?: boolean;
 }) {
   return (
     <Card
       className={cn(
         "w-full transition-all duration-200 hover:shadow-md",
-        "cursor-grab active:cursor-grabbing",
-        "min-w-0", // evita overflow
+        !isMobile && "cursor-grab active:cursor-grabbing",
+        "min-w-0",
         isOverlay && "pointer-events-none shadow-lg rotate-3 scale-105"
       )}
     >
-      <CardHeader className="pb-2">
+      <CardHeader className={cn("pb-1", isMobile ? "p-3" : "pb-2")}>
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -99,13 +100,17 @@ function QuoteCardContent({
               </CardTitle>
             </div>
           </div>
-          <GripVertical className="h-4 w-4 text-muted-foreground opacity-50" />
+          {!isMobile && (
+            <GripVertical className="h-4 w-4 text-muted-foreground opacity-50" />
+          )}
         </div>
       </CardHeader>
 
-      <CardContent className="pt-0 pb-3 space-y-3">
+      <CardContent
+        className={cn("pt-0 space-y-2", isMobile ? "pb-2 px-3" : "pb-2")}
+      >
         {quote.client?.name && (
-          <div className="flex items-center gap-2 text-sm min-w-0">
+          <div className="flex items-center gap-2 text-xs min-w-0">
             <User className="h-3 w-3 text-muted-foreground flex-shrink-0" />
             <span className="truncate text-muted-foreground">
               {quote.client.name}
@@ -113,7 +118,7 @@ function QuoteCardContent({
           </div>
         )}
 
-        <Separator />
+        <Separator className="my-1" />
 
         <div className="flex items-center justify-between text-xs">
           <div className="flex items-center gap-1 text-muted-foreground">
@@ -130,11 +135,11 @@ function QuoteCardContent({
 
         {!isOverlay && (
           <>
-            <Separator />
+            <Separator className="my-1" />
             <Button
               variant="ghost"
               size="sm"
-              className="w-full justify-center gap-2 h-8"
+              className="w-full justify-center gap-1 h-7 text-xs"
               asChild
               onPointerDown={(e) => e.stopPropagation()}
             >
@@ -142,7 +147,7 @@ function QuoteCardContent({
                 href={`/dashboard/companies/${quote.company_id}/quotes/${quote.id}`}
               >
                 <ExternalLink className="h-3 w-3" />
-                Abrir Cotação
+                Abrir
               </Link>
             </Button>
           </>
@@ -177,7 +182,7 @@ function QuoteCard({ quote, status }: { quote: Quote; status: QuoteStatus }) {
       style={style}
       {...attributes}
       {...listeners}
-      className="mb-3 min-w-0 w-full max-w-full"
+      className="mb-2 min-w-0 w-full"
     >
       <QuoteCardContent quote={quote} />
     </div>
@@ -203,33 +208,34 @@ function StatusColumn({
     <div
       ref={setNodeRef}
       className={cn(
-        "flex flex-col rounded-lg border bg-card transition-colors min-w-0 w-full max-w-full",
+        "flex flex-col rounded-lg border bg-card transition-colors",
+        "h-full min-w-0 w-full",
         isOver && "bg-accent/50"
       )}
     >
-      <div className="p-4 pb-2">
+      <div className="p-3 pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
-            <h3 className="font-semibold text-sm">{config.label}</h3>
-            <Badge variant={variant} className="text-xs">
+            <h3 className="font-semibold text-sm truncate">{config.label}</h3>
+            <Badge variant={variant} className="text-xs flex-shrink-0">
               {quotes.length}
             </Badge>
           </div>
         </div>
-        <Separator className="mt-3" />
+        <Separator className="mt-2" />
       </div>
 
-      <div className="flex-1 p-3 xl:p-4 pt-1 min-h-[500px]">
+      <div className="flex-1 p-2 pt-1 min-h-[320px] sm:min-h-[380px] lg:min-h-[420px]">
         <SortableContext
           items={quotes.map((q) => q.id)}
           strategy={verticalListSortingStrategy}
         >
           {quotes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-32 text-center">
-              <div className="rounded-full bg-muted p-3 mb-2">
-                <FileText className="h-6 w-6 text-muted-foreground" />
+            <div className="flex flex-col items-center justify-center h-24 text-center">
+              <div className="rounded-full bg-muted p-2 mb-1">
+                <FileText className="h-4 w-4 text-muted-foreground" />
               </div>
-              <p className="text-sm text-muted-foreground">Nenhuma cotação</p>
+              <p className="text-xs text-muted-foreground">Nenhuma cotação</p>
             </div>
           ) : (
             quotes.map((quote) => (
@@ -237,6 +243,39 @@ function StatusColumn({
             ))
           )}
         </SortableContext>
+      </div>
+    </div>
+  );
+}
+
+function MobileStatusSection({
+  status,
+  quotes,
+}: {
+  status: QuoteStatus;
+  quotes: Quote[];
+}) {
+  const config = QUOTE_STATUS_CONFIG[status];
+  const variant = statusVariantMap[status] || "default";
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <h3 className="font-semibold text-sm">{config.label}</h3>
+        <Badge variant={variant} className="text-xs">
+          {quotes.length}
+        </Badge>
+      </div>
+      <div className="space-y-2">
+        {quotes.length === 0 ? (
+          <p className="text-xs text-muted-foreground py-3 text-center bg-muted/30 rounded">
+            Nenhuma cotação
+          </p>
+        ) : (
+          quotes.map((quote) => (
+            <QuoteCardContent key={quote.id} quote={quote} isMobile />
+          ))
+        )}
       </div>
     </div>
   );
@@ -316,8 +355,8 @@ export function QuoteKanbanBoard({
   const totalQuotes = quotes.length;
 
   return (
-    <div className="p-4 md:p-6 lg:p-8">
-      <div className="space-y-4 min-w-0 w-full max-w-full overflow-x-hidden">
+    <div className="p-2 sm:p-3 md:p-4 lg:p-6">
+      <div className="space-y-3 min-w-0 w-full">
         <div className="flex items-center justify-between">
           <div className="min-w-0">
             <h2 className="text-lg font-semibold">Board de Cotações</h2>
@@ -328,45 +367,42 @@ export function QuoteKanbanBoard({
           </div>
         </div>
 
-        {/* Aviso para telas pequenas */}
-        <div className="md:hidden">
-          <Card className="border-dashed">
-            <CardHeader>
-              <div className="flex items-start gap-3">
-                <MonitorX className="h-5 w-5 text-muted-foreground mt-0.5" />
-                <div>
-                  <CardTitle className="text-base">
-                    Tela muito pequena
-                  </CardTitle>
-                  <CardDescription>
-                    O kanban não é compatível com esta resolução. Aumente a
-                    largura da janela ou use um dispositivo com tela maior.
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
+        {/* Versão mobile - lista agrupada */}
+        <div className="md:hidden space-y-4">
+          {statusOrder.map((status) => (
+            <MobileStatusSection
+              key={status}
+              status={status}
+              quotes={columns[status] || []}
+            />
+          ))}
         </div>
 
+        {/* Versão desktop - kanban com drag & drop */}
         <DndContext
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
         >
-          {/* Grid responsivo sem scroll horizontal */}
-          <div
-            className={cn(
-              "hidden md:grid gap-4 min-w-0 w-full max-w-full overflow-x-hidden",
-              "grid-cols-[repeat(auto-fit,minmax(18rem,1fr))]"
-            )}
-          >
-            {statusOrder.map((status) => (
-              <StatusColumn
-                key={status}
-                status={status}
-                quotes={columns[status] || []}
-              />
-            ))}
+          <div className="hidden md:block">
+            <div
+              className={cn(
+                "grid gap-3 lg:gap-4",
+                "grid-cols-[repeat(auto-fit,minmax(280px,1fr))]",
+                "sm:grid-cols-[repeat(auto-fit,minmax(200px,1fr))]",
+                "lg:grid-cols-[repeat(auto-fit,minmax(200px,1fr))]",
+                "xl:grid-cols-[repeat(auto-fit,minmax(250px,1fr))]",
+                "min-h-[400px]"
+              )}
+            >
+              {statusOrder.map((status) => (
+                <StatusColumn
+                  key={status}
+                  status={status}
+                  quotes={columns[status] || []}
+                />
+              ))}
+            </div>
           </div>
 
           <DragOverlay>
