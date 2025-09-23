@@ -9,6 +9,7 @@ import type {
   CompanyListResponse,
   CompanyListParams,
   CompanyPermissions,
+  SharedCompanyUser,
 } from "@/types/company";
 
 interface UseCompaniesOptions {
@@ -47,6 +48,14 @@ const DEFAULT_PERMISSIONS: CompanyPermissions = {
   can_manage_products: false,
   can_view_reports: false,
 };
+
+interface SharedCompanyResponse {
+  share_id: number;
+  shared_at: string;
+  permissions: CompanyPermissions;
+  company: Company;
+  shared_by: SharedCompanyUser;
+}
 
 // Cache simples para evitar refetch entre páginas
 let cachedCompanies: Company[] | null = null;
@@ -157,14 +166,24 @@ export function useCompanies(
         });
 
         if (sharedResponse.ok) {
-          const sharedData: CompanyListResponse = await sharedResponse.json();
-          sharedCompanies = (sharedData.data || []).map((c) => ({
-            ...c,
-            logo_url: c.logo_url
-              ? `${c.logo_url}${c.logo_url.includes("?") ? "&" : "?"}v=${encodeURIComponent(c.updated_at)}`
-              : undefined,
-            is_shared: true,
-          }));
+          const sharedData: SharedCompanyResponse[] = await sharedResponse.json();
+          sharedCompanies = (sharedData || []).map((share) => {
+            const sharedCompany = {
+              ...share.company,
+              logo_url: share.company.logo_url
+                ? `${share.company.logo_url}${share.company.logo_url.includes("?") ? "&" : "?"}v=${encodeURIComponent(share.company.updated_at)}`
+                : undefined,
+            };
+
+            return {
+              ...sharedCompany,
+              permissions: share.permissions,
+              share_id: share.share_id,
+              shared_at: share.shared_at,
+              shared_by: share.shared_by,
+              is_shared: true,
+            };
+          });
         }
       } catch (error) {
         console.error("Erro ao buscar empresas compartilhadas:", error);
@@ -176,8 +195,8 @@ export function useCompanies(
         new Map(combined.map((c) => [c.id, c])).values()
       );
 
-        setCompanies(unique);
-        cachedCompanies = unique;
+      setCompanies(unique);
+      cachedCompanies = unique;
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Erro desconhecido";
@@ -199,8 +218,8 @@ export function useCompanies(
 
   // Refresh que limpa cache
   const refreshCompanies = useCallback(async () => {
-      await fetchCompanies();
-    }, [fetchCompanies]);
+    await fetchCompanies();
+  }, [fetchCompanies]);
 
   // Busca automática ao montar o componente
   useEffect(() => {

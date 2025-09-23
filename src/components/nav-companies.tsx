@@ -50,52 +50,84 @@ import { CompanyActivationModal } from "@/components/company-activation-modal";
 import { NewCompanyButton } from "@/components/new-company-button";
 
 import { useCompanyContext } from "@/contexts/CompanyContext";
-import { useAuth } from "@/contexts/AuthContext";
 import type { Company, CompanyMenuItem } from "@/types/company";
+
+type ResolvedCompanyPermissions = {
+  canViewClients: boolean;
+  canCreateQuotes: boolean;
+  canEditSettings: boolean;
+  canViewFinance: boolean;
+  canManageProducts: boolean;
+  canViewReports: boolean;
+};
+
+function resolveCompanyPermissions(
+  company: Company,
+  { isOwner }: { isOwner: boolean }
+): ResolvedCompanyPermissions {
+  if (isOwner) {
+    return {
+      canViewClients: true,
+      canCreateQuotes: true,
+      canEditSettings: true,
+      canViewFinance: true,
+      canManageProducts: true,
+      canViewReports: true,
+    };
+  }
+
+  const permissions = company.permissions;
+
+  return {
+    canViewClients: permissions?.can_view_clients ?? false,
+    canCreateQuotes: permissions?.can_create_quotes ?? false,
+    canEditSettings: permissions?.can_edit_settings ?? false,
+    canViewFinance: permissions?.can_view_finance ?? false,
+    canManageProducts: permissions?.can_manage_products ?? false,
+    canViewReports: permissions?.can_view_reports ?? false,
+  };
+}
 
 // Função para gerar os itens do menu baseado nas permissões
 function getCompanyMenuItems(
-  companyId: string,
-  permissions: {
-    canViewClients: boolean;
-    canCreateQuotes: boolean;
-    canEditSettings: boolean;
-    canViewFinance: boolean;
-    canManageProducts: boolean;
-    canViewReports: boolean;
-  }
+  company: Company,
+  permissions: ResolvedCompanyPermissions
 ): CompanyMenuItem[] {
-  const baseUrl = `/dashboard/companies/${companyId}`;
+  const baseUrl = `/dashboard/companies/${company.id}`;
 
   const items: CompanyMenuItem[] = [];
 
-  // Orçamentos - sempre visível
-  items.push({
-    title: "Orçamentos",
-    href: `${baseUrl}/quotes`,
-    icon: IconFileText,
-  });
+  if (permissions.canCreateQuotes) {
+    // Orçamentos
+    items.push({
+      title: "Orçamentos",
+      href: `${baseUrl}/quotes`,
+      icon: IconFileText,
+    });
 
-  // Kanban de Orçamentos - sempre visível
-  items.push({
-    title: "Kanban",
-    href: `${baseUrl}/quotes/kanban`,
-    icon: IconLayoutKanban,
-  });
+    // Kanban de Orçamentos
+    items.push({
+      title: "Kanban",
+      href: `${baseUrl}/quotes/kanban`,
+      icon: IconLayoutKanban,
+    });
+  }
 
-  // Clientes - sempre visível
-  items.push({
-    title: "Clientes",
-    href: `${baseUrl}/clients`,
-    icon: IconUsers,
-  });
+  if (permissions.canViewClients) {
+    items.push({
+      title: "Clientes",
+      href: `${baseUrl}/clients`,
+      icon: IconUsers,
+    });
+  }
 
-  // Produtos - sempre visível
-  items.push({
-    title: "Produtos",
-    href: `${baseUrl}/products`,
-    icon: IconFolder,
-  });
+  if (permissions.canManageProducts) {
+    items.push({
+      title: "Produtos",
+      href: `${baseUrl}/products`,
+      icon: IconFolder,
+    });
+  }
 
   // TODO: Reabilitar "Relatórios" e "Financeiro" quando as páginas estiverem prontas
 
@@ -121,6 +153,7 @@ interface CompanyItemProps {
   menuItems: CompanyMenuItem[];
   onActivationClick: () => void;
   canShare?: boolean;
+  permissions: ResolvedCompanyPermissions;
 }
 
 function CompanyItem({
@@ -132,6 +165,7 @@ function CompanyItem({
   menuItems,
   onActivationClick,
   canShare = false,
+  permissions,
 }: CompanyItemProps) {
   const pathname = usePathname();
   const { isMobile } = useSidebar();
@@ -224,12 +258,14 @@ function CompanyItem({
                 <DropdownMenuSeparator />
               </>
             )}
-            <DropdownMenuItem asChild>
-              <Link href={`/dashboard/companies/${company.id}/settings`}>
-                <IconSettings className="w-4 h-4 mr-2" />
-                Configurações
-              </Link>
-            </DropdownMenuItem>
+            {permissions.canEditSettings && (
+              <DropdownMenuItem asChild>
+                <Link href={`/dashboard/companies/${company.id}/settings`}>
+                  <IconSettings className="w-4 h-4 mr-2" />
+                  Configurações
+                </Link>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem asChild>
               <Link href={`/dashboard/companies/${company.id}`}>
                 <IconBuilding className="w-4 h-4" />
@@ -252,30 +288,38 @@ function CompanyItem({
               </SidebarMenuSubItem>
             ) : (
               // Menu normal para empresa ativa
-              menuItems.map((item) => {
-                const isSubActive =
-                  pathname === item.href ||
-                  pathname.startsWith(`${item.href}/`);
+              menuItems.length > 0 ? (
+                menuItems.map((item) => {
+                  const isSubActive =
+                    pathname === item.href ||
+                    pathname.startsWith(`${item.href}/`);
 
-                return (
-                  <SidebarMenuSubItem key={item.href}>
-                    <SidebarMenuSubButton asChild isActive={isSubActive}>
-                      <Link href={item.href}>
-                        <item.icon className="w-4 h-4" />
-                        <span>{item.title}</span>
-                        {item.badge && (
-                          <Badge
-                            variant="secondary"
-                            className="ml-auto text-xs"
-                          >
-                            {item.badge}
-                          </Badge>
-                        )}
-                      </Link>
-                    </SidebarMenuSubButton>
-                  </SidebarMenuSubItem>
-                );
-              })
+                  return (
+                    <SidebarMenuSubItem key={item.href}>
+                      <SidebarMenuSubButton asChild isActive={isSubActive}>
+                        <Link href={item.href}>
+                          <item.icon className="w-4 h-4" />
+                          <span>{item.title}</span>
+                          {item.badge && (
+                            <Badge
+                              variant="secondary"
+                              className="ml-auto text-xs"
+                            >
+                              {item.badge}
+                            </Badge>
+                          )}
+                        </Link>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  );
+                })
+              ) : (
+                <SidebarMenuSubItem>
+                  <div className="p-2 text-sm text-muted-foreground">
+                    Você não possui acesso às seções desta empresa.
+                  </div>
+                </SidebarMenuSubItem>
+              )
             )}
           </SidebarMenuSub>
         </CollapsibleContent>
@@ -326,10 +370,9 @@ export function NavCompanies() {
     switchCompany,
     isLoading,
     isError,
-    hasPermission,
     refreshCompanies,
+    isOwner,
   } = useCompanyContext();
-  const { user } = useAuth();
 
   const [expandedCompanies, setExpandedCompanies] = React.useState<Set<string>>(
     new Set(activeCompanyId ? [activeCompanyId] : [])
@@ -410,19 +453,6 @@ export function NavCompanies() {
     refreshCompanies(); // Recarrega a lista de empresas
   }, [refreshCompanies]);
 
-  // Permissões simplificadas
-  const companyPermissions = React.useMemo(
-    () => ({
-      canViewClients: hasPermission("can_view_clients"),
-      canCreateQuotes: hasPermission("can_create_quotes"),
-      canEditSettings: hasPermission("can_edit_settings"),
-      canViewFinance: hasPermission("can_view_finance"),
-      canManageProducts: hasPermission("can_manage_products"),
-      canViewReports: hasPermission("can_view_reports"),
-    }),
-    [hasPermission]
-  );
-
   return (
     <>
       {/* Seção principal de empresas ATIVAS */}
@@ -465,11 +495,12 @@ export function NavCompanies() {
             activeCompanies.map((company) => {
               const isActive = activeCompanyId === company.id;
               const isExpanded = expandedCompanies.has(company.id);
-              const menuItems = getCompanyMenuItems(
-                company.id,
-                companyPermissions
-              );
-              const canShare = company.owner_id === user?.id;
+              const owner = isOwner(company);
+              const permissions = resolveCompanyPermissions(company, {
+                isOwner: owner,
+              });
+              const menuItems = getCompanyMenuItems(company, permissions);
+              const canShare = owner;
 
               return (
                 <CompanyItem
@@ -482,6 +513,7 @@ export function NavCompanies() {
                   onActivationClick={() => openActivationModal(company)}
                   menuItems={menuItems}
                   canShare={canShare}
+                  permissions={permissions}
                 />
               );
             })}

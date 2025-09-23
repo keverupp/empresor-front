@@ -29,6 +29,7 @@ export interface Company {
   shared_at?: string;
   permissions?: CompanyPermissions;
   is_shared?: boolean;
+  shared_by?: SharedCompanyUser;
   created_at: string;
   updated_at: string;
   verified_at?: string;
@@ -86,6 +87,14 @@ export interface CompanyShare {
   status: string;
   shared_at: string;
 }
+
+export interface SharedCompanyUser {
+  id: string;
+  name: string;
+  email: string;
+  avatar_url?: string | null;
+}
+
 
 export interface CompanyListResponse {
   data: Company[];
