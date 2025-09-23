@@ -10,12 +10,34 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-export default function ResetPasswordPage({
+type SearchParams = Record<string, string | string[] | undefined>;
+
+type ResetPasswordPageProps = {
+  searchParams?: SearchParams | Promise<SearchParams>;
+};
+
+const resolveSearchParams = async (
+  searchParams: ResetPasswordPageProps["searchParams"]
+): Promise<SearchParams | undefined> => {
+  if (!searchParams) return undefined;
+
+  if (
+    typeof searchParams === "object" &&
+    searchParams !== null &&
+    "then" in searchParams &&
+    typeof (searchParams as Promise<SearchParams>).then === "function"
+  ) {
+    return await searchParams;
+  }
+
+  return searchParams;
+};
+
+export default async function ResetPasswordPage({
   searchParams,
-}: {
-  searchParams?: Record<string, string | string[] | undefined>;
-}) {
-  const tokenParam = searchParams?.token;
+}: ResetPasswordPageProps) {
+  const resolvedSearchParams = await resolveSearchParams(searchParams);
+  const tokenParam = resolvedSearchParams?.token;
   const token =
     typeof tokenParam === "string"
       ? tokenParam

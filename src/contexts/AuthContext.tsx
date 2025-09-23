@@ -21,7 +21,7 @@ interface AuthContextType extends AuthState {
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
-  resetPassword: (token: string, password: string) => Promise<void>;
+  resetPassword: (token: string, newPassword: string) => Promise<void>;
   refreshToken: () => Promise<void>;
   validateSession: () => Promise<void>;
 
@@ -400,7 +400,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const resetPassword = async (
     token: string,
-    password: string
+    newPassword: string
   ): Promise<void> => {
     try {
       const apiUrl = `${appConfig.development.api.baseURL}${appConfig.urls.api.endpoints.auth.resetPassword}`;
@@ -408,7 +408,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, password }),
+        body: JSON.stringify({ token, newPassword }),
       });
 
       if (!response.ok) {

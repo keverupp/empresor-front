@@ -21,8 +21,8 @@ interface ResetPasswordFormProps {
 }
 
 export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -30,20 +30,21 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   const { resetPassword } = useAuth();
   const router = useRouter();
 
-  const normalizedPassword = password.trim();
-  const normalizedConfirmPassword = confirmPassword.trim();
-  const passwordsMatch = normalizedPassword === normalizedConfirmPassword;
+  const normalizedNewPassword = newPassword.trim();
+  const normalizedConfirmNewPassword = confirmNewPassword.trim();
+  const passwordsMatch =
+    normalizedNewPassword === normalizedConfirmNewPassword;
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!passwordsMatch || !normalizedPassword) {
+    if (!passwordsMatch || !normalizedNewPassword) {
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await resetPassword(token, normalizedPassword);
+      await resetPassword(token, normalizedNewPassword);
       router.push("/login");
     } catch {
       // O erro já é tratado com toast no AuthContext
@@ -65,13 +66,13 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="password">Nova senha</Label>
+            <Label htmlFor="newPassword">Nova senha</Label>
             <div className="relative">
               <Input
-                id="password"
+                id="newPassword"
                 type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
                 required
                 className="pl-10 pr-10"
               />
@@ -94,13 +95,15 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirmar nova senha</Label>
+            <Label htmlFor="confirmNewPassword">Confirmar nova senha</Label>
             <div className="relative">
               <Input
-                id="confirmPassword"
+                id="confirmNewPassword"
                 type={showConfirmPassword ? "text" : "password"}
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
+                value={confirmNewPassword}
+                onChange={(event) =>
+                  setConfirmNewPassword(event.target.value)
+                }
                 required
                 className="pl-10 pr-10"
               />
@@ -122,7 +125,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
                 )}
               </Button>
             </div>
-            {!passwordsMatch && confirmPassword && (
+            {!passwordsMatch && confirmNewPassword && (
               <p className="text-sm text-destructive">
                 As senhas não coincidem.
               </p>
