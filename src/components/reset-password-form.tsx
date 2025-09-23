@@ -30,18 +30,20 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   const { resetPassword } = useAuth();
   const router = useRouter();
 
-  const passwordsMatch = password === confirmPassword;
+  const normalizedPassword = password.trim();
+  const normalizedConfirmPassword = confirmPassword.trim();
+  const passwordsMatch = normalizedPassword === normalizedConfirmPassword;
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (!passwordsMatch) {
+    if (!passwordsMatch || !normalizedPassword) {
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await resetPassword(token, password);
+      await resetPassword(token, normalizedPassword);
       router.push("/login");
     } catch {
       // O erro já é tratado com toast no AuthContext
