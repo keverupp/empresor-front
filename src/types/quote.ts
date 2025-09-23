@@ -32,6 +32,7 @@ export interface Quote {
   company_id: string;
   client_id: string;
   created_by_user_id?: string | null;
+  created_by_user_name?: string | null;
   quote_number: string;
   status: QuoteStatus;
   issue_date: string;

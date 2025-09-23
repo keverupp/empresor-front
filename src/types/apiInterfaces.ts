@@ -18,6 +18,8 @@ import type {
 export interface Client {
   id: string;
   company_id: string;
+  created_by_user_id?: string | null;
+  created_by_user_name?: string | null;
   name: string;
   email?: string | null;
   phone_number?: string | null;

@@ -141,6 +141,7 @@ export default function QuotesPage() {
   const columnLabels = {
     quote_number: "Identificação",
     client: "Cliente",
+    created_by: "Criado por",
     status: "Status",
     issue_date: "Data de Emissão",
     expiry_date: "Validade",
@@ -173,6 +174,28 @@ export default function QuotesPage() {
                 </div>
               )}
             </div>
+          </div>
+        );
+      },
+    },
+    {
+      id: "created_by",
+      header: "Criado por",
+      cell: ({ row }) => {
+        const { created_by_user_name, created_by_user_id } = row.original;
+
+        if (!created_by_user_name && !created_by_user_id) {
+          return <span className="text-muted-foreground text-sm">-</span>;
+        }
+
+        return (
+          <div className="flex flex-col">
+            {created_by_user_name && (
+              <span className="text-sm font-medium">{created_by_user_name}</span>
+            )}
+            {created_by_user_id && (
+              <span className="text-xs text-muted-foreground">{`ID: ${created_by_user_id}`}</span>
+            )}
           </div>
         );
       },

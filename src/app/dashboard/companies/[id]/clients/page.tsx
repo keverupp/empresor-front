@@ -4,7 +4,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
-import { Phone, Mail, FileText, MoreHorizontal, MapPin } from "lucide-react";
+import { Phone, Mail, FileText, MoreHorizontal, MapPin, User } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -178,6 +178,7 @@ export default function CompanyClientsPage() {
     email: "E-mail",
     phone_number: "Telefone",
     address: "Endereço",
+    created_by: "Criado por",
     created_at: "Data de Cadastro",
     actions: "Ações",
   };
@@ -253,6 +254,31 @@ export default function CompanyClientsPage() {
             >
               {addressParts.join(", ")}
             </span>
+          </div>
+        );
+      },
+    },
+    {
+      id: "created_by",
+      header: "Criado por",
+      cell: ({ row }) => {
+        const { created_by_user_name, created_by_user_id } = row.original;
+
+        if (!created_by_user_name && !created_by_user_id) {
+          return <span className="text-muted-foreground text-sm">-</span>;
+        }
+
+        return (
+          <div className="flex items-center gap-2">
+            <User className="h-3 w-3 text-muted-foreground" />
+            <div className="flex flex-col">
+              {created_by_user_name && (
+                <span className="text-sm font-medium">{created_by_user_name}</span>
+              )}
+              {created_by_user_id && (
+                <span className="text-xs text-muted-foreground">{`ID: ${created_by_user_id}`}</span>
+              )}
+            </div>
           </div>
         );
       },
