@@ -10,16 +10,18 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-interface ResetPasswordPageProps {
-  searchParams: {
-    token?: string;
-  };
-}
-
 export default function ResetPasswordPage({
   searchParams,
-}: ResetPasswordPageProps) {
-  const token = typeof searchParams?.token === "string" ? searchParams.token : "";
+}: {
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
+  const tokenParam = searchParams?.token;
+  const token =
+    typeof tokenParam === "string"
+      ? tokenParam
+      : Array.isArray(tokenParam)
+        ? tokenParam[0] ?? ""
+        : "";
   const hasToken = Boolean(token);
 
   return (
