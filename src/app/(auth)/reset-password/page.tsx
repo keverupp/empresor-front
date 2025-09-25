@@ -13,30 +13,13 @@ import { Button } from "@/components/ui/button";
 type SearchParams = Record<string, string | string[] | undefined>;
 
 type ResetPasswordPageProps = {
-  searchParams?: SearchParams | Promise<SearchParams>;
-};
-
-const resolveSearchParams = async (
-  searchParams: ResetPasswordPageProps["searchParams"]
-): Promise<SearchParams | undefined> => {
-  if (!searchParams) return undefined;
-
-  if (
-    typeof searchParams === "object" &&
-    searchParams !== null &&
-    "then" in searchParams &&
-    typeof (searchParams as Promise<SearchParams>).then === "function"
-  ) {
-    return await searchParams;
-  }
-
-  return searchParams;
+  searchParams?: Promise<SearchParams>;
 };
 
 export default async function ResetPasswordPage({
   searchParams,
 }: ResetPasswordPageProps) {
-  const resolvedSearchParams = await resolveSearchParams(searchParams);
+  const resolvedSearchParams = (await searchParams) ?? undefined;
   const tokenParam = resolvedSearchParams?.token;
   const token =
     typeof tokenParam === "string"
