@@ -78,10 +78,9 @@ export function ItemsTab({
   onUpdate,
   onRemove,
 }: Props) {
-  const rawItems =
-    useWatch({ control: form.control, name: "items" }) as
-      | FormItem[]
-      | undefined;
+  const rawItems = useWatch({ control: form.control, name: "items" }) as
+    | FormItem[]
+    | undefined;
   const items = useMemo(() => rawItems ?? [], [rawItems]);
 
   // ---------- Linha de adição ----------
@@ -282,16 +281,21 @@ export function ItemsTab({
       <div className="p-4 border-2 border-dashed border-muted-foreground/25 rounded-lg bg-background">
         <div className="flex items-center gap-2 mb-4">
           <Plus className="h-4 w-4" />
-          <span className="font-medium">Adicionar Novo Item</span>
+          <span className="font-medium">Adicionar Itens</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-12 gap-4">
+        <div
+          className={cn(
+            "grid grid-cols-1 gap-4",
+            hasCatalog && products.length > 0
+              ? "sm:grid-cols-12"
+              : "sm:grid-cols-9"
+          )}
+        >
           {/* Produto ou descrição */}
           {hasCatalog && products.length > 0 ? (
             <div className="sm:col-span-7 space-y-1">
-              <Label className="text-sm font-medium">
-                Produto ou descrição *
-              </Label>
+              <Label className="text-sm font-medium">Produto</Label>
               <ProductOrDescriptionCombobox
                 ref={refProduct}
                 products={products}
@@ -320,7 +324,7 @@ export function ItemsTab({
           ) : (
             <div className="sm:col-span-4 space-y-1">
               <Label htmlFor="add-desc" className="text-sm font-medium">
-                Descrição *
+                Descrição
               </Label>
               <Input
                 id="add-desc"
@@ -353,7 +357,7 @@ export function ItemsTab({
 
           <div className="sm:col-span-2 space-y-1">
             <Label htmlFor="add-qty" className="text-sm font-medium">
-              Quantidade *
+              Quantidade
             </Label>
             <Input
               id="add-qty"
@@ -385,7 +389,7 @@ export function ItemsTab({
 
           <div className="sm:col-span-2 space-y-1">
             <Label htmlFor="add-price" className="text-sm font-medium">
-              Preço (R$) *
+              Preço
             </Label>
             <Input
               id="add-price"
@@ -425,7 +429,6 @@ export function ItemsTab({
               ) : (
                 <>
                   <Plus className="h-4 w-4 mr-1" />
-                  Adicionar
                 </>
               )}
             </Button>

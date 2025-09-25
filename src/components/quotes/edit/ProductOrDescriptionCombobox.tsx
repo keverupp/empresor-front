@@ -45,7 +45,7 @@ export const ProductOrDescriptionCombobox = forwardRef<
 >(function ProductOrDescriptionCombobox(
   {
     products,
-    placeholder = "Selecione um produto ou digite uma descrição",
+    placeholder = "Selecione ou adicione um produto",
     description,
     selectedProductId,
     onPickProduct,
