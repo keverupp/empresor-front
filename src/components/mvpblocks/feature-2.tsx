@@ -62,14 +62,14 @@ export default function FeatureSteps() {
   }, [progress]);
 
   return (
-    <div className={"p-8 md:p-12"}>
+    <div className="px-4 py-10 sm:px-8 lg:px-12">
       <div className="mx-auto w-full max-w-7xl">
-        <div className="relative mx-auto mb-12 max-w-2xl sm:text-center">
-          <div className="relative z-10">
-            <h2 className="font-geist text-3xl font-bold tracking-tighter md:text-4xl lg:text-5xl">
+        <div className="relative mx-auto mb-12 max-w-2xl overflow-hidden rounded-3xl bg-muted/30 p-8 text-center shadow-sm shadow-black/10">
+          <div className="relative z-10 space-y-3">
+            <h2 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl lg:text-5xl">
               Complete Seu Processo Comercial em 4 Passos
             </h2>
-            <p className="font-geist mt-3 text-foreground/60">
+            <p className="text-base text-muted-foreground md:text-lg">
               Do cadastro de clientes ao controle financeiro, tenha uma visão
               completa do seu negócio com ferramentas integradas para maximizar
               suas vendas.
@@ -83,35 +83,40 @@ export default function FeatureSteps() {
             }}
           ></div>
         </div>
-        <hr className="mx-auto mb-10 h-px w-1/2 bg-foreground/30" />
+        <div className="mx-auto mb-10 h-1 w-24 rounded-full bg-muted" />
 
         <div className="flex flex-col gap-6 md:grid md:grid-cols-2 md:gap-10">
-          <div className="order-2 space-y-8 md:order-1">
+          <div className="order-2 space-y-6 md:order-1 md:space-y-8">
             {features.map((feature, index) => (
               <motion.div
                 key={index}
-                className="flex items-center gap-6 md:gap-8"
+                className={cn(
+                  "group flex items-start gap-4 rounded-2xl bg-muted/30 p-4 shadow-sm transition-all duration-300 md:gap-6",
+                  index === currentFeature
+                    ? "bg-muted/40 shadow-md"
+                    : "hover:bg-muted/20 hover:shadow-md"
+                )}
                 initial={{ opacity: 0.3, x: -20 }}
                 animate={{
-                  opacity: index === currentFeature ? 1 : 0.3,
+                  opacity: index === currentFeature ? 1 : 0.65,
                   x: 0,
-                  scale: index === currentFeature ? 1.05 : 1,
+                  scale: index === currentFeature ? 1.02 : 1,
                 }}
                 transition={{ duration: 0.5 }}
               >
                 <motion.div
                   className={cn(
-                    "flex h-12 w-12 items-center justify-center rounded-full border-2 md:h-14 md:w-14",
+                    "flex h-12 w-12 items-center justify-center rounded-xl bg-card text-primary shadow-[0_-2px_6px_rgba(255,255,255,0.35),0_8px_18px_-12px_rgba(15,23,42,0.5)] md:h-14 md:w-14",
                     index === currentFeature
-                      ? "scale-110 border-primary bg-primary/10 text-primary [box-shadow:0_0_15px_rgba(59,130,246,0.3)]"
-                      : "border-muted-foreground bg-muted"
+                      ? "scale-110 shadow-[0_-4px_12px_rgba(255,255,255,0.45),0_12px_28px_-10px_rgba(59,130,246,0.5)]"
+                      : ""
                   )}
                 >
                   {feature.icon}
                 </motion.div>
 
-                <div className="flex-1">
-                  <h3 className="text-xl font-semibold md:text-2xl">
+                <div className="flex-1 space-y-1">
+                  <h3 className="text-lg font-semibold text-foreground md:text-2xl">
                     {feature.title}
                   </h3>
                   <p className="text-sm text-muted-foreground md:text-base">
@@ -122,41 +127,37 @@ export default function FeatureSteps() {
             ))}
           </div>
 
-          <div
-            className={cn(
-              "relative order-1 h-[200px] overflow-hidden rounded-lg border border-primary/20 [box-shadow:0_5px_30px_-15px_rgba(59,130,246,0.3)] md:order-2 md:h-[300px] lg:h-[400px]"
-            )}
-          >
-            <AnimatePresence mode="wait">
-              {features.map(
-                (feature, index) =>
-                  index === currentFeature && (
-                    <motion.div
-                      key={index}
-                      className="absolute inset-0 overflow-hidden rounded-lg"
-                      initial={{ y: 100, opacity: 0, rotateX: -20 }}
-                      animate={{ y: 0, opacity: 1, rotateX: 0 }}
-                      exit={{ y: -100, opacity: 0, rotateX: 20 }}
-                      transition={{ duration: 0.5, ease: "easeInOut" }}
-                    >
-                      <img
-                        src={feature.image}
-                        alt={feature.title}
-                        className="h-full w-full transform object-cover transition-transform hover:scale-105"
-                        width={1000}
-                        height={500}
-                      />
-                      <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-background via-background/50 to-transparent" />
+          <div className="relative order-1 h-[220px] overflow-hidden rounded-[28px] bg-muted/30 p-3 shadow-inner shadow-black/5 transition-shadow duration-500 hover:shadow-black/10 md:order-2 md:h-[320px] lg:h-[420px]">
+            <div className="relative h-full w-full overflow-hidden rounded-[22px] bg-card shadow-[0_-8px_22px_-18px_rgba(255,255,255,0.45),0_32px_70px_-45px_rgba(15,23,42,0.6)]">
+              <AnimatePresence mode="wait">
+                {features.map(
+                  (feature, index) =>
+                    index === currentFeature && (
+                      <motion.div
+                        key={index}
+                        className="absolute inset-0 overflow-hidden rounded-[22px]"
+                        initial={{ y: 100, opacity: 0, rotateX: -20 }}
+                        animate={{ y: 0, opacity: 1, rotateX: 0 }}
+                        exit={{ y: -100, opacity: 0, rotateX: 20 }}
+                        transition={{ duration: 0.5, ease: "easeInOut" }}
+                      >
+                        <img
+                          src={feature.image}
+                          alt={feature.title}
+                          className="h-full w-full transform object-cover transition-transform duration-500 hover:scale-105"
+                          width={1000}
+                          height={500}
+                        />
+                        <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-background via-background/60 to-transparent" />
 
-                      <div className="absolute bottom-4 left-4 rounded-lg bg-background/80 p-2 backdrop-blur-sm">
-                        <span className="text-xs font-medium text-primary">
+                        <div className="absolute bottom-4 left-4 rounded-lg bg-background/80 px-3 py-1.5 text-xs font-medium text-primary shadow-sm backdrop-blur-sm">
                           {feature.step}
-                        </span>
-                      </div>
-                    </motion.div>
-                  )
-              )}
-            </AnimatePresence>
+                        </div>
+                      </motion.div>
+                    )
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </div>
