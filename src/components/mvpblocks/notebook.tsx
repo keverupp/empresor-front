@@ -7,7 +7,7 @@ import { appConfig } from "@/config/app";
 
 export default function NotebookHero() {
   return (
-    <div className="mx-auto max-w-7xl p-8 md:p-12">
+    <div className="relative mx-auto max-w-6xl px-6 py-12 sm:px-10 lg:px-16">
       {/* Add keyframes for the animation */}
       <style jsx global>{`
         @keyframes moveGradientLeft {
@@ -29,9 +29,8 @@ export default function NotebookHero() {
         <div className="absolute bottom-0 left-0 h-[400px] w-[400px] rounded-full bg-gradient-to-tr from-cyan-500/20 via-cyan-500/10 to-transparent opacity-30 blur-[80px]" />
       </div>
 
-      <main className="container relative mt-4 max-w-[1100px] px-2 py-4 lg:py-8">
-        <div className="relative sm:overflow-hidden">
-          <div className="relative flex flex-col items-center justify-center text-center rounded bg-fd-background/70 px-4 pt-12 shadow-xl shadow-primary/10 backdrop-blur-md md:px-12 md:pt-16">
+      <main className="relative mt-2 flex flex-col items-center justify-center text-center">
+        <div className="relative w-full overflow-hidden rounded-[26px] bg-card/95 px-6 pb-12 pt-16 shadow-[0_-10px_30px_-22px_rgba(255,255,255,0.55),0_35px_85px_-45px_rgba(15,23,42,0.6)] transition-shadow duration-500 hover:shadow-[0_-12px_32px_-22px_rgba(255,255,255,0.6),0_45px_95px_-50px_rgba(15,23,42,0.65)] md:px-12 md:pt-20">
             <div
               className="animate-gradient-x absolute inset-0 top-32 z-0 hidden blur-2xl dark:block"
               style={{
@@ -54,7 +53,7 @@ export default function NotebookHero() {
             />
 
             {/* Badge */}
-            <div className="mb-6 inline-flex items-center rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
+            <div className="mb-6 inline-flex items-center rounded-full bg-muted/50 px-5 py-2 text-sm font-semibold text-foreground shadow-[inset_0_1px_3px_rgba(255,255,255,0.35)] dark:shadow-[inset_0_1px_2px_rgba(15,23,42,0.6)]">
               🚀 Sistema de Gestão de Orçamentos Completo
             </div>
 
@@ -73,8 +72,8 @@ export default function NotebookHero() {
             </p>
 
             {/* Features Grid */}
-            <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
-              <div className="flex items-center gap-2">
+            <div className="mb-10 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-5">
+              <div className="group flex items-center gap-2 rounded-full bg-muted/40 px-4 py-2 text-left text-sm font-medium shadow-sm transition-all duration-300 hover:bg-muted/20 hover:shadow-md">
                 <svg
                   className="h-5 w-5 text-primary"
                   fill="none"
@@ -89,11 +88,9 @@ export default function NotebookHero() {
                     d="M5 13l4 4L19 7"
                   ></path>
                 </svg>
-                <span className="text-sm font-medium">
-                  Orçamentos Inteligentes
-                </span>
+                <span className="font-medium text-foreground">Orçamentos Inteligentes</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="group flex items-center gap-2 rounded-full bg-muted/40 px-4 py-2 text-left text-sm font-medium shadow-sm transition-all duration-300 hover:bg-muted/20 hover:shadow-md">
                 <svg
                   className="h-5 w-5 text-primary"
                   fill="none"
@@ -108,9 +105,9 @@ export default function NotebookHero() {
                     d="M5 13l4 4L19 7"
                   ></path>
                 </svg>
-                <span className="text-sm font-medium">PDF Personalizado</span>
+                <span className="font-medium text-foreground">PDF Personalizado</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="group flex items-center gap-2 rounded-full bg-muted/40 px-4 py-2 text-left text-sm font-medium shadow-sm transition-all duration-300 hover:bg-muted/20 hover:shadow-md">
                 <svg
                   className="h-5 w-5 text-primary"
                   fill="none"
@@ -125,9 +122,9 @@ export default function NotebookHero() {
                     d="M5 13l4 4L19 7"
                   ></path>
                 </svg>
-                <span className="text-sm font-medium">Controle Financeiro</span>
+                <span className="font-medium text-foreground">Controle Financeiro</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="group flex items-center gap-2 rounded-full bg-muted/40 px-4 py-2 text-left text-sm font-medium shadow-sm transition-all duration-300 hover:bg-muted/20 hover:shadow-md">
                 <svg
                   className="h-5 w-5 text-primary"
                   fill="none"
@@ -142,39 +139,40 @@ export default function NotebookHero() {
                     d="M5 13l4 4L19 7"
                   ></path>
                 </svg>
-                <span className="text-sm font-medium">
-                  Relatórios Completos
-                </span>
+                <span className="font-medium text-foreground">Relatórios Completos</span>
               </div>
             </div>
 
             {/* CTA Buttons */}
-            <div className="z-10 mb-12 inline-flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <a
-                href="/signup"
-                className={cn(
-                  buttonVariants({
-                    size: "lg",
-                    className:
-                      "rounded-full bg-gradient-to-b from-primary to-primary/80 text-primary-foreground px-8 py-3 text-lg",
-                  })
-                )}
-              >
-                Começar Gratuitamente <ArrowRight className="ml-2 size-5" />
-              </a>
-              <button
-                className={cn(
-                  buttonVariants({
-                    size: "lg",
-                    variant: "outline",
-                    className:
-                      "rounded-full bg-background/50 backdrop-blur-sm px-8 py-3 text-lg",
-                  })
-                )}
-              >
-                <Play className="mr-2 size-5" />
-                Ver Demonstração
-              </button>
+            <div className="z-10 mb-12 w-full max-w-2xl">
+              <div className="flex flex-col items-center gap-3 rounded-md bg-muted/30 p-3 shadow-[inset_0_1px_4px_rgba(15,23,42,0.08)] dark:shadow-[inset_0_1px_4px_rgba(0,0,0,0.55)] sm:flex-row sm:justify-center">
+                <a
+                  href="/signup"
+                  className={cn(
+                    buttonVariants({
+                      size: "lg",
+                      className:
+                        "rounded-full bg-gradient-to-b from-primary to-primary/80 px-8 py-3 text-lg font-semibold text-primary-foreground shadow-md transition-all duration-300 hover:shadow-lg",
+                    })
+                  )}
+                >
+                  Começar Gratuitamente <ArrowRight className="ml-2 size-5" />
+                </a>
+                <button
+                  type="button"
+                  className={cn(
+                    buttonVariants({
+                      size: "lg",
+                      variant: "outline",
+                      className:
+                        "rounded-full bg-background/60 px-8 py-3 text-lg font-semibold shadow-sm transition-all duration-300 hover:bg-muted/20 hover:shadow-md",
+                    })
+                  )}
+                >
+                  <Play className="mr-2 size-5" />
+                  Ver Demonstração
+                </button>
+              </div>
             </div>
 
             {/* Social Proof */}
@@ -202,11 +200,11 @@ export default function NotebookHero() {
                 alt={`${appConfig.name} - Dashboard de gestão empresarial`}
                 width={1000}
                 height={600}
-                className="z-10 mx-auto -mb-60 w-full max-w-4xl select-none rounded border border-neutral-200 object-cover shadow-2xl duration-1000 animate-in fade-in slide-in-from-bottom-12 dark:border-neutral-700 lg:-mb-40"
+                className="z-10 mx-auto -mb-60 w-full max-w-4xl select-none rounded-3xl object-cover shadow-[0_-4px_18px_-10px_rgba(255,255,255,0.45),0_45px_90px_-45px_rgba(15,23,42,0.55)] duration-1000 animate-in fade-in slide-in-from-bottom-12 lg:-mb-40"
               />
 
               {/* Floating Cards */}
-              <div className="absolute -right-6 -top-6 rotate-3 transform rounded bg-white p-4 shadow-lg animate-in fade-in slide-in-from-right-4 dark:bg-neutral-900">
+              <div className="absolute -right-6 -top-6 rotate-3 transform rounded-xl bg-card/95 p-4 shadow-[0_-6px_18px_-14px_rgba(255,255,255,0.45),0_18px_40px_-22px_rgba(15,23,42,0.55)] animate-in fade-in slide-in-from-right-4">
                 <div className="flex items-center gap-3">
                   <svg
                     className="h-6 w-6 text-green-500"
@@ -229,7 +227,7 @@ export default function NotebookHero() {
                 </div>
               </div>
 
-              <div className="absolute -left-6 top-1/3 -rotate-3 transform rounded bg-white p-4 shadow-lg animate-in fade-in slide-in-from-left-4 dark:bg-neutral-900">
+              <div className="absolute -left-6 top-1/3 -rotate-3 transform rounded-xl bg-card/95 p-4 shadow-[0_-6px_18px_-14px_rgba(255,255,255,0.45),0_18px_40px_-22px_rgba(15,23,42,0.55)] animate-in fade-in slide-in-from-left-4">
                 <div className="flex items-center gap-3">
                   <div className="h-3 w-3 rounded-full bg-blue-500"></div>
                   <div>
@@ -242,8 +240,7 @@ export default function NotebookHero() {
               </div>
             </div>
           </div>
-        </div>
-      </main>
-    </div>
-  );
+        </main>
+      </div>
+    );
 }

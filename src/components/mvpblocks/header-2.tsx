@@ -81,7 +81,7 @@ export default function Header2() {
       <motion.header
         className={`fixed left-0 right-0 top-0 z-50 transition-all duration-500 ${
           isScrolled
-            ? "border-b border-border/50 bg-background/80 shadow-sm backdrop-blur-md"
+            ? "bg-background/85 shadow-[0_-6px_18px_-18px_rgba(255,255,255,0.45),0_20px_48px_-32px_rgba(15,23,42,0.4)] backdrop-blur-md"
             : "bg-transparent"
         }`}
         variants={containerVariants}
@@ -138,11 +138,11 @@ export default function Header2() {
                 >
                   <button
                     onClick={() => handleNavClick(item.href)}
-                    className="relative rounded-lg px-4 py-2 text-sm font-medium text-foreground/80 transition-colors duration-200 hover:text-foreground"
+                    className="relative rounded-xl px-4 py-2 text-sm font-medium text-foreground/80 transition-all duration-200 hover:text-foreground hover:shadow-md"
                   >
                     {hoveredItem === item.name && (
                       <motion.div
-                        className="absolute inset-0 rounded-lg bg-muted"
+                        className="absolute inset-0 rounded-xl bg-muted/60"
                         layoutId="navbar-hover"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -173,7 +173,7 @@ export default function Header2() {
                 >
                   <Link
                     href="/dashboard"
-                    className="inline-flex items-center space-x-2 rounded-lg bg-foreground px-5 py-2.5 text-sm font-medium text-background shadow-sm transition-all duration-200 hover:bg-foreground/90"
+                    className="inline-flex items-center space-x-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background shadow-md transition-all duration-200 hover:shadow-lg hover:bg-foreground/90"
                   >
                     <LayoutDashboard className="h-4 w-4" />
                     <span>Dashboard</span>
@@ -183,7 +183,7 @@ export default function Header2() {
                 <>
                   <Link
                     href="/login"
-                    className="px-4 py-2 text-sm font-medium text-foreground/80 transition-colors duration-200 hover:text-foreground"
+                    className="rounded-full px-4 py-2 text-sm font-medium text-foreground/80 transition-all duration-200 hover:bg-muted/20 hover:text-foreground"
                   >
                     Entrar
                   </Link>
@@ -193,7 +193,7 @@ export default function Header2() {
                   >
                     <Link
                       href="/register"
-                      className="inline-flex items-center space-x-2 rounded-lg bg-foreground px-5 py-2.5 text-sm font-medium text-background shadow-sm transition-all duration-200 hover:bg-foreground/90"
+                      className="inline-flex items-center space-x-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background shadow-md transition-all duration-200 hover:shadow-lg hover:bg-foreground/90"
                     >
                       <span>Começar</span>
                       <ArrowRight className="h-4 w-4" />
@@ -230,19 +230,19 @@ export default function Header2() {
               onClick={() => setIsMobileMenuOpen(false)}
             />
             <motion.div
-              className="fixed right-4 top-16 z-50 w-80 overflow-hidden rounded-2xl border border-border bg-background shadow-2xl lg:hidden"
+              className="fixed right-4 top-16 z-50 w-80 overflow-hidden rounded-3xl bg-card shadow-[0_-8px_24px_-18px_rgba(255,255,255,0.45),0_28px_60px_-35px_rgba(15,23,42,0.55)] lg:hidden"
               variants={mobileMenuVariants}
               initial="closed"
               animate="open"
               exit="closed"
             >
               <div className="space-y-6 p-6">
-                <div className="space-y-1">
+                <div className="space-y-2 rounded-2xl bg-muted/30 p-3 shadow-inner shadow-black/5">
                   {navItems.map((item) => (
                     <motion.div key={item.name} variants={mobileItemVariants}>
                       <button
                         onClick={() => handleNavClick(item.href)}
-                        className="block w-full rounded-lg px-4 py-3 text-left font-medium text-foreground transition-colors duration-200 hover:bg-muted"
+                        className="block w-full rounded-xl px-4 py-3 text-left text-sm font-semibold text-foreground transition-all duration-200 hover:bg-muted/20 hover:shadow-md"
                       >
                         {item.name}
                       </button>
@@ -251,7 +251,7 @@ export default function Header2() {
                 </div>
 
                 <motion.div
-                  className="flex items-center justify-between border-t border-border pt-6"
+                  className="flex items-center justify-between rounded-2xl bg-muted/30 px-4 py-3 shadow-inner shadow-black/5"
                   variants={mobileItemVariants}
                 >
                   <span className="text-sm text-muted-foreground">Tema</span>
@@ -259,7 +259,7 @@ export default function Header2() {
                 </motion.div>
 
                 <motion.div
-                  className="space-y-3 border-t border-border pt-6"
+                  className="space-y-3 rounded-2xl bg-muted/30 p-3 shadow-inner shadow-black/5"
                   variants={mobileItemVariants}
                 >
                   {isAuthenticated ? (
@@ -268,7 +268,7 @@ export default function Header2() {
                         setIsMobileMenuOpen(false);
                         navigateTo("/dashboard");
                       }}
-                      className="block w-full rounded-lg bg-foreground py-3 text-center font-medium text-background transition-all duration-200 hover:bg-foreground/90"
+                      className="block w-full rounded-full bg-foreground py-3 text-center text-sm font-semibold text-background shadow-md transition-all duration-200 hover:shadow-lg hover:bg-foreground/90"
                     >
                       Dashboard
                     </button>
@@ -276,14 +276,14 @@ export default function Header2() {
                     <>
                       <Link
                         href="/login"
-                        className="block w-full rounded-lg py-3 text-center font-medium text-foreground transition-colors duration-200 hover:bg-muted"
+                        className="block w-full rounded-full py-3 text-center text-sm font-semibold text-foreground transition-all duration-200 hover:bg-muted/20"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         Entrar
                       </Link>
                       <Link
                         href="/register"
-                        className="block w-full rounded-lg bg-foreground py-3 text-center font-medium text-background transition-all duration-200 hover:bg-foreground/90"
+                        className="block w-full rounded-full bg-foreground py-3 text-center text-sm font-semibold text-background shadow-md transition-all duration-200 hover:shadow-lg hover:bg-foreground/90"
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
                         Começar
