@@ -13,6 +13,8 @@ export const quoteItemSchema = z.object({
   unit_price_cents: z.number().min(0, "Preço unitário deve ser positivo"),
   total_price_cents: z.number().optional(),
   item_order: z.number().optional(),
+  complement: z.string().optional().nullable(),
+  images: z.array(z.string()).optional().nullable(),
 });
 
 /**
@@ -93,6 +95,8 @@ export const quoteFormSchema = z.object({
         description: z.string().min(1, "Descrição é obrigatória"),
         quantity: z.number().min(0.01, "Quantidade deve ser maior que zero"),
         unit_price: z.number().min(0, "Preço unitário deve ser positivo"),
+        complement: z.string().optional(),
+        images: z.array(z.string()).optional(),
       })
     )
     .min(1, "Pelo menos um item é obrigatório"),
@@ -130,6 +134,8 @@ export function transformQuoteFormToApi(data: QuoteFormData): CreateQuoteData {
       product_id: item.product_id || null,
       unit_price_cents: Math.round(item.unit_price * 100),
       total_price_cents: Math.round(item.quantity * item.unit_price * 100),
+      complement: item.complement || null,
+      images: item.images || null,
     })),
   };
 }

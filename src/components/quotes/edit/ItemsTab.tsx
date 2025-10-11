@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,6 +46,7 @@ import { useWatch, type UseFormReturn } from "react-hook-form";
 import type { QuoteFormData } from "@/lib/quote-schemas";
 import type { Product } from "@/types/apiInterfaces";
 import { ProductOrDescriptionCombobox } from "@/components/quotes/edit/ProductOrDescriptionCombobox";
+import { ImageUploader } from "@/components/ui/ImageUploader";
 
 type Props = {
   form: UseFormReturn<QuoteFormData>;
@@ -55,6 +57,8 @@ type Props = {
     quantity: number;
     unit_price: number;
     product_id?: string | null;
+    complement?: string;
+    images?: string[];
   }) => Promise<void>;
   onUpdate: (
     itemId: number,
@@ -63,6 +67,8 @@ type Props = {
       quantity?: number;
       unit_price?: number;
       product_id?: string | null;
+      complement?: string;
+      images?: string[];
     }
   ) => Promise<void>;
   onRemove: (itemId: number) => Promise<void>;
@@ -88,6 +94,8 @@ export function ItemsTab({
   const [addQty, setAddQty] = useState<number>(1);
   const [addPrice, setAddPrice] = useState<number>(0);
   const [addProductId, setAddProductId] = useState<string | undefined>();
+  const [addComplement, setAddComplement] = useState("");
+  const [addImages, setAddImages] = useState<string[]>([]);
   const [adding, setAdding] = useState(false);
   const [addFormErrors, setAddFormErrors] = useState<{
     description?: string;
@@ -122,6 +130,8 @@ export function ItemsTab({
     setAddQty(1);
     setAddPrice(0);
     setAddProductId(undefined);
+    setAddComplement("");
+    setAddImages([]);
     setAddFormErrors({});
   }, []);
 
@@ -134,6 +144,8 @@ export function ItemsTab({
         quantity: addQty,
         unit_price: addPrice,
         product_id: addProductId ?? null,
+        complement: addComplement,
+        images: addImages,
       });
       resetAddForm();
       if (hasCatalog) refProduct.current?.focus();
@@ -148,6 +160,8 @@ export function ItemsTab({
     addQty,
     addPrice,
     addProductId,
+    addComplement,
+    addImages,
     resetAddForm,
     hasCatalog,
   ]);
@@ -174,7 +188,16 @@ export function ItemsTab({
     qty: number;
     price: number;
     product_id?: string | null;
-  }>({ desc: "", qty: 1, price: 0, product_id: null });
+    complement: string;
+    images: string[];
+  }>({
+    desc: "",
+    qty: 1,
+    price: 0,
+    product_id: null,
+    complement: "",
+    images: [],
+  });
   const [savingEdit, setSavingEdit] = useState(false);
   const [editErrors, setEditErrors] = useState<{
     description?: string;
@@ -192,6 +215,8 @@ export function ItemsTab({
         qty: Number(it.quantity) || 1,
         price: Number(it.unit_price) || 0,
         product_id: it.product_id ?? null,
+        complement: it.complement || "",
+        images: it.images || [],
       });
       setEditErrors({});
     },
@@ -222,6 +247,8 @@ export function ItemsTab({
         quantity: buf.qty,
         unit_price: buf.price,
         product_id: hasCatalog ? buf.product_id ?? null : undefined,
+        complement: buf.complement,
+        images: buf.images,
       });
       setEditingRow(null);
       setEditErrors({});
@@ -284,154 +311,176 @@ export function ItemsTab({
           <span className="font-medium">Adicionar Itens</span>
         </div>
 
-        <div
-          className={cn(
-            "grid grid-cols-1 gap-4",
-            hasCatalog && products.length > 0
-              ? "sm:grid-cols-12"
-              : "sm:grid-cols-9"
-          )}
-        >
-          {/* Produto ou descrição */}
-          {hasCatalog && products.length > 0 ? (
-            <div className="sm:col-span-7 space-y-1">
-              <Label className="text-sm font-medium">Produto</Label>
-              <ProductOrDescriptionCombobox
-                ref={refProduct}
-                products={products}
-                description={addDesc}
-                selectedProductId={addProductId}
-                onPickProduct={(p) => {
-                  setAddProductId(p.id);
-                  setAddDesc(p.name);
-                  if (!addPrice) setAddPrice(p.unit_price_cents / 100);
-                  refQty.current?.focus();
-                }}
-                onPickCustom={(desc) => {
-                  setAddProductId(undefined);
-                  setAddDesc(desc);
-                  refQty.current?.focus();
-                }}
-                inputId="add-desc-combobox"
-              />
-              {addFormErrors.description && (
-                <div className="flex items-center gap-1 text-xs text-destructive">
-                  <AlertCircle className="h-3 w-3" />
-                  {addFormErrors.description}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="sm:col-span-4 space-y-1">
-              <Label htmlFor="add-desc" className="text-sm font-medium">
-                Descrição
+        <div className="space-y-4">
+          <div
+            className={cn(
+              "grid grid-cols-1 gap-4",
+              hasCatalog && products.length > 0
+                ? "sm:grid-cols-12"
+                : "sm:grid-cols-9"
+            )}
+          >
+            {/* Produto ou descrição */}
+            {hasCatalog && products.length > 0 ? (
+              <div className="sm:col-span-7 space-y-1">
+                <Label className="text-sm font-medium">Produto</Label>
+                <ProductOrDescriptionCombobox
+                  ref={refProduct}
+                  products={products}
+                  description={addDesc}
+                  selectedProductId={addProductId}
+                  onPickProduct={(p) => {
+                    setAddProductId(p.id);
+                    setAddDesc(p.name);
+                    if (!addPrice) setAddPrice(p.unit_price_cents / 100);
+                    refQty.current?.focus();
+                  }}
+                  onPickCustom={(desc) => {
+                    setAddProductId(undefined);
+                    setAddDesc(desc);
+                    refQty.current?.focus();
+                  }}
+                  inputId="add-desc-combobox"
+                />
+                {addFormErrors.description && (
+                  <div className="flex items-center gap-1 text-xs text-destructive">
+                    <AlertCircle className="h-3 w-3" />
+                    {addFormErrors.description}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="sm:col-span-4 space-y-1">
+                <Label htmlFor="add-desc" className="text-sm font-medium">
+                  Descrição
+                </Label>
+                <Input
+                  id="add-desc"
+                  ref={refDesc}
+                  value={addDesc}
+                  onChange={(e) => {
+                    setAddDesc(e.target.value);
+                    if (addFormErrors.description) {
+                      setAddFormErrors((prev) => ({
+                        ...prev,
+                        description: undefined,
+                      }));
+                    }
+                  }}
+                  onKeyDown={(e) => handleAddKeyDown(e, "desc")}
+                  placeholder="Descrição do item"
+                  aria-invalid={!!addFormErrors.description}
+                  className={cn(
+                    addFormErrors.description && "border-destructive"
+                  )}
+                />
+                {addFormErrors.description && (
+                  <div className="flex items-center gap-1 text-xs text-destructive">
+                    <AlertCircle className="h-3 w-3" />
+                    {addFormErrors.description}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="sm:col-span-2 space-y-1">
+              <Label htmlFor="add-qty" className="text-sm font-medium">
+                Quantidade
               </Label>
               <Input
-                id="add-desc"
-                ref={refDesc}
-                value={addDesc}
+                id="add-qty"
+                ref={refQty}
+                type="number"
+                min="0.01"
+                step="0.01"
+                value={Number.isFinite(addQty) ? addQty : 0}
                 onChange={(e) => {
-                  setAddDesc(e.target.value);
-                  if (addFormErrors.description) {
+                  setAddQty(parseFloat(e.target.value || "0"));
+                  if (addFormErrors.quantity) {
                     setAddFormErrors((prev) => ({
                       ...prev,
-                      description: undefined,
+                      quantity: undefined,
                     }));
                   }
                 }}
-                onKeyDown={(e) => handleAddKeyDown(e, "desc")}
-                placeholder="Descrição do item"
-                aria-invalid={!!addFormErrors.description}
-                className={cn(
-                  addFormErrors.description && "border-destructive"
-                )}
+                onKeyDown={(e) => handleAddKeyDown(e, "qty")}
+                aria-invalid={!!addFormErrors.quantity}
+                className={cn(addFormErrors.quantity && "border-destructive")}
               />
-              {addFormErrors.description && (
+              {addFormErrors.quantity && (
                 <div className="flex items-center gap-1 text-xs text-destructive">
                   <AlertCircle className="h-3 w-3" />
-                  {addFormErrors.description}
+                  {addFormErrors.quantity}
                 </div>
               )}
             </div>
-          )}
 
-          <div className="sm:col-span-2 space-y-1">
-            <Label htmlFor="add-qty" className="text-sm font-medium">
-              Quantidade
-            </Label>
-            <Input
-              id="add-qty"
-              ref={refQty}
-              type="number"
-              min="0.01"
-              step="0.01"
-              value={Number.isFinite(addQty) ? addQty : 0}
-              onChange={(e) => {
-                setAddQty(parseFloat(e.target.value || "0"));
-                if (addFormErrors.quantity) {
-                  setAddFormErrors((prev) => ({
-                    ...prev,
-                    quantity: undefined,
-                  }));
-                }
-              }}
-              onKeyDown={(e) => handleAddKeyDown(e, "qty")}
-              aria-invalid={!!addFormErrors.quantity}
-              className={cn(addFormErrors.quantity && "border-destructive")}
-            />
-            {addFormErrors.quantity && (
-              <div className="flex items-center gap-1 text-xs text-destructive">
-                <AlertCircle className="h-3 w-3" />
-                {addFormErrors.quantity}
-              </div>
-            )}
-          </div>
-
-          <div className="sm:col-span-2 space-y-1">
-            <Label htmlFor="add-price" className="text-sm font-medium">
-              Preço
-            </Label>
-            <Input
-              id="add-price"
-              ref={refPrice}
-              type="number"
-              min="0"
-              step="0.01"
-              value={Number.isFinite(addPrice) ? addPrice : 0}
-              onChange={(e) => {
-                setAddPrice(parseFloat(e.target.value || "0"));
-                if (addFormErrors.price) {
-                  setAddFormErrors((prev) => ({ ...prev, price: undefined }));
-                }
-              }}
-              onKeyDown={(e) => handleAddKeyDown(e, "price")}
-              aria-invalid={!!addFormErrors.price}
-              className={cn(addFormErrors.price && "border-destructive")}
-            />
-            {addFormErrors.price && (
-              <div className="flex items-center gap-1 text-xs text-destructive">
-                <AlertCircle className="h-3 w-3" />
-                {addFormErrors.price}
-              </div>
-            )}
-          </div>
-
-          <div className="sm:col-span-1 flex items-end">
-            <Button
-              className="w-full"
-              type="button"
-              onClick={handleAddSubmit}
-              disabled={adding || !isAddFormValid}
-              aria-label="Adicionar item"
-            >
-              {adding ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <Plus className="h-4 w-4 mr-1" />
-                </>
+            <div className="sm:col-span-2 space-y-1">
+              <Label htmlFor="add-price" className="text-sm font-medium">
+                Preço
+              </Label>
+              <Input
+                id="add-price"
+                ref={refPrice}
+                type="number"
+                min="0"
+                step="0.01"
+                value={Number.isFinite(addPrice) ? addPrice : 0}
+                onChange={(e) => {
+                  setAddPrice(parseFloat(e.target.value || "0"));
+                  if (addFormErrors.price) {
+                    setAddFormErrors((prev) => ({ ...prev, price: undefined }));
+                  }
+                }}
+                onKeyDown={(e) => handleAddKeyDown(e, "price")}
+                aria-invalid={!!addFormErrors.price}
+                className={cn(addFormErrors.price && "border-destructive")}
+              />
+              {addFormErrors.price && (
+                <div className="flex items-center gap-1 text-xs text-destructive">
+                  <AlertCircle className="h-3 w-3" />
+                  {addFormErrors.price}
+                </div>
               )}
-            </Button>
+            </div>
+
+            <div className="sm:col-span-1 flex items-end">
+              <Button
+                className="w-full"
+                type="button"
+                onClick={handleAddSubmit}
+                disabled={adding || !isAddFormValid}
+                aria-label="Adicionar item"
+              >
+                {adding ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <Plus className="h-4 w-4 mr-1" />
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="add-complement" className="text-sm font-medium">
+              Complemento (Opcional)
+            </Label>
+            <Textarea
+              id="add-complement"
+              value={addComplement}
+              onChange={(e) => setAddComplement(e.target.value)}
+              placeholder="Detalhes adicionais, observações, etc."
+              rows={2}
+              className="mt-1"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-sm font-medium">Imagens (Opcional)</Label>
+            <ImageUploader
+              value={addImages}
+              onChange={setAddImages}
+            />
           </div>
         </div>
 
@@ -503,7 +552,7 @@ export function ItemsTab({
                   >
                     <TableCell>
                       {isEditing ? (
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           {hasCatalog ? (
                             <ProductOrDescriptionCombobox
                               products={products}
@@ -544,6 +593,37 @@ export function ItemsTab({
                               {editErrors.description}
                             </div>
                           )}
+                          <div>
+                            <Label
+                              htmlFor={`edit-complement-${idx}`}
+                              className="text-xs text-muted-foreground"
+                            >
+                              Complemento
+                            </Label>
+                            <Textarea
+                              id={`edit-complement-${idx}`}
+                              value={buf.complement}
+                              onChange={(e) =>
+                                setBuf((b) => ({
+                                  ...b,
+                                  complement: e.target.value,
+                                }))
+                              }
+                              className="mt-1"
+                              rows={2}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs text-muted-foreground">
+                              Imagens
+                            </Label>
+                            <ImageUploader
+                              value={buf.images}
+                              onChange={(newImages) =>
+                                setBuf((b) => ({ ...b, images: newImages }))
+                              }
+                            />
+                          </div>
                         </div>
                       ) : (
                         <div>
@@ -553,6 +633,23 @@ export function ItemsTab({
                           >
                             {it.description}
                           </span>
+                          {it.complement && (
+                            <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">
+                              {it.complement}
+                            </p>
+                          )}
+                          {it.images && it.images.length > 0 && (
+                            <div className="mt-2 flex gap-2">
+                              {it.images.map((img) => (
+                                <img
+                                  key={img}
+                                  src={img}
+                                  alt="imagem do item"
+                                  className="h-10 w-10 rounded object-cover"
+                                />
+                              ))}
+                            </div>
+                          )}
                         </div>
                       )}
                     </TableCell>
