@@ -325,7 +325,9 @@ export const appConfig = {
     api: {
       timeout: 30000,
       retries: 3,
-      baseURL: "https://api.empresor.com.br/api", // Baseado no servidor da API fornecida
+      baseURL:
+        process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ??
+        "/api",
     },
     debug: true,
     mockData: false, // Como temos API real, desabilitar mock

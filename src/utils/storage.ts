@@ -26,7 +26,11 @@ export const storage = {
   setTokens: (tokens: AuthTokens): void => {
     try {
       localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, tokens.accessToken);
-      localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokens.refreshToken);
+      if (tokens.refreshToken) {
+        localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, tokens.refreshToken);
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+      }
       localStorage.setItem(STORAGE_KEYS.SESSION_VALID, "true");
     } catch (error) {
       console.error("Error saving tokens to localStorage:", error);
@@ -38,7 +42,7 @@ export const storage = {
       const accessToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
       const refreshToken = localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN);
 
-      if (accessToken && refreshToken) {
+      if (accessToken) {
         return { accessToken, refreshToken };
       }
     } catch (error) {
@@ -104,6 +108,8 @@ export const storage = {
       if (accessTokenValid) return true;
 
       // Se access token expirado, verificar refresh token
+      if (!tokens.refreshToken) return false;
+
       const refreshTokenValid = !isTokenExpired(tokens.refreshToken);
 
       return refreshTokenValid;
@@ -131,7 +137,7 @@ export const storage = {
       // Se access token expirou mas refresh token válido
       return (
         isTokenExpired(tokens.accessToken) &&
-        !isTokenExpired(tokens.refreshToken)
+        !!tokens.refreshToken && !isTokenExpired(tokens.refreshToken)
       );
     } catch {
       return false;
@@ -146,19 +152,21 @@ export const storage = {
       if (!tokens) return null;
 
       const accessPayload = JSON.parse(atob(tokens.accessToken.split(".")[1]));
-      const refreshPayload = JSON.parse(
-        atob(tokens.refreshToken.split(".")[1])
-      );
+      const refreshPayload = tokens.refreshToken
+        ? JSON.parse(atob(tokens.refreshToken.split(".")[1]))
+        : null;
 
       return {
         accessToken: {
           exp: new Date(accessPayload.exp * 1000),
           expired: isTokenExpired(tokens.accessToken),
         },
-        refreshToken: {
-          exp: new Date(refreshPayload.exp * 1000),
-          expired: isTokenExpired(tokens.refreshToken),
-        },
+        refreshToken: refreshPayload
+          ? {
+              exp: new Date(refreshPayload.exp * 1000),
+              expired: isTokenExpired(tokens.refreshToken!),
+            }
+          : null,
       };
     } catch {
       return null;

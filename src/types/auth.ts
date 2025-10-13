@@ -9,7 +9,7 @@ export interface User {
 
 export interface AuthTokens {
   accessToken: string;
-  refreshToken: string;
+  refreshToken?: string | null;
 }
 
 export interface AuthState {
@@ -20,14 +20,14 @@ export interface AuthState {
 }
 
 export interface LoginCredentials {
-  email: string;
-  password: string;
+  email?: string;
+  password?: string;
 }
 
 export interface RegisterData {
-  name: string;
-  email: string;
-  password: string;
+  name?: string;
+  email?: string;
+  password?: string;
 }
 
 export interface UpdateProfileData {

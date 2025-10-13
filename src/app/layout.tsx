@@ -52,11 +52,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <AuthWrapper>
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased min-h-screen bg-background`}
-          suppressHydrationWarning
-        >
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased min-h-screen bg-background`}
+        suppressHydrationWarning
+      >
+        <AuthWrapper>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -69,8 +69,8 @@ export default function RootLayout({
 
             <Toaster position="top-right" />
           </ThemeProvider>
-        </body>
-      </AuthWrapper>
+        </AuthWrapper>
+      </body>
     </html>
   );
 }

@@ -3,7 +3,6 @@ import { useAuth } from "../contexts/AuthContext";
 import { useCallback, useRef } from "react";
 import type { ApiOptions, ApiResponse } from "../types/auth";
 import { appConfig } from "../config/app";
-import { storage } from "../utils/storage";
 import { toast } from "sonner";
 
 export const useApi = () => {
@@ -40,22 +39,6 @@ export const useApi = () => {
             !headers.has("Content-Type")
           ) {
             headers.set("Content-Type", "application/json");
-          }
-
-          if (
-            !skipAuth &&
-            storage.needsTokenRefresh() &&
-            !isRefreshingRef.current
-          ) {
-            try {
-              isRefreshingRef.current = true;
-              await refreshToken();
-              await new Promise((resolve) => setTimeout(resolve, 100));
-            } catch (error) {
-              console.error("Pre-request token refresh failed:", error);
-            } finally {
-              isRefreshingRef.current = false;
-            }
           }
 
           const latestTokens = tokensRef.current;
@@ -106,7 +89,6 @@ export const useApi = () => {
                 "Token refresh failed during API call:",
                 refreshError
               );
-              storage.clear();
               await logout();
               return {
                 error: "Sessão expirada. Faça login novamente.",
