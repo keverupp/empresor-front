@@ -19,12 +19,15 @@ cp .env.example .env.local
 Variáveis principais:
 
 - `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`: credenciais da aplicação Auth0
-- `AUTH0_AUDIENCE`: API Audience configurada na Auth0 (opcional)
-- `AUTH0_DB_CONNECTION`: nome da conexão (ex.: `Username-Password-Authentication`)
-- `AUTH0_REDIRECT_URI`: `http://localhost:3000/api/auth/callback` no ambiente local
-- `AUTH0_POST_LOGOUT_REDIRECT_URI`: URL para onde o usuário volta após logout
 - `AUTH0_COOKIE_SECRET`: string aleatória usada para assinar cookies (ex.: `openssl rand -base64 32`)
 - `DATABASE_URL`: string de conexão Postgres
+
+Variáveis opcionais:
+
+- `AUTH0_AUDIENCE`: API Audience configurada na Auth0 (necessária apenas se você protegeu uma API própria na Auth0)
+- `AUTH0_DB_CONNECTION`: nome da conexão Database (ex.: `Username-Password-Authentication`) caso queira habilitar cadastro e reset de senha direto pela nossa API
+- `AUTH0_BASE_URL`: força o domínio base da aplicação (por padrão usa `NEXT_PUBLIC_APP_URL`, `VERCEL_URL` ou `http://localhost:3000`)
+- `AUTH0_REDIRECT_URI` e `AUTH0_POST_LOGOUT_REDIRECT_URI`: sobrescrevem as URLs geradas automaticamente para callback e logout
 
 2. Instale dependências e execute migrations:
 

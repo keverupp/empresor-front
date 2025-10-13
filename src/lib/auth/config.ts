@@ -121,35 +121,43 @@ export const getAuth0Config = (): Auth0Config => {
     AUTH0_CLIENT_ID,
     AUTH0_CLIENT_SECRET,
     AUTH0_AUDIENCE,
-    AUTH0_REDIRECT_URI,
-    AUTH0_POST_LOGOUT_REDIRECT_URI,
     AUTH0_DB_CONNECTION,
     AUTH0_COOKIE_SECRET,
+    AUTH0_REDIRECT_URI,
+    AUTH0_POST_LOGOUT_REDIRECT_URI,
+    AUTH0_BASE_URL,
+    NEXT_PUBLIC_APP_URL,
+    VERCEL_URL,
   } = process.env;
 
   if (!AUTH0_DOMAIN || !AUTH0_CLIENT_ID || !AUTH0_CLIENT_SECRET) {
     throw new Error("Missing Auth0 environment variables");
   }
 
-  if (!AUTH0_REDIRECT_URI) {
-    throw new Error("AUTH0_REDIRECT_URI is required");
-  }
-
-  if (!AUTH0_POST_LOGOUT_REDIRECT_URI) {
-    throw new Error("AUTH0_POST_LOGOUT_REDIRECT_URI is required");
-  }
-
   if (!AUTH0_COOKIE_SECRET) {
     throw new Error("AUTH0_COOKIE_SECRET is required to sign session cookies");
   }
+
+  const resolvedBaseUrl = (() => {
+    const base =
+      AUTH0_BASE_URL ||
+      NEXT_PUBLIC_APP_URL ||
+      (VERCEL_URL ? `https://${VERCEL_URL}` : undefined);
+    return (base ?? "http://localhost:3000").replace(/\/$/, "");
+  })();
+
+  const redirectUri =
+    AUTH0_REDIRECT_URI || `${resolvedBaseUrl}/api/auth/callback`;
+  const postLogoutRedirectUri =
+    AUTH0_POST_LOGOUT_REDIRECT_URI || `${resolvedBaseUrl}/`;
 
   return {
     domain: AUTH0_DOMAIN,
     clientId: AUTH0_CLIENT_ID,
     clientSecret: AUTH0_CLIENT_SECRET,
     audience: AUTH0_AUDIENCE,
-    redirectUri: AUTH0_REDIRECT_URI,
-    postLogoutRedirectUri: AUTH0_POST_LOGOUT_REDIRECT_URI,
+    redirectUri,
+    postLogoutRedirectUri,
     dbConnection: AUTH0_DB_CONNECTION,
     cookieSecret: AUTH0_COOKIE_SECRET,
   };
