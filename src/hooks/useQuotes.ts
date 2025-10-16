@@ -403,6 +403,7 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
         const pdfRes = await apiCall<Blob>(pdfEndpoint, {
           method: "POST",
           skipAuth: true,
+          retries: 0,
           headers: {
             Accept: "application/pdf",
           },

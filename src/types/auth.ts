@@ -53,6 +53,7 @@ export interface ApiOptions extends Omit<RequestInit, "body"> {
   showSuccessToast?: boolean;
   body?: BodyInit | null; // explicitando body para não conflitar
   responseType?: ApiResponseType;
+  retries?: number;
 }
 
 export interface ActivePlan {
