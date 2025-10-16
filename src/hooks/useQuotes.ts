@@ -374,8 +374,45 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
           },
         };
 
+        const hasImages = (() => {
+          const rootImages = Array.isArray(
+            (data as { images?: unknown })?.images
+          )
+            ? ((data as { images?: unknown })?.images as unknown[])
+            : [];
+
+          if (
+            rootImages.some(
+              (img) => typeof img === "string" && img.trim().length > 0
+            )
+          ) {
+            return true;
+          }
+
+          const items = Array.isArray((data as { items?: unknown })?.items)
+            ? ((data as { items?: unknown })?.items as Array<{
+                images?: unknown;
+              }>)
+            : [];
+
+          return items.some((item) => {
+            const itemImages = Array.isArray(item.images)
+              ? (item.images as unknown[])
+              : [];
+            return itemImages.some(
+              (img) => typeof img === "string" && img.trim().length > 0
+            );
+          });
+        })();
+
+        const pdfEndpoint = hasImages
+          ? process.env.PDF_API_URL_WITH_IMAGES ??
+            "http://n8n.doras.space/webhook/generate-budget-image-pdf"
+          : process.env.PDF_API_URL ??
+            "http://n8n.doras.space/webhook/generate-budget-pdf";
+
         const pdfRes = await apiCall<Blob>(
-          process.env.PDF_API_URL ?? "https://pdfv2.empresor.com.br/pdf/view",
+          pdfEndpoint,
           {
             method: "POST",
             skipAuth: true,
