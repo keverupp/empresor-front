@@ -17,6 +17,9 @@ export interface QuoteItem {
   quantity: number;
   unit_price_cents: number;
   total_price_cents?: number;
+  item_order?: number;
+  complement?: string | null;
+  images?: string[] | null;
 }
 
 export interface QuoteClient {

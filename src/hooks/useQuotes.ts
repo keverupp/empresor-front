@@ -358,10 +358,70 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
           throw new Error("Dados do PDF não retornados");
         }
 
+        let enrichedData: Record<string, unknown> = { ...data };
+
+        try {
+          const quoteDetailsResponse = await apiCall<Quote>(
+            `/companies/${companyId}/quotes/${quoteId}`,
+            { method: "GET" }
+          );
+
+          const quoteDetails = quoteDetailsResponse.data;
+          const items = quoteDetails?.items ?? [];
+
+          if (items.length > 0) {
+            const sanitizedItems = items.map((item) => {
+              const sanitized: Record<string, unknown> = { ...item };
+
+              if (!item.complement?.trim()) {
+                delete sanitized.complement;
+              }
+
+              if (Array.isArray(item.images)) {
+                const filteredImages = item.images.filter(
+                  (img) => typeof img === "string" && img.trim().length > 0
+                );
+
+                if (filteredImages.length > 0) {
+                  sanitized.images = filteredImages;
+                } else {
+                  delete sanitized.images;
+                }
+              }
+
+              return sanitized;
+            });
+
+            enrichedData = {
+              ...enrichedData,
+              items: sanitizedItems,
+            };
+
+            if (
+              enrichedData.quote &&
+              typeof enrichedData.quote === "object" &&
+              !Array.isArray(enrichedData.quote)
+            ) {
+              enrichedData = {
+                ...enrichedData,
+                quote: {
+                  ...(enrichedData.quote as Record<string, unknown>),
+                  items: sanitizedItems,
+                },
+              };
+            }
+          }
+        } catch (fetchErr) {
+          console.error(
+            "Falha ao complementar dados do PDF com itens do orçamento:",
+            fetchErr
+          );
+        }
+
         const payload = {
           type: "budget-premium",
           title,
-          data,
+          data: enrichedData,
           config: {
             format: "A4",
             orientation: "portrait",
