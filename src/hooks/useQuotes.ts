@@ -411,21 +411,15 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
           : process.env.PDF_API_URL ??
             "http://n8n.doras.space/webhook/generate-budget-pdf";
 
-        const pdfRes = await apiCall<Blob>(
-          pdfEndpoint,
-          {
-            method: "POST",
-            skipAuth: true,
-            headers: {
-              "x-api-key":
-                process.env.PDF_API_KEY ??
-                "9dbfce7254de4aa79dd6224df978d83c1cfced4092d2bf8a098c520aa20f25de",
-              Accept: "application/pdf",
-            },
-            body: JSON.stringify(payload),
-            responseType: "blob",
-          }
-        );
+        const pdfRes = await apiCall<Blob>(pdfEndpoint, {
+          method: "POST",
+          skipAuth: true,
+          headers: {
+            Accept: "application/pdf",
+          },
+          body: JSON.stringify(payload),
+          responseType: "blob",
+        });
 
         if (pdfRes.error) {
           throw new Error(pdfRes.error);
