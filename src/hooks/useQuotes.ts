@@ -359,19 +359,8 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
         }
 
         const payload = {
-          type: "budget-premium",
           title,
           data,
-          config: {
-            format: "A4",
-            orientation: "portrait",
-            margin: {
-              top: "1cm",
-              right: "1cm",
-              bottom: "1cm",
-              left: "1cm",
-            },
-          },
         };
 
         const hasImages = (() => {
