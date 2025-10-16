@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { useAuth } from "@/contexts/AuthContext";
 import { useApi } from "@/hooks/useApi";
 
-import type { Quote, Product } from "@/types/apiInterfaces";
+import type { Quote, Product, QuoteItem } from "@/types/apiInterfaces";
 import type { QuoteFormData } from "@/lib/quote-schemas";
 import { formatDateForInput } from "@/lib/quote-utils";
 
@@ -37,6 +37,8 @@ function hydrateFormFromApi(q: Quote): QuoteFormData {
       description: it.description,
       quantity: it.quantity,
       unit_price: (it.unit_price_cents ?? 0) / 100,
+      complement: it.complement,
+      images: it.images,
     })),
   };
 }
@@ -240,6 +242,8 @@ export function useQuoteEdit() {
       quantity: number;
       unit_price: number; // R$
       product_id?: string | null;
+      complement?: string;
+      images?: string[];
     }) => {
       if (!quote || !companyId) return;
       setError(null);
@@ -249,6 +253,8 @@ export function useQuoteEdit() {
         quantity: Number(payload.quantity),
         unit_price_cents: Math.round(Number(payload.unit_price) * 100),
         product_id: payload.product_id ?? null,
+        complement: payload.complement,
+        images: payload.images,
       };
 
       const { data, error: apiErr } = await post<Quote>(
@@ -272,6 +278,8 @@ export function useQuoteEdit() {
         quantity?: number;
         unit_price?: number; // R$
         product_id?: string | null;
+        complement?: string;
+        images?: string[];
       }
     ) => {
       if (!quote || !companyId) return;
@@ -283,6 +291,8 @@ export function useQuoteEdit() {
       if (patch.unit_price !== undefined)
         body.unit_price_cents = Math.round(Number(patch.unit_price) * 100);
       if (patch.product_id !== undefined) body.product_id = patch.product_id;
+      if (patch.complement !== undefined) body.complement = patch.complement;
+      if (patch.images !== undefined) body.images = patch.images;
 
       const { data, error: apiErr } = await put<Quote>(
         `/companies/${companyId}/quotes/${quote.id}/items/${itemId}`,
