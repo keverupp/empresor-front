@@ -22,6 +22,7 @@ export const useApi = () => {
         showErrorToast = true,
         showSuccessToast = false,
         responseType = "json",
+        retries: retryOverride,
         ...fetchOptions
       } = options;
 
@@ -30,7 +31,8 @@ export const useApi = () => {
         : `${appConfig.development.api.baseURL}${endpoint}`;
 
       let retries = 0;
-      const maxRetries = appConfig.development.api.retries ?? 1;
+      const maxRetries =
+        retryOverride ?? appConfig.development.api.retries ?? 1;
 
       while (retries <= maxRetries) {
         try {
