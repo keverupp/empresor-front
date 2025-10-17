@@ -22,7 +22,10 @@ export function ImageUploader({
   const { post } = useApi();
   const [uploading, setUploading] = useState(false);
 
-  const isPaid = activePlan !== "free";
+  const isPaid =
+    !!activePlan &&
+    ["active", "trialing"].includes(activePlan.status) &&
+    activePlan.plan_name.toLowerCase() !== "gratuito";
 
   const handleUpload = async (files: FileList | null) => {
     if (!files || files.length === 0 || !isPaid) return;
