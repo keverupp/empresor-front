@@ -359,36 +359,57 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
         }
 
         const payload = {
-          type: "budget-premium",
           title,
           data,
-          config: {
-            format: "A4",
-            orientation: "portrait",
-            margin: {
-              top: "1cm",
-              right: "1cm",
-              bottom: "1cm",
-              left: "1cm",
-            },
-          },
         };
 
-        const pdfRes = await apiCall<Blob>(
-          process.env.PDF_API_URL ?? "https://pdfv2.empresor.com.br/pdf/view",
-          {
-            method: "POST",
-            skipAuth: true,
-            headers: {
-              "x-api-key":
-                process.env.PDF_API_KEY ??
-                "9dbfce7254de4aa79dd6224df978d83c1cfced4092d2bf8a098c520aa20f25de",
-              Accept: "application/pdf",
-            },
-            body: JSON.stringify(payload),
-            responseType: "blob",
+        const hasImages = (() => {
+          const rootImages = Array.isArray(
+            (data as { images?: unknown })?.images
+          )
+            ? ((data as { images?: unknown })?.images as unknown[])
+            : [];
+
+          if (
+            rootImages.some(
+              (img) => typeof img === "string" && img.trim().length > 0
+            )
+          ) {
+            return true;
           }
-        );
+
+          const items = Array.isArray((data as { items?: unknown })?.items)
+            ? ((data as { items?: unknown })?.items as Array<{
+                images?: unknown;
+              }>)
+            : [];
+
+          return items.some((item) => {
+            const itemImages = Array.isArray(item.images)
+              ? (item.images as unknown[])
+              : [];
+            return itemImages.some(
+              (img) => typeof img === "string" && img.trim().length > 0
+            );
+          });
+        })();
+
+        const pdfEndpoint = hasImages
+          ? process.env.PDF_API_URL_WITH_IMAGES ??
+            "https://n8n.doras.space/webhook/generate-budget-image-pdf"
+          : process.env.PDF_API_URL ??
+            "https://n8n.doras.space/webhook/generate-budget-pdf";
+
+        const pdfRes = await apiCall<Blob>(pdfEndpoint, {
+          method: "POST",
+          skipAuth: true,
+          retries: 0,
+          headers: {
+            Accept: "application/pdf",
+          },
+          body: JSON.stringify(payload),
+          responseType: "blob",
+        });
 
         if (pdfRes.error) {
           throw new Error(pdfRes.error);
@@ -420,13 +441,17 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
               : new Blob([pdfBlob], { type: "application/pdf" });
           const blobUrl = URL.createObjectURL(blob);
 
-          const link = document.createElement("a");
-          link.href = blobUrl;
-          link.target = "_blank";
-          link.rel = "noopener noreferrer";
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
+          const newTab = window.open(blobUrl, "_blank", "noopener,noreferrer");
+
+          if (!newTab) {
+            const link = document.createElement("a");
+            link.href = blobUrl;
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          }
 
           setTimeout(() => {
             URL.revokeObjectURL(blobUrl);
