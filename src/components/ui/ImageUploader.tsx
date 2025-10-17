@@ -6,8 +6,8 @@ import {
   useEffect,
   useState,
   type DragEvent,
-  type ClipboardEvent,
 } from "react";
+import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
 import { useApi } from "@/hooks/useApi";
 import { Button } from "./button";
@@ -177,10 +177,12 @@ export function ImageUploader({
       <div className="grid grid-cols-3 gap-2">
         {value.map((url) => (
           <div key={url} className="relative">
-            <img
+            <Image
               src={url}
               alt="Uploaded image"
               className="w-full h-24 object-cover rounded-md"
+              width={96}
+              height={96}
             />
             <Button
               variant="destructive"
