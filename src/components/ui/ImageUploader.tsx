@@ -7,6 +7,11 @@ import { useApi } from "@/hooks/useApi";
 import { Button } from "./button";
 import { Loader2, Upload, X } from "lucide-react";
 
+type PresignedUploadResponse = {
+  uploadUrl: string;
+  fileUrl: string;
+};
+
 type ImageUploaderProps = {
   value: string[];
   onChange: (value: string[]) => void;
@@ -34,7 +39,9 @@ export function ImageUploader({
     try {
       const uploadPromises = Array.from(files).map(async (file) => {
         // 1. Get presigned URL from backend
-        const { data: presignedData, error: presignedError } = await post(
+        const { data: presignedData, error: presignedError } = await post<
+          PresignedUploadResponse
+        >(
           "/upload/presigned-url",
           {
             fileName: file.name,
@@ -44,6 +51,11 @@ export function ImageUploader({
 
         if (presignedError) {
           console.error("Error getting presigned URL", presignedError);
+          return null;
+        }
+
+        if (!presignedData) {
+          console.error("Missing presigned upload data");
           return null;
         }
 
