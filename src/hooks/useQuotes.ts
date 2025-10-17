@@ -65,6 +65,55 @@ function normalizeQuotesList(payload: any): QuotesListResponse {
   return { data: [], pagination: undefined };
 }
 
+function containsImageReference(value: unknown): boolean {
+  if (!value) return false;
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return false;
+
+    if (/^data:image\//i.test(trimmed)) {
+      return true;
+    }
+
+    if (/\.(png|jpe?g|gif|bmp|webp|svg)(\?|#|$)/i.test(trimmed)) {
+      return true;
+    }
+
+    if (/^https?:\/\//i.test(trimmed)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  if (Array.isArray(value)) {
+    return value.some((item) => containsImageReference(item));
+  }
+
+  if (typeof value === "object") {
+    return Object.entries(value as Record<string, unknown>).some(
+      ([key, nestedValue]) => {
+        if (typeof nestedValue === "undefined" || nestedValue === null) {
+          return false;
+        }
+
+        if (/image/i.test(key)) {
+          return containsImageReference(nestedValue);
+        }
+
+        if (typeof nestedValue === "object") {
+          return containsImageReference(nestedValue);
+        }
+
+        return false;
+      }
+    );
+  }
+
+  return false;
+}
+
 export function useQuotes({ companyId }: UseQuotesOptions) {
   const { apiCall } = useApi();
 
@@ -344,6 +393,7 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
       if (!companyId || !quoteId) return;
 
       const toastId = toast.loading("Gerando PDF...");
+      let previewTab: Window | null = null;
       try {
         const pdfResponse = await apiCall<{
           title: string;
@@ -363,42 +413,16 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
           data,
         };
 
-        const hasImages = (() => {
-          const rootImages = Array.isArray(
-            (data as { images?: unknown })?.images
-          )
-            ? ((data as { images?: unknown })?.images as unknown[])
-            : [];
-
-          if (
-            rootImages.some(
-              (img) => typeof img === "string" && img.trim().length > 0
-            )
-          ) {
-            return true;
-          }
-
-          const items = Array.isArray((data as { items?: unknown })?.items)
-            ? ((data as { items?: unknown })?.items as Array<{
-                images?: unknown;
-              }>)
-            : [];
-
-          return items.some((item) => {
-            const itemImages = Array.isArray(item.images)
-              ? (item.images as unknown[])
-              : [];
-            return itemImages.some(
-              (img) => typeof img === "string" && img.trim().length > 0
-            );
-          });
-        })();
+        const hasImages = containsImageReference(data);
 
         const pdfEndpoint = hasImages
           ? process.env.PDF_API_URL_WITH_IMAGES ??
-            "https://n8n.doras.space/webhook/generate-budget-image-pdf"
+            "https://pdfv2.empresor.com.br/webhook/generate-budget-image-pdf"
           : process.env.PDF_API_URL ??
-            "https://n8n.doras.space/webhook/generate-budget-pdf";
+            "https://pdfv2.empresor.com.br/webhook/generate-budget-pdf";
+
+        previewTab =
+          typeof window !== "undefined" ? window.open("", "_blank") : null;
 
         const pdfRes = await apiCall<Blob>(pdfEndpoint, {
           method: "POST",
@@ -441,9 +465,20 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
               : new Blob([pdfBlob], { type: "application/pdf" });
           const blobUrl = URL.createObjectURL(blob);
 
-          const newTab = window.open(blobUrl, "_blank", "noopener,noreferrer");
+          let opened = false;
 
-          if (!newTab) {
+          if (previewTab) {
+            try {
+              previewTab.location.href = blobUrl;
+              previewTab.opener = null;
+              opened = true;
+            } catch {
+              previewTab.close();
+              previewTab = null;
+            }
+          }
+
+          if (!opened) {
             const link = document.createElement("a");
             link.href = blobUrl;
             link.target = "_blank";
@@ -462,6 +497,10 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
           throw new Error("PDF não retornado");
         }
       } catch (err) {
+        if (previewTab && !previewTab.closed) {
+          previewTab.close();
+        }
+
         const msg = err instanceof Error ? err.message : "Erro ao gerar PDF";
         setError(msg);
         toast.error(msg, { id: toastId });
