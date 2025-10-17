@@ -3,7 +3,7 @@ import Header2 from "@/components/mvpblocks/header-2";
 import Notebook from "@/components/mvpblocks/notebook";
 import Feature2 from "@/components/mvpblocks/feature-2";
 import FAQ2 from "@/components/mvpblocks/faq-2";
-import Footer4Col from "@/components/mvpblocks/footer-4col";
+// import Footer4Col from "@/components/mvpblocks/footer-4col";
 
 export default function HomePage() {
   return (
@@ -27,7 +27,7 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <Footer4Col />
+      {/* <Footer4Col /> */}
     </div>
   );
 }

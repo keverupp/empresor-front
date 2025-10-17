@@ -9,7 +9,6 @@ import {
   IconUsers,
   IconFileText,
   IconLayoutKanban,
-  IconSettings,
   IconFolder,
   IconChevronDown,
   IconChevronRight,
@@ -131,15 +130,6 @@ function getCompanyMenuItems(
 
   // TODO: Reabilitar "Relatórios" e "Financeiro" quando as páginas estiverem prontas
 
-  // Configurações - baseado em permissão (sempre por último se disponível)
-  if (permissions.canEditSettings) {
-    items.push({
-      title: "Configurações",
-      href: `${baseUrl}/settings`,
-      icon: IconSettings,
-    });
-  }
-
   return items;
 }
 
@@ -165,7 +155,6 @@ function CompanyItem({
   menuItems,
   onActivationClick,
   canShare = false,
-  permissions,
 }: CompanyItemProps) {
   const pathname = usePathname();
   const { isMobile } = useSidebar();
@@ -257,14 +246,6 @@ function CompanyItem({
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
               </>
-            )}
-            {permissions.canEditSettings && (
-              <DropdownMenuItem asChild>
-                <Link href={`/dashboard/companies/${company.id}/settings`}>
-                  <IconSettings className="w-4 h-4 mr-2" />
-                  Configurações
-                </Link>
-              </DropdownMenuItem>
             )}
             <DropdownMenuItem asChild>
               <Link href={`/dashboard/companies/${company.id}`}>

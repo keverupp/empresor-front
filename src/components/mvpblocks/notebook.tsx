@@ -2,7 +2,7 @@
 
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { appConfig } from "@/config/app";
 
 export default function NotebookHero() {
@@ -58,7 +58,7 @@ export default function NotebookHero() {
               🚀 Sistema de Gestão de Orçamentos Completo
             </div>
 
-            <h1 className="mb-6 text-4xl font-bold leading-tight md:text-6xl lg:text-7xl">
+            <h1 className="mb-6 text-2xl font-bold leading-tight md:text-4xl lg:text-5xl">
               Transforme a{" "}
               <span className="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
                 Gestão de Orçamentos
@@ -66,92 +66,16 @@ export default function NotebookHero() {
               da Sua Empresa
             </h1>
 
-            <p className="mb-8 max-w-3xl text-lg text-muted-foreground md:text-xl">
-              Sistema completo para criar, gerenciar e acompanhar orçamentos
-              empresariais. Automatize cálculos, personalize PDFs com sua marca
-              e tenha controle total sobre seu processo comercial.
+            <p className="mb-8 max-w-2xl text-sm text-muted-foreground md:text-xl">
+              Crie e gerencie orçamentos empresariais com facilidade. Tudo 100%
+              online, seguro e disponível na palma da sua mão, onde quer que
+              esteja.
             </p>
-
-            {/* Features Grid */}
-            <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
-              <div className="flex items-center gap-2">
-                <svg
-                  className="h-5 w-5 text-primary"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M5 13l4 4L19 7"
-                  ></path>
-                </svg>
-                <span className="text-sm font-medium">
-                  Orçamentos Inteligentes
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <svg
-                  className="h-5 w-5 text-primary"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M5 13l4 4L19 7"
-                  ></path>
-                </svg>
-                <span className="text-sm font-medium">PDF Personalizado</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <svg
-                  className="h-5 w-5 text-primary"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M5 13l4 4L19 7"
-                  ></path>
-                </svg>
-                <span className="text-sm font-medium">Controle Financeiro</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <svg
-                  className="h-5 w-5 text-primary"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M5 13l4 4L19 7"
-                  ></path>
-                </svg>
-                <span className="text-sm font-medium">
-                  Relatórios Completos
-                </span>
-              </div>
-            </div>
 
             {/* CTA Buttons */}
             <div className="z-10 mb-12 inline-flex flex-col items-center justify-center gap-4 sm:flex-row">
               <a
-                href="/signup"
+                href="/register"
                 className={cn(
                   buttonVariants({
                     size: "lg",
@@ -162,37 +86,6 @@ export default function NotebookHero() {
               >
                 Começar Gratuitamente <ArrowRight className="ml-2 size-5" />
               </a>
-              <button
-                className={cn(
-                  buttonVariants({
-                    size: "lg",
-                    variant: "outline",
-                    className:
-                      "rounded-full bg-background/50 backdrop-blur-sm px-8 py-3 text-lg",
-                  })
-                )}
-              >
-                <Play className="mr-2 size-5" />
-                Ver Demonstração
-              </button>
-            </div>
-
-            {/* Social Proof */}
-            <div className="mb-16 text-center">
-              <p className="mb-4 text-sm text-muted-foreground">
-                Mais de{" "}
-                <span className="font-semibold text-foreground">
-                  500+ empresas
-                </span>{" "}
-                já automatizaram seus orçamentos com o {appConfig.name}
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-8 opacity-60 grayscale hover:opacity-80 hover:grayscale-0 transition-all duration-300">
-                {/* Placeholder para logos de clientes */}
-                <div className="h-8 w-24 rounded bg-muted"></div>
-                <div className="h-8 w-20 rounded bg-muted"></div>
-                <div className="h-8 w-28 rounded bg-muted"></div>
-                <div className="h-8 w-22 rounded bg-muted"></div>
-              </div>
             </div>
 
             {/* Dashboard Preview */}

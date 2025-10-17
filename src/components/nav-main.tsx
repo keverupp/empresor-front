@@ -3,11 +3,8 @@
 import {
   IconCommand,
   IconPlus,
-  IconSearch,
   IconFileText,
   IconUsers,
-  IconCalendar,
-  IconSettings,
   type Icon,
 } from "@tabler/icons-react";
 import { useState, useEffect } from "react";
@@ -61,32 +58,6 @@ const quickCommands = [
         icon: IconPlus,
         action: "new-product",
         keywords: ["produto", "product", "novo", "cadastrar"],
-      },
-      {
-        title: "Agendar Reunião",
-        description: "Criar novo evento no calendário",
-        icon: IconCalendar,
-        action: "/dashboard/calendar/new",
-        keywords: ["reuniao", "meeting", "calendario", "agendar"],
-      },
-    ],
-  },
-  {
-    group: "Navegar",
-    items: [
-      {
-        title: "Dashboard",
-        description: "Ir para o dashboard principal",
-        icon: IconSearch,
-        action: "/dashboard",
-        keywords: ["dashboard", "home", "inicio"],
-      },
-      {
-        title: "Configurações",
-        description: "Configurações da conta",
-        icon: IconSettings,
-        action: "/dashboard/settings",
-        keywords: ["configuracoes", "settings", "config"],
       },
     ],
   },
@@ -146,9 +117,7 @@ export function NavMain({
     const result = await createQuote(data);
     if (result) {
       setQuoteDialogOpen(false);
-      router.push(
-        `/dashboard/companies/${companyId}/quotes/${result.id}/edit`
-      );
+      router.push(`/dashboard/companies/${companyId}/quotes/${result.id}/edit`);
     }
   };
 

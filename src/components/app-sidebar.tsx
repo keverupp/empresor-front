@@ -4,19 +4,15 @@
 import * as React from "react";
 import {
   IconDashboard,
-  IconDatabase,
   IconHelp,
-  IconInnerShadowTop,
-  IconSearch,
-  IconSettings,
 } from "@tabler/icons-react";
 
 import { NavCompanies } from "@/components/nav-companies";
-import { NavDocuments } from "@/components/nav-documents";
 import { NavSecondary } from "@/components/nav-secondary";
 import { NavUser } from "@/components/nav-user";
 import { NavMain } from "@/components/nav-main";
 import { SidebarThemeToggle } from "@/components/sidebar-theme-toggle";
+import { appConfig } from "@/config/app";
 import {
   Sidebar,
   SidebarContent,
@@ -43,28 +39,9 @@ const mainNavigation = [
 // Navegação secundária (ferramentas e configurações)
 const secondaryNavigation = [
   {
-    title: "Configurações",
-    url: "/dashboard/settings",
-    icon: IconSettings,
-  },
-  {
     title: "Ajuda",
     url: "/dashboard/help",
     icon: IconHelp,
-  },
-  {
-    title: "Buscar",
-    url: "/dashboard/search",
-    icon: IconSearch,
-  },
-];
-
-// Documentos e ferramentas
-const documentsNavigation = [
-  {
-    name: "Biblioteca de Dados",
-    url: "/dashboard/data-library",
-    icon: IconDatabase,
   },
 ];
 
@@ -90,7 +67,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
               <Link href="/dashboard">
-                <IconInnerShadowTop className="!size-5" />
+                <img
+                  src={appConfig.assets.logo.icon}
+                  alt={appConfig.name}
+                  className="h-6 w-6 text-white"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                    e.currentTarget.nextElementSibling?.classList.remove(
+                      "hidden"
+                    );
+                  }}
+                />
                 <span className="text-base font-semibold">Empresor</span>
               </Link>
             </SidebarMenuButton>
@@ -105,9 +92,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
         {/* Empresas com accordion - seção principal */}
         <NavCompanies />
-
-        {/* Ferramentas e documentos */}
-        <NavDocuments items={documentsNavigation} />
 
         {/* Navegação secundária - sempre no final */}
         <NavSecondary items={secondaryNavigation} className="mt-auto" />

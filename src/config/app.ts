@@ -110,7 +110,7 @@ export const appConfig = {
   assets: {
     logo: {
       main: "/logo.svg",
-      icon: "/favicon.ico",
+      icon: "/logo.png",
       light: "/logo-light.svg",
       dark: "/logo-dark.svg",
       watermark: "/logo-watermark.svg",

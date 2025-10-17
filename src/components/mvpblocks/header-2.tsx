@@ -18,7 +18,6 @@ const navItems: NavItem[] = [
   { name: "Início", href: "#hero" },
   { name: "Funcionalidades", href: "#features" },
   { name: "FAQ", href: "#faq" },
-  { name: "Contato", href: "#contact" },
 ];
 
 export default function Header2() {
@@ -98,11 +97,11 @@ export default function Header2() {
             >
               <Link href="/" className="flex items-center space-x-3">
                 <div className="relative">
-                  <div className="flex h-9 w-9 items-center justify-center rounded bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 shadow-lg">
+                  <div className="flex h-9 w-9 items-center justify-center">
                     <img
                       src={appConfig.assets.logo.icon}
                       alt={appConfig.name}
-                      className="h-5 w-5 text-white"
+                      className="h-8 w-8 text-white"
                       onError={(e) => {
                         e.currentTarget.style.display = "none";
                         e.currentTarget.nextElementSibling?.classList.remove(
@@ -110,18 +109,11 @@ export default function Header2() {
                         );
                       }}
                     />
-                    <span className="hidden h-5 w-5 text-white font-bold text-xs">
-                      E
-                    </span>
                   </div>
-                  <div className="absolute -right-1 -top-1 h-3 w-3 animate-pulse rounded-full bg-green-400"></div>
                 </div>
                 <div className="flex flex-col">
                   <span className="text-lg font-bold text-foreground">
                     {appConfig.name}
-                  </span>
-                  <span className="-mt-1 text-xs text-muted-foreground">
-                    Gestão Empresarial
                   </span>
                 </div>
               </Link>
