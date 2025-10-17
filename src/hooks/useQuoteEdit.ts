@@ -37,8 +37,8 @@ function hydrateFormFromApi(q: Quote): QuoteFormData {
       description: it.description,
       quantity: it.quantity,
       unit_price: (it.unit_price_cents ?? 0) / 100,
-      complement: it.complement,
-      images: it.images,
+      complement: it.complement ?? "",
+      images: Array.isArray(it.images) ? it.images : [],
     })),
   };
 }
