@@ -396,9 +396,9 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
 
         const pdfEndpoint = hasImages
           ? process.env.PDF_API_URL_WITH_IMAGES ??
-            "http://n8n.doras.space/webhook/generate-budget-image-pdf"
+            "https://n8n.doras.space/webhook/generate-budget-image-pdf"
           : process.env.PDF_API_URL ??
-            "http://n8n.doras.space/webhook/generate-budget-pdf";
+            "https://n8n.doras.space/webhook/generate-budget-pdf";
 
         const pdfRes = await apiCall<Blob>(pdfEndpoint, {
           method: "POST",

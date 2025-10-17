@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { useAuth } from "@/contexts/AuthContext";
 import { useApi } from "@/hooks/useApi";
 
-import type { Quote, Product, QuoteItem } from "@/types/apiInterfaces";
+import type { Quote, Product } from "@/types/apiInterfaces";
 import type { QuoteFormData } from "@/lib/quote-schemas";
 import { formatDateForInput } from "@/lib/quote-utils";
 
