@@ -19,6 +19,15 @@ function hydrateFormFromApi(q: Quote): QuoteFormData {
     (q as unknown as { discount_value_cents?: number })?.discount_value_cents ??
     0;
 
+  let discount_value = 0;
+  if (discountType === "percentage") {
+    if (q.subtotal_cents > 0) {
+      discount_value = (discountValueCents * 100) / q.subtotal_cents;
+    }
+  } else {
+    discount_value = discountValueCents / 100;
+  }
+
   return {
     client_id: q.client_id,
     quote_number: q.quote_number,
@@ -31,10 +40,7 @@ function hydrateFormFromApi(q: Quote): QuoteFormData {
       discountType === "percentage" || discountType === "fixed_amount"
         ? discountType
         : "",
-    discount_value:
-      discountType === "percentage"
-        ? discountValueCents
-        : discountValueCents / 100,
+    discount_value,
     tax_amount:
       ((q as unknown as { tax_amount_cents?: number })?.tax_amount_cents ?? 0) /
       100,
