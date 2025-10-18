@@ -417,9 +417,9 @@ export function useQuotes({ companyId }: UseQuotesOptions) {
 
         const pdfEndpoint = hasImages
           ? process.env.PDF_API_URL_WITH_IMAGES ??
-            "https://pdfv2.empresor.com.br/webhook/generate-budget-image-pdf"
+            "https://pdfv2.empresor.com.br/api/generate-budget-image-pdf"
           : process.env.PDF_API_URL ??
-            "https://pdfv2.empresor.com.br/webhook/generate-budget-pdf";
+            "https://pdfv2.empresor.com.br/api/generate-budget-pdf";
 
         previewTab =
           typeof window !== "undefined" ? window.open("", "_blank") : null;
