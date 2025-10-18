@@ -13,6 +13,12 @@ import { formatDateForInput } from "@/lib/quote-utils";
 
 /** API -> Form */
 function hydrateFormFromApi(q: Quote): QuoteFormData {
+  const discountType = (q as unknown as { discount_type?: string })
+    ?.discount_type;
+  const discountValueCents =
+    (q as unknown as { discount_value_cents?: number })?.discount_value_cents ??
+    0;
+
   return {
     client_id: q.client_id,
     quote_number: q.quote_number,
@@ -21,13 +27,14 @@ function hydrateFormFromApi(q: Quote): QuoteFormData {
     notes: q.notes ?? "",
     internal_notes: q.internal_notes ?? "",
     terms_and_conditions_content: q.terms_and_conditions_content ?? "",
-    discount_type: (() => {
-      const dt = (q as unknown as { discount_type?: string })?.discount_type;
-      return dt === "percentage" || dt === "fixed_amount" ? dt : "";
-    })(),
+    discount_type:
+      discountType === "percentage" || discountType === "fixed_amount"
+        ? discountType
+        : "",
     discount_value:
-      ((q as unknown as { discount_value_cents?: number })
-        ?.discount_value_cents ?? 0) / 100,
+      discountType === "percentage"
+        ? discountValueCents
+        : discountValueCents / 100,
     tax_amount:
       ((q as unknown as { tax_amount_cents?: number })?.tax_amount_cents ?? 0) /
       100,
@@ -175,9 +182,12 @@ export function useQuoteEdit() {
           terms_and_conditions_content:
             values.terms_and_conditions_content || null,
           discount_type: values.discount_type || null,
-          discount_value_cents: values.discount_value
-            ? Math.round(values.discount_value * 100)
-            : null,
+          discount_value_cents:
+            values.discount_type === "percentage"
+              ? values.discount_value
+              : values.discount_value
+              ? Math.round(values.discount_value * 100)
+              : null,
           tax_amount_cents: values.tax_amount
             ? Math.round(values.tax_amount * 100)
             : null,
@@ -326,7 +336,8 @@ export function useQuoteEdit() {
 
   // ===== Totais (observando os campos do form) =====
   const watchedItems = form.watch("items");
-  const watchedDiscount = form.watch("discount_value");
+  const watchedDiscountType = form.watch("discount_type");
+  const watchedDiscountValue = form.watch("discount_value");
   const watchedTax = form.watch("tax_amount");
 
   const subtotalCents = useMemo(
@@ -334,10 +345,15 @@ export function useQuoteEdit() {
     [watchedItems]
   );
 
-  const discountCents = useMemo(
-    () => Math.max(0, Math.round(Number(watchedDiscount || 0) * 100)),
-    [watchedDiscount]
-  );
+  const discountCents = useMemo(() => {
+    const value = Number(watchedDiscountValue || 0);
+    if (watchedDiscountType === "percentage") {
+      // Valor percentual sobre o subtotal
+      return Math.round((subtotalCents * value) / 100);
+    }
+    // Valor fixo em R$
+    return Math.round(value * 100);
+  }, [watchedDiscountType, watchedDiscountValue, subtotalCents]);
 
   const taxCents = useMemo(
     () => Math.max(0, Math.round(Number(watchedTax || 0) * 100)),
